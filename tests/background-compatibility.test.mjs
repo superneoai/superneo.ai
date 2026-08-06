@@ -27,6 +27,9 @@ test("the scene poster stays visible until the first valid WebGL frame", async (
   assert.match(field, /onSceneStateChange:\s*\(ready:\s*boolean\)\s*=>\s*void/);
   assert.match(field, /onSceneStateChange\(false\)/);
   assert.match(field, /reportSceneState\(true\)/);
+  assert.match(field, /renderer\.debug\.onShaderError/);
+  assert.match(field, /shaderHealthy/);
+  assert.match(field, /WEBGL_lose_context/);
   assert.match(field, /webglcontextlost/);
   assert.match(field, /webglcontextrestored/);
   assert.match(app, /data-scene-ready=\{sceneReady\}/);

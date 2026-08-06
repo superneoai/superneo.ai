@@ -8,7 +8,7 @@ test("the scene preserves its original bloom without engine-specific branches", 
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(field, /new UnrealBloomPass\(new THREE\.Vector2\(1, 1\), 0\.24, 0\.48, 0\.38\)/);
-  assert.match(field, /bloomPass\.strength = 0\.16 \+ interactionEnergy \* 0\.2 \+ signalEnergy \* 0\.12/);
+  assert.match(field, /bloomPass\.strength = 0\.16 \+ interactionEnergy \* 0\.2 \+ signalEnergy \* 0\.04/);
   assert.match(field, /bloomPass\.radius = 0\.4 \+ interactionEnergy \* 0\.065/);
   assert.doesNotMatch(field, /uGlowStrength/);
   assert.match(field, /pointGeometry/);

@@ -123,7 +123,7 @@ test("the routed tip signal preserves the shared accent through additive bloom",
   }
   assert.match(surface, /color \+= uSignalColor \* vSignalPulse \* 0\.68;/);
   assert.match(surface, /color \+= uSignalColor \* vEndpointGlow \* 0\.36;/);
-  assert.match(surface, /color \+= bone \* vEndpointGlow \* 0\.05;/);
+  assert.match(surface, /color \+= bone \* vEndpointGlow \* 0\.08;/);
   assert.match(particle, /color \+= uSignalColor \* vSignalPulse \* 0\.64;/);
   assert.match(particle, /color \+= uSignalColor \* vEndpointGlow \* 0\.32;/);
   assert.doesNotMatch(surface, /routedColor|mix\(color, routedColor/);

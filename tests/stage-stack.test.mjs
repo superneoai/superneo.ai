@@ -61,7 +61,10 @@ test("stage headings leave a visible compositor-only text trail", async () => {
   assert.match(app, /aria-label=\{item\.title\}/);
   assert.match(app, /className="stage-trail stage-trail--near"/);
   assert.match(app, /className="stage-trail stage-trail--far"/);
-  assert.match(app, /<StageWord title=\{item\.title\} \/>/);
+  assert.match(
+    app,
+    /<StageWord title=\{item\.title\} forcedNeoState=\{forcedNeoState\} \/>/,
+  );
   assert.match(app, /className="stage-word"/);
   assert.match(app, /className="stage-outline"/);
   assert.match(styles, /@keyframes stage-trail-near/);

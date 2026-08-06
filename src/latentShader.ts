@@ -416,7 +416,7 @@ export const surfaceFragmentShader = /* glsl */ `
     color += uSignalColor * uVelocity * rim * 0.08;
     color += uSignalColor * vSignalPulse * 0.68;
     color += uSignalColor * vEndpointGlow * 0.36;
-    color += bone * vEndpointGlow * 0.05;
+    color += bone * vEndpointGlow * 0.08;
 
     float fade = 0.74 + threshold * 0.2 + rim * 0.06;
     gl_FragColor = vec4(color * fade, uSurfaceOpacity);

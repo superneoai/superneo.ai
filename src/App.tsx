@@ -8,6 +8,7 @@ import {
 } from "react";
 import { SoundtrackController } from "./Soundtrack";
 import { toStageProgress } from "./morphTimeline";
+import { parseSceneQa, type NeoQaState } from "./sceneQa";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
 
 const LatentField = lazy(() =>
@@ -43,8 +44,18 @@ function ScenePoster() {
   );
 }
 
-function StageWord({ title }: { title: string }) {
+function StageWord({
+  title,
+  forcedNeoState,
+}: {
+  title: string;
+  forcedNeoState: NeoQaState | null;
+}) {
   if (title !== "SUPERNEO") return <>{title}</>;
+
+  const stateStyle = (state: NeoQaState) => forcedNeoState
+    ? { animation: "none", opacity: forcedNeoState === state ? 1 : 0 }
+    : undefined;
 
   return (
     <span className="superneo-word">
@@ -62,6 +73,7 @@ function StageWord({ title }: { title: string }) {
           draggable="false"
           alt=""
           aria-hidden="true"
+          style={stateStyle("full")}
         />
         <img
           className="neo-sign neo-sign--medium"
@@ -73,6 +85,7 @@ function StageWord({ title }: { title: string }) {
           draggable="false"
           alt=""
           aria-hidden="true"
+          style={stateStyle("medium")}
         />
         <img
           className="neo-sign neo-sign--fault-low"
@@ -84,6 +97,7 @@ function StageWord({ title }: { title: string }) {
           draggable="false"
           alt=""
           aria-hidden="true"
+          style={stateStyle("fault-low")}
         />
       </span>
     </span>
@@ -230,7 +244,7 @@ function ProcessTrace() {
   );
 }
 
-function StagePanel() {
+function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
   const stackRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef<HTMLParagraphElement>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
@@ -308,13 +322,13 @@ function StagePanel() {
           >
             <span className="stage-outline" aria-hidden="true">{item.title}</span>
             <span className="stage-trail stage-trail--near" aria-hidden="true">
-              <StageWord title={item.title} />
+              <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>
             <span className="stage-trail stage-trail--far" aria-hidden="true">
-              <StageWord title={item.title} />
+              <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>
             <span className="stage-word" aria-hidden="true">
-              <StageWord title={item.title} />
+              <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>
           </h2>
         ))}
@@ -325,6 +339,9 @@ function StagePanel() {
 }
 
 export function App() {
+  const sceneQa = import.meta.env.DEV
+    ? parseSceneQa(window.location.search)
+    : null;
   const [discovered, setDiscovered] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
@@ -339,6 +356,7 @@ export function App() {
         <LatentField
           onDiscover={handleDiscover}
           onSceneStateChange={handleSceneStateChange}
+          qa={sceneQa}
         />
       </Suspense>
       <div className="technical-frame" aria-hidden="true" />
@@ -352,7 +370,7 @@ export function App() {
 
       <p className="making-line">in the making.</p>
 
-      <StagePanel />
+      <StagePanel forcedNeoState={sceneQa?.neoState ?? null} />
 
       <div className="scroll-rail" aria-hidden="true">
         <span className="scroll-rail-fill" />

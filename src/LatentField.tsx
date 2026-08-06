@@ -21,6 +21,7 @@ import { createMorphGeometry, createPointGeometry } from "./morphGeometry";
 import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { createFrameProbe } from "./frameProbe";
+import type { SceneQaConfig } from "./sceneQa";
 import { dispatchStageChange } from "./stageSignal";
 import {
   createTipArrivals,
@@ -33,11 +34,12 @@ gsap.registerPlugin(ScrollTrigger);
 type LatentFieldProps = {
   onDiscover: () => void;
   onSceneStateChange: (ready: boolean) => void;
+  qa?: SceneQaConfig | null;
 };
 
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
-export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps) {
+export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,6 +54,8 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
     let needsRender = true;
     let artworkReady = false;
     let sceneReady = false;
+    let shaderHealthy = true;
+    let readinessStartedAt = 0;
     const reportSceneState = (ready: boolean) => {
       if (sceneReady === ready) return;
       sceneReady = ready;
@@ -67,6 +71,7 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
     let renderer: THREE.WebGLRenderer;
 
     try {
+      if (qa?.sceneFault === "renderer") throw new Error("Forced renderer failure");
       renderer = new THREE.WebGLRenderer({
         antialias: false,
         alpha: false,
@@ -83,6 +88,15 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
     renderer.toneMappingExposure = 1.08;
     renderer.domElement.className = "signal-canvas";
     host.appendChild(renderer.domElement);
+    renderer.debug.onShaderError = (gl, program, vertexShader, fragmentShader) => {
+      shaderHealthy = false;
+      reportSceneState(false);
+      console.error("SUPERNEO shader compilation failed", {
+        program: gl.getProgramInfoLog(program),
+        vertex: gl.getShaderInfoLog(vertexShader),
+        fragment: gl.getShaderInfoLog(fragmentShader),
+      });
+    };
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
@@ -142,7 +156,9 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
         uSignalColor: signalColorUniform,
       },
       vertexShader: backgroundVertexShader,
-      fragmentShader: backgroundFragmentShader,
+      fragmentShader: qa?.sceneFault === "shader"
+        ? `${backgroundFragmentShader}\nQA_INVALID_SHADER_TOKEN`
+        : backgroundFragmentShader,
       depthWrite: false,
       depthTest: false,
     });
@@ -245,9 +261,11 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
     scene.add(objectGroup);
 
     const textureLoader = new THREE.TextureLoader();
-    const artworkPaths = renderProfile.compact
-      ? ["latent-field-mobile.jpg"]
-      : ["latent-field.avif", "latent-field.jpg"];
+    const artworkPaths = qa?.sceneFault === "texture"
+      ? ["qa-missing-texture.jpg"]
+      : renderProfile.compact
+        ? ["latent-field-mobile.jpg"]
+        : ["latent-field.avif", "latent-field.jpg"];
     const showArtworkFallback = () => {
       artworkReady = false;
       background.visible = false;
@@ -624,15 +642,20 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
       }
       asciiPass.uniforms.uInteraction.value = interactionEnergy * 0.68;
       asciiPass.uniforms.uStage.value = scrollUniform.value;
-      bloomPass.strength = 0.16 + interactionEnergy * 0.2 + signalEnergy * 0.12;
+      bloomPass.strength = 0.16 + interactionEnergy * 0.2 + signalEnergy * 0.04;
       bloomPass.radius = 0.4 + interactionEnergy * 0.065;
       const renderStarted = performance.now();
       try {
         composer.render(delta);
-        if (!sceneReady && artworkReady) {
+        if (!sceneReady && artworkReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
-            reportSceneState(true);
+            if (readinessStartedAt === 0) readinessStartedAt = performance.now();
+            if (performance.now() - readinessStartedAt >= (qa?.sceneDelay ?? 0)) {
+              reportSceneState(true);
+            } else {
+              needsRender = true;
+            }
           }
         }
       } catch {
@@ -642,7 +665,9 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
       }
       const renderEnded = performance.now();
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
-      needsRender = false;
+      needsRender = !sceneReady && artworkReady && shaderHealthy &&
+        (readinessStartedAt === 0 ||
+          performance.now() - readinessStartedAt < (qa?.sceneDelay ?? 0));
     };
 
     const tick = (time: number) => {
@@ -678,6 +703,9 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
     document.addEventListener("visibilitychange", handleVisibility);
     renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
     renderer.domElement.addEventListener("webglcontextrestored", handleContextRestored);
+    if (qa?.sceneFault === "context") {
+      renderer.getContext().getExtension("WEBGL_lose_context")?.loseContext();
+    }
     reducedMotion.addEventListener("change", handleMotionPreference);
     coarsePointer.addEventListener("change", scheduleResize);
     gsap.ticker.add(tick);
