@@ -8,7 +8,7 @@ test("layered LATENT shells share one ambient morph phase", async () => {
     "utf8",
   );
   const morphFunction = shader.match(
-    /vec3 morphPosition\(\) \{([\s\S]*?)float progress/,
+    /vec3 morphPosition\(\) \{([\s\S]*?)vec3 current/,
   );
 
   assert.ok(morphFunction, "expected the morphPosition shader function");
@@ -19,19 +19,17 @@ test("layered LATENT shells share one ambient morph phase", async () => {
   );
 });
 
-test("LATENT ambient motion has no hard switch near the start of scroll", async () => {
+test("ambient morph layers converge at settled topology endpoints", async () => {
   const shader = await readFile(
     new URL("../src/latentShader.ts", import.meta.url),
     "utf8",
   );
   const morphFunction = shader.match(
-    /vec3 morphPosition\(\) \{([\s\S]*?)float progress/,
+    /vec3 morphPosition\(\) \{([\s\S]*?)vec3 current/,
   );
 
   assert.ok(morphFunction, "expected the morphPosition shader function");
-  assert.doesNotMatch(
-    morphFunction[1],
-    /if \(uScroll < 0\.04\)/,
-    "crossing the opening scroll boundary must not abruptly change ambient motion",
-  );
+  assert.match(morphFunction[1], /float basePhase = uStagePhase/);
+  assert.match(morphFunction[1], /float transitionEnvelope = transitionWave \* transitionWave/);
+  assert.match(morphFunction[1], /\* 4\.0 \* transitionEnvelope/);
 });

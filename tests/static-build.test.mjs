@@ -42,13 +42,18 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /New structure appears between them\./);
   assert.match(app, /The structure remains open\./);
   assert.match(app, /<h1>superneo\.ai<\/h1>/);
-  assert.match(app, /className="neo-accent">NEO/);
-  assert.match(app, /<SoundtrackController stage=\{stage\}/);
+  assert.match(app, /className="neo-source">NEO<\/span>/);
+  assert.match(app, /className="neo-sign"/);
+  assert.match(app, /src=\{neoSignUrl\}/);
+  assert.doesNotMatch(app, /data-text="NEO"|className="neo-core"/);
+  assert.match(app, /<SoundtrackController \/>/);
   assert.match(app, /className="process-head"/);
-  assert.match(app, /<ProcessTrace stage=\{stage\}/);
+  assert.match(app, /<ProcessTrace \/>/);
   assert.match(app, /className="stage-stack"/);
-  assert.match(app, /data-state=\{index === stage/);
-  assert.match(app, /data-depth=\{index - stage\}/);
+  assert.match(app, /heading\.dataset\.state = index === stage/);
+  assert.match(app, /heading\.dataset\.depth = String\(index - stage\)/);
+  assert.match(app, /window\.addEventListener\(STAGE_CHANGE_EVENT, syncStage\)/);
+  assert.doesNotMatch(app, /\bsetStage\b/);
   assert.match(app, /FORM \/ LIVE/);
   assert.match(app, /ITER <output/);
   assert.match(app, /className="bit-loader"/);
@@ -107,6 +112,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(shader, /signalIndex < 5/);
   assert.match(shader, /uMorphBias/);
   assert.match(shader, /ambientMorph/);
+  assert.match(shader, /uStagePhase/);
+  assert.match(shader, /transitionEnvelope/);
   assert.match(shader, /spectralShift/);
   assert.match(shader, /violetTone/);
   assert.match(shader, /hotPinkTone/);
@@ -120,8 +127,6 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(shader, /orchidTone/);
   assert.match(shader, /cubicPalette/);
   assert.match(shader, /time \* 0\.07/);
-  assert.match(shader, /smoothstep\(0\.0, 0\.08, uScroll\)/);
-  assert.match(shader, /smoothstep\(0\.92, 1\.0, uScroll\)/);
   assert.match(shader, /ambientWeave/);
   assert.match(shader, /imageZoom/);
   assert.match(shader, /imagePan/);
@@ -146,7 +151,9 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(shader, /vSignalPulse/);
   assert.match(shader, /vEndpointGlow/);
   assert.doesNotMatch(shader, /uWaveOrigin|waveRadius|vWave|scatterStrength/);
-  assert.match(shader, /glyphStage/);
+  assert.match(shader, /glyphPhase/);
+  assert.match(shader, /inferenceGlyph/);
+  assert.match(shader, /emergenceGlyph/);
   assert.match(field, /locateClickAlong/);
   assert.match(field, /MAX_ACTIVE_SIGNALS = 5/);
   assert.match(field, /new Float32Array\(MAX_ACTIVE_SIGNALS\)/);
@@ -161,6 +168,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /scopeSamples/);
   assert.match(app, /className="motion-scope"/);
   assert.match(app, /MOTION/);
+  assert.match(app, /className="signal-readouts"/);
+  assert.match(app, /className="signal-activity"/);
   assert.match(field, /echoPastMaterial/);
   assert.match(field, /echoFutureMaterial/);
   assert.match(field, /uMorphBias: \{ value: -0\.18 \}/);
@@ -199,6 +208,9 @@ test("builds a complete GitHub Pages artifact", async () => {
   await access(new URL("../dist/.nojekyll", import.meta.url));
   await access(new URL("../dist/og.png", import.meta.url));
   await access(new URL("../dist/latent-field.avif", import.meta.url));
+  await access(new URL("../dist/latent-field.jpg", import.meta.url));
+  await access(new URL("../dist/latent-field-mobile.jpg", import.meta.url));
+  await access(new URL("../dist/neo-sign.png", import.meta.url));
   await access(new URL("../dist/robots.txt", import.meta.url));
   await access(new URL("../dist/sitemap.xml", import.meta.url));
 });
@@ -212,10 +224,13 @@ test("keeps the generated asset paths relative", async () => {
 
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /focus-visible/);
-  assert.match(css, /--scroll-progress/);
+  assert.match(css, /scroll-rail-fill/);
   assert.match(css, /neo-neon-fault/);
+  assert.doesNotMatch(css, /gecko-neon-aura/);
   assert.match(css, /soundtrack-control/);
   assert.match(css, /soundtrack-control:hover/);
+  assert.match(css, /soundtrack-control:after/);
+  assert.match(css, /opacity \.15s \.22s/);
   assert.match(css, /soundtrack-ready-icon/);
   assert.match(css, /signal-monitor/);
   assert.match(css, /visibility:hidden/);
@@ -223,5 +238,5 @@ test("keeps the generated asset paths relative", async () => {
   assert.match(css, /grid-template-columns:1fr auto/);
   assert.match(css, /touch-action:pan-x/);
   assert.match(css, /@media\s*\((?:max-width:|width<=)720px\)/);
-  assert.match(css, /--signal:oklch\(90% \.22 126\)/);
+  assert.match(css, /--signal:#baf628/);
 });

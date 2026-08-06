@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { BufferAttribute } from "three";
-import { createMorphGeometry } from "../src/morphGeometry.ts";
+import { createMorphGeometry, createPointGeometry } from "../src/morphGeometry.ts";
 
 function aspectRatio(attribute: BufferAttribute) {
   let minX = Infinity;
@@ -34,5 +34,21 @@ test("morph targets have genuinely different silhouettes", () => {
   assert.ok(aspects[1] > 1.15, `inference should form a directional route; got ${aspects[1].toFixed(2)}`);
   assert.ok(aspects[2] < 1, `emergence should branch vertically; got ${aspects[2].toFixed(2)}`);
   assert.ok(aspects[3] > 1.65, `open state should expand horizontally; got ${aspects[3].toFixed(2)}`);
+  geometry.dispose();
+});
+
+test("point rendering visits each unique vertex once and preserves indexed brightness", () => {
+  const geometry = createMorphGeometry(false);
+  const points = createPointGeometry(geometry);
+  const weights = points.getAttribute("aPointWeight") as BufferAttribute;
+  let weightTotal = 0;
+  for (let index = 0; index < weights.count; index += 1) {
+    weightTotal += weights.getX(index);
+  }
+
+  assert.equal(points.getIndex(), null);
+  assert.equal(points.getAttribute("position").count, geometry.getAttribute("position").count);
+  assert.equal(weightTotal, geometry.getIndex()?.count);
+  points.dispose();
   geometry.dispose();
 });
