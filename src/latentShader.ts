@@ -13,7 +13,9 @@ const morphVertexChunk = /* glsl */ `
   uniform float uPress;
   uniform float uTime;
   uniform float uScroll;
+  uniform float uStagePhase;
   uniform float uVelocity;
+  uniform vec3 uSignalColor;
   uniform float uSignalProgress[5];
   uniform float uClickAlong[5];
   uniform float uSignalVariation[5];
@@ -21,27 +23,19 @@ const morphVertexChunk = /* glsl */ `
   uniform float uMorphBias;
 
   vec3 morphPosition() {
-    // All shells breathe on the same clock. Their static morph bias still
-    // creates depth without making the layered silhouette pull against itself.
-    float sharedAmbientMorph =
+    float ambientMorph =
       sin(uTime * 0.16) * 0.042 +
       sin(uTime * 0.061 + 1.7) * 0.016;
-    // Fold the cycle inward continuously at either end so crossing the first
-    // scroll threshold cannot cause a visible change in direction.
-    float startFold = 1.0 - smoothstep(0.0, 0.08, uScroll);
-    float endFold = smoothstep(0.92, 1.0, uScroll);
-    float ambientMorph = mix(
-      sharedAmbientMorph,
-      sharedAmbientMorph * 0.5 + 0.029,
-      startFold
+    float basePhase = uStagePhase;
+    // Let the shells separate while travelling, then converge on every named
+    // stage so a previous silhouette never trails the next label.
+    float transitionWave = sin(basePhase * 3.14159265);
+    float transitionEnvelope = transitionWave * transitionWave;
+    float phase = clamp(
+      basePhase + (uMorphBias + ambientMorph) * 4.0 * transitionEnvelope,
+      0.0,
+      3.0
     );
-    ambientMorph = mix(
-      ambientMorph,
-      sharedAmbientMorph * 0.5 - 0.029,
-      endFold
-    );
-    float progress = clamp(uScroll + uMorphBias + ambientMorph, 0.0, 1.0);
-    float phase = progress * 3.0;
     vec3 current;
     if (phase < 1.0) {
       float blend = smoothstep(0.0, 1.0, phase);
@@ -155,7 +149,7 @@ const morphVertexChunk = /* glsl */ `
       sin(uTime * 0.11 + aAlong * 6.0)
     ) * ambientWeave * 0.0025 * uDisplacementScale;
 
-    float semanticPhase = clamp(uScroll, 0.0, 1.0) * 3.0;
+    float semanticPhase = uStagePhase;
     float latentMotion = stageInfluence(semanticPhase, 0.0);
     float inferenceMotion = stageInfluence(semanticPhase, 1.0);
     float emergenceMotion = stageInfluence(semanticPhase, 2.0);
@@ -308,6 +302,8 @@ export const surfaceFragmentShader = /* glsl */ `
   uniform float uVelocity;
   uniform float uSurfaceOpacity;
   uniform float uTime;
+  uniform float uStagePhase;
+  uniform vec3 uSignalColor;
 
   varying vec3 vObjectPosition;
   varying vec3 vViewPosition;
@@ -320,7 +316,6 @@ export const surfaceFragmentShader = /* glsl */ `
   varying float vEndpointGlow;
 
   ${spectralColorChunk}
-
   float bayer4(vec2 cell) {
     float x = mod(floor(cell.x), 4.0);
     float y = mod(floor(cell.y), 4.0);
@@ -371,24 +366,30 @@ export const surfaceFragmentShader = /* glsl */ `
     float threshold = bayer4(gl_FragCoord.xy);
     float levels = mix(3.0, 6.0, smoothstep(0.42, 0.9, vStage));
     float dithered = floor(shade * levels + threshold) / levels;
-    float coverage = clamp(shade * 0.82 + rim * 0.34 + vInteraction * 0.32, 0.0, 1.0);
+    float routedSignal = max(vSignalPulse, vEndpointGlow);
+    routedSignal = clamp(routedSignal, 0.0, 1.0);
+    routedSignal = smoothstep(0.04, 0.72, routedSignal);
+    float coverage = clamp(
+      shade * 0.82 + rim * 0.34 + vInteraction * 0.32 + routedSignal * 0.46,
+      0.0,
+      1.0
+    );
     if (coverage < threshold * 0.94) discard;
 
     vec3 ink = vec3(0.012, 0.015, 0.012);
     vec3 bone = vec3(0.91, 0.898, 0.863);
-    vec3 phosphor = vec3(0.718, 1.0, 0.235);
     vec3 color = mix(ink, bone, dithered * 0.84);
     vec3 spectral = spectralShift(uTime, vStrand * 1.7 + vSeed * 0.4);
     float spectralPresence = 0.3 + rim * 0.24 + (1.0 - dithered) * 0.08;
     color = mix(color, spectral, spectralPresence);
     color += spectral * rim * 0.1;
     float signal = clamp(
-      vInteraction * 0.72 + vSignalPulse * 0.82 + vEndpointGlow * 0.45 +
+      vInteraction * 0.72 + vSignalPulse * 0.82 + vEndpointGlow * 0.74 +
       highlight * (0.2 + uPointerMotion * 0.8) + uPress * contact * 0.38,
       0.0,
       1.0
     );
-    float semanticPhase = clamp(vStage, 0.0, 1.0) * 3.0;
+    float semanticPhase = uStagePhase;
     float latentEffect = stageInfluence(semanticPhase, 0.0) *
       (1.0 - smoothstep(0.16, 0.72, length(vObjectPosition.xy))) *
       (0.45 + sin(uTime * 0.58 + vSeed * 3.0) * 0.2);
@@ -409,13 +410,12 @@ export const surfaceFragmentShader = /* glsl */ `
       1.0
     );
     signal = clamp(signal + semanticSignal * 0.48, 0.0, 1.0);
-    color = mix(color, phosphor, signal * (0.16 + rim * 0.34));
-    color += phosphor * semanticSignal * (0.07 + rim * 0.11);
-    color += phosphor * vSignalPulse * 0.68;
-    color += phosphor * vEndpointGlow * 0.36;
-    color += bone * vEndpointGlow * 0.05;
+    color = mix(color, uSignalColor, signal * (0.16 + rim * 0.34));
+    color += uSignalColor * semanticSignal * (0.07 + rim * 0.11);
     color += bone * rim * 0.13;
-    color += phosphor * uVelocity * rim * 0.08;
+    color += uSignalColor * uVelocity * rim * 0.08;
+    vec3 routedColor = uSignalColor * (0.46 + rim * 0.08);
+    color = mix(color, routedColor, routedSignal * 0.96);
 
     float fade = 0.74 + threshold * 0.2 + rim * 0.06;
     gl_FragColor = vec4(color * fade, uSurfaceOpacity);
@@ -425,6 +425,7 @@ export const surfaceFragmentShader = /* glsl */ `
 export const particleVertexShader = /* glsl */ `
   ${morphVertexChunk}
 
+  attribute float aPointWeight;
   uniform float uPixelRatio;
   uniform float uShell;
   uniform float uPointScale;
@@ -434,6 +435,7 @@ export const particleVertexShader = /* glsl */ `
   varying float vStage;
   varying float vSignalPulse;
   varying float vEndpointGlow;
+  varying float vPointWeight;
 
   void main() {
     float interaction;
@@ -443,11 +445,12 @@ export const particleVertexShader = /* glsl */ `
     vInteraction = interaction;
     vSeed = aSeed;
     vStage = uScroll;
+    vPointWeight = aPointWeight;
     sampleClickSignals(vSignalPulse, vEndpointGlow);
     gl_Position = projectionMatrix * viewPosition;
     float perspective = 4.2 / max(-viewPosition.z, 0.5);
     gl_PointSize = (3.8 + aSeed * 4.2 + interaction * 3.2 +
-      vSignalPulse * 4.8 + vEndpointGlow * 2.2) *
+      vSignalPulse * 4.8 + vEndpointGlow * 3.6) *
       uPointScale * uPixelRatio * perspective;
   }
 `;
@@ -459,15 +462,17 @@ export const particleFragmentShader = /* glsl */ `
   uniform float uPress;
   uniform float uOpacity;
   uniform float uTime;
+  uniform float uStagePhase;
+  uniform vec3 uSignalColor;
 
   varying float vInteraction;
   varying float vSeed;
   varying float vStage;
   varying float vSignalPulse;
   varying float vEndpointGlow;
+  varying float vPointWeight;
 
   ${spectralColorChunk}
-
   float lineMask(float distanceToLine, float width) {
     return 1.0 - smoothstep(width, width + 0.055, distanceToLine);
   }
@@ -478,48 +483,56 @@ export const particleFragmentShader = /* glsl */ `
 
   void main() {
     vec2 p = gl_PointCoord - 0.5;
-    float glyphStage = floor(clamp(vStage * 3.0 + 0.5, 0.0, 3.0));
-    float mask = 0.0;
-
-    if (glyphStage < 0.5) {
-      mask = max(dotMask(p - vec2(0.0, 0.17), 0.075), dotMask(p + vec2(0.0, 0.17), 0.075));
-      mask = mix(dotMask(p, 0.105), mask, step(0.58, vSeed));
-    } else if (glyphStage < 1.5) {
-      mask = max(
-        lineMask(abs(p.y - (0.22 - p.x)), 0.045),
-        lineMask(abs(p.y + (0.22 - p.x)), 0.045)
-      ) * step(-0.24, p.x) * step(p.x, 0.28);
-    } else if (glyphStage < 2.5) {
-      float stem = lineMask(abs(p.x), 0.042) * step(-0.31, p.y) * step(p.y, 0.08);
-      float branches = max(
-        lineMask(abs(p.y - p.x - 0.04), 0.045),
-        lineMask(abs(p.y + p.x - 0.04), 0.045)
-      ) * step(0.0, p.y);
-      mask = max(stem, branches);
-    } else {
-      mask = 1.0 - smoothstep(0.038, 0.068, abs(length(p) - 0.23));
-    }
+    float glyphPhase = uStagePhase;
+    float dotPair = max(
+      dotMask(p - vec2(0.0, 0.17), 0.075),
+      dotMask(p + vec2(0.0, 0.17), 0.075)
+    );
+    float latentGlyph = mix(dotMask(p, 0.105), dotPair, step(0.58, vSeed));
+    float inferenceGlyph = max(
+      lineMask(abs(p.y - (0.22 - p.x)), 0.045),
+      lineMask(abs(p.y + (0.22 - p.x)), 0.045)
+    ) * step(-0.24, p.x) * step(p.x, 0.28);
+    float stem = lineMask(abs(p.x), 0.042) * step(-0.31, p.y) * step(p.y, 0.08);
+    float branches = max(
+      lineMask(abs(p.y - p.x - 0.04), 0.045),
+      lineMask(abs(p.y + p.x - 0.04), 0.045)
+    ) * step(0.0, p.y);
+    float emergenceGlyph = max(stem, branches);
+    float openGlyph = 1.0 - smoothstep(0.038, 0.068, abs(length(p) - 0.23));
+    float mask = mix(
+      latentGlyph,
+      inferenceGlyph,
+      smoothstep(0.32, 0.68, glyphPhase)
+    );
+    mask = mix(
+      mask,
+      emergenceGlyph,
+      smoothstep(1.32, 1.68, glyphPhase)
+    );
+    mask = mix(mask, openGlyph, smoothstep(2.32, 2.68, glyphPhase));
 
     if (mask < 0.02) discard;
     vec3 bone = vec3(0.91, 0.898, 0.863);
-    vec3 phosphor = vec3(0.718, 1.0, 0.235);
     vec3 spectral = spectralShift(uTime, vSeed * 1.3 + vStage * 0.4);
     float signal = clamp(
       vInteraction + uPointerMotion * vInteraction + uPress * 0.2 +
-      vSignalPulse * 0.88 + vEndpointGlow * 0.55,
+      vSignalPulse * 0.88 + vEndpointGlow * 0.8,
       0.0,
       1.0
     );
+    float routedSignal = max(vSignalPulse, vEndpointGlow);
+    routedSignal = clamp(routedSignal, 0.0, 1.0);
+    routedSignal = smoothstep(0.04, 0.72, routedSignal);
     vec3 dormantColor = mix(
       bone * (0.42 + vSeed * 0.36),
       spectral,
       0.38 + vSeed * 0.18
     );
-    vec3 color = mix(dormantColor, phosphor, signal * 0.9);
-    color += phosphor * vSignalPulse * 0.64;
-    color += phosphor * vEndpointGlow * 0.32;
+    vec3 color = mix(dormantColor, uSignalColor, signal * 0.62);
+    color = mix(color, uSignalColor * 0.58, routedSignal * 0.96);
     float alpha = mask * (0.24 + vSeed * 0.34 + signal * 0.42) *
-      (1.0 + vEndpointGlow * 0.2) * uOpacity;
+      (1.0 + vEndpointGlow * 0.2) * uOpacity * vPointWeight;
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -541,6 +554,7 @@ export const backgroundFragmentShader = /* glsl */ `
   uniform sampler2D uArtwork;
   uniform vec2 uResolution;
   uniform vec2 uArtworkResolution;
+  uniform float uCompactLayout;
   uniform vec2 uPointerScreen;
   uniform float uPointerStrength;
   uniform float uPointerMotion;
@@ -619,7 +633,7 @@ export const backgroundFragmentShader = /* glsl */ `
     vec2 pixelUv = gl_FragCoord.xy / uResolution;
     vec2 artworkUv = coverUv(vUv);
     float ambientBreath = sin(uTime * 0.11) * 0.5 + 0.5;
-    float imageZoom = 0.93 +
+    float imageZoom = mix(0.93, 1.0, uCompactLayout) +
       sin(uTime * 0.17) * 0.018 +
       sin(uTime * 0.061 + 1.3) * 0.007;
     vec2 imagePan = vec2(
@@ -720,11 +734,12 @@ export const backgroundFragmentShader = /* glsl */ `
       step(0.025, luma + edge);
 
     vec3 bone = vec3(0.91, 0.898, 0.863);
-    vec3 phosphor = vec3(0.718, 1.0, 0.235);
     vec3 color = surface * (0.34 + quantized * 0.7);
     color += bone * edge * (0.08 + uScroll * 0.12);
-    color = mix(color, phosphor, glyphMask * (0.16 + pointerField * 0.34));
-    color += phosphor * pointerField * edge * (uPointerMotion + uPress) * 0.12;
+    float paleStructure = smoothstep(0.16, 0.72, luma) * (0.35 + edge * 0.65);
+    color += bone * paleStructure * uCompactLayout * 0.11;
+    color = mix(color, uSignalColor, glyphMask * (0.16 + pointerField * 0.34));
+    color += uSignalColor * pointerField * edge * (uPointerMotion + uPress) * 0.12;
 
     float vignette = 1.0 - smoothstep(0.32, 0.96, length((pixelUv - 0.5) * vec2(0.66, 1.0)));
     float movingLight = 0.5 + 0.5 * sin(
@@ -771,6 +786,7 @@ export const asciiDitherPostFragmentShader = /* glsl */ `
   uniform vec2 uResolution;
   uniform float uInteraction;
   uniform float uStage;
+  uniform vec3 uSignalColor;
 
   varying vec2 vUv;
 
@@ -823,7 +839,8 @@ export const asciiDitherPostFragmentShader = /* glsl */ `
   }
 
   void main() {
-    vec3 source = texture2D(tDiffuse, vUv).rgb;
+    vec4 sourceSample = texture2D(tDiffuse, vUv);
+    vec3 source = sourceSample.rgb;
     float cellSize = mix(10.0, 8.4, clamp(uInteraction, 0.0, 1.0));
     vec2 grid = gl_FragCoord.xy / cellSize;
     vec2 cell = floor(grid);
@@ -844,13 +861,16 @@ export const asciiDitherPostFragmentShader = /* glsl */ `
     float ditherHole = step(threshold * mix(0.9, 0.78, uInteraction), luma + edge * 0.48);
 
     vec3 bone = vec3(0.91, 0.898, 0.863);
-    vec3 phosphor = vec3(0.718, 1.0, 0.235);
-    vec3 glyphColor = mix(bone * (0.34 + quantized * 0.72), phosphor, uInteraction * 0.28 + edge * 0.12);
+    vec3 glyphColor = mix(
+      bone * (0.34 + quantized * 0.72),
+      uSignalColor,
+      min(0.16, uInteraction * 0.06 + edge * 0.04)
+    );
     vec3 dithered = source * mix(0.5, 1.0, ditherHole);
     vec3 color = mix(dithered, glyphColor, glyph * asciiStrength);
     color += source * (0.18 + uStage * 0.08);
     float particleChroma = max(source.g - max(source.r, source.b), 0.0);
     color = mix(color, source * 1.16, smoothstep(0.035, 0.24, particleChroma));
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, sourceSample.a);
   }
 `;

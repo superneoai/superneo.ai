@@ -20,6 +20,7 @@ const midiToFrequency = (note: number) => 440 * 2 ** ((note - 69) / 12);
 
 type AudioContextConstructor = new (options?: AudioContextOptions) => AudioContext;
 type TrackedSource = OscillatorNode | AudioBufferSourceNode;
+type SoundtrackOptions = { compact?: boolean };
 
 export class SuperneoSoundtrack {
   private context: AudioContext;
@@ -51,13 +52,19 @@ export class SuperneoSoundtrack {
     );
   }
 
-  constructor() {
+  constructor(options: SoundtrackOptions = {}) {
     const AudioContextClass = window.AudioContext ||
       (window as typeof window & { webkitAudioContext?: AudioContextConstructor })
         .webkitAudioContext;
     if (!AudioContextClass) throw new Error("Web Audio is not supported");
 
-    this.context = new AudioContextClass({ latencyHint: "interactive" });
+    try {
+      this.context = new AudioContextClass({
+        latencyHint: options.compact ? "balanced" : "interactive",
+      });
+    } catch {
+      this.context = new AudioContextClass();
+    }
     this.musicBus = this.context.createGain();
     this.sfxBus = this.context.createGain();
     this.toneFilter = this.context.createBiquadFilter();
@@ -79,8 +86,8 @@ export class SuperneoSoundtrack {
     this.compressor.ratio.value = 3;
     this.compressor.attack.value = 0.018;
     this.compressor.release.value = 0.34;
-    this.reverb.buffer = this.createImpulseResponse(2.8, 2.4);
-    this.reverbGain.gain.value = 0.2;
+    this.reverb.buffer = options.compact ? null : this.createImpulseResponse(2.8, 2.4);
+    this.reverbGain.gain.value = options.compact ? 0 : 0.2;
     this.delay.delayTime.value = 0.375;
     this.delayGain.gain.value = 0.13;
     this.delayFeedback.gain.value = 0.24;

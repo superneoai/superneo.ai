@@ -172,3 +172,27 @@ export function createMorphGeometry(compact: boolean) {
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 2.6);
   return geometry;
 }
+
+export function createPointGeometry(surfaceGeometry: THREE.BufferGeometry) {
+  const pointGeometry = new THREE.BufferGeometry();
+  Object.entries(surfaceGeometry.attributes).forEach(([name, attribute]) => {
+    pointGeometry.setAttribute(name, attribute);
+  });
+
+  const vertexCount = surfaceGeometry.getAttribute("position").count;
+  const pointWeights = new Float32Array(vertexCount);
+  const surfaceIndex = surfaceGeometry.getIndex();
+  if (surfaceIndex) {
+    for (let index = 0; index < surfaceIndex.count; index += 1) {
+      pointWeights[surfaceIndex.getX(index)] += 1;
+    }
+  } else {
+    pointWeights.fill(1);
+  }
+  pointGeometry.setAttribute(
+    "aPointWeight",
+    new THREE.BufferAttribute(pointWeights, 1),
+  );
+  pointGeometry.boundingSphere = surfaceGeometry.boundingSphere?.clone() ?? null;
+  return pointGeometry;
+}

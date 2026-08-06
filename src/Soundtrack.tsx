@@ -1,31 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { SuperneoSoundtrack } from "./soundtrackEngine";
+import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
 import { TIP_SIGNAL_EVENT, type TipArrival } from "./tipSignal";
 
-type SoundtrackControllerProps = {
-  stage: number;
-};
-
 const defaultVolume = 46;
+const deviceVolumeMedia = "(max-width: 720px), (hover: none) and (pointer: coarse)";
 
-export function SoundtrackController({ stage }: SoundtrackControllerProps) {
+export const SoundtrackController = memo(function SoundtrackController() {
   const engineRef = useRef<SuperneoSoundtrack | null>(null);
+  const stageRef = useRef(0);
   const volumeRef = useRef(defaultVolume);
+  const startingRef = useRef(false);
   const [playing, setPlaying] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [supported] = useState(() => SuperneoSoundtrack.isSupported());
   const [volume, setVolumeState] = useState(defaultVolume);
+  const [deviceVolume, setDeviceVolume] = useState(
+    () => window.matchMedia(deviceVolumeMedia).matches,
+  );
 
   const ensureEngine = useCallback(() => {
     if (!engineRef.current) {
-      engineRef.current = new SuperneoSoundtrack();
-      engineRef.current.setVolume(volumeRef.current / 100);
-      engineRef.current.setStage(stage);
+      engineRef.current = new SuperneoSoundtrack({ compact: deviceVolume });
+      engineRef.current.setVolume(deviceVolume ? 1 : volumeRef.current / 100);
+      engineRef.current.setStage(stageRef.current);
     }
     return engineRef.current;
-  }, [stage]);
+  }, [deviceVolume]);
 
   const play = useCallback(async () => {
-    if (!supported) return;
+    if (!supported || startingRef.current) return;
+    startingRef.current = true;
+    setStarting(true);
     try {
       const engine = ensureEngine();
       await engine.play();
@@ -33,6 +39,9 @@ export function SoundtrackController({ stage }: SoundtrackControllerProps) {
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     } catch {
       setPlaying(false);
+    } finally {
+      startingRef.current = false;
+      setStarting(false);
     }
   }, [ensureEngine, supported]);
 
@@ -51,13 +60,25 @@ export function SoundtrackController({ stage }: SoundtrackControllerProps) {
     const safeVolume = Math.min(100, Math.max(0, nextVolume));
     volumeRef.current = safeVolume;
     setVolumeState(safeVolume);
-    engineRef.current?.setVolume(safeVolume / 100);
+    if (!deviceVolume) engineRef.current?.setVolume(safeVolume / 100);
     try {
       window.localStorage.setItem("superneo-volume", String(safeVolume));
     } catch {
       // Playback still works when storage is unavailable in private contexts.
     }
   };
+
+  useEffect(() => {
+    const query = window.matchMedia(deviceVolumeMedia);
+    const updateMode = () => setDeviceVolume(query.matches);
+    updateMode();
+    query.addEventListener("change", updateMode);
+    return () => query.removeEventListener("change", updateMode);
+  }, []);
+
+  useEffect(() => {
+    engineRef.current?.setVolume(deviceVolume ? 1 : volumeRef.current / 100);
+  }, [deviceVolume]);
 
   useEffect(() => {
     try {
@@ -72,8 +93,15 @@ export function SoundtrackController({ stage }: SoundtrackControllerProps) {
   }, []);
 
   useEffect(() => {
-    engineRef.current?.setStage(stage);
-  }, [stage]);
+    const syncStage = (event: Event) => {
+      const { stage } = (event as CustomEvent<StageChangeDetail>).detail;
+      stageRef.current = stage;
+      engineRef.current?.setStage(stage);
+    };
+
+    window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
+    return () => window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
+  }, []);
 
   useEffect(() => {
     const playTipArrivals = (event: Event) => {
@@ -123,6 +151,7 @@ export function SoundtrackController({ stage }: SoundtrackControllerProps) {
     <section
       className="soundtrack-control"
       data-playing={playing}
+      data-mode={deviceVolume ? "device" : "trim"}
       data-no-scene="true"
       aria-label="Soundtrack controls"
     >
@@ -130,25 +159,29 @@ export function SoundtrackController({ stage }: SoundtrackControllerProps) {
         className="soundtrack-toggle"
         type="button"
         onClick={togglePlayback}
-        disabled={!supported}
+        disabled={!supported || starting}
+        aria-busy={starting}
+        aria-controls={deviceVolume ? undefined : "soundtrack-volume"}
         aria-label={playing ? "Pause soundtrack" : "Play soundtrack"}
         aria-pressed={playing}
       >
         <span className="soundtrack-ready-icon" aria-hidden="true">♫</span>
         <span className="soundtrack-bars" aria-hidden="true"><i /><i /><i /></span>
       </button>
-      <label className="soundtrack-volume">
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value={volume}
-          onChange={(event) => setVolume(Number(event.currentTarget.value))}
-          aria-label="Soundtrack volume"
-          aria-valuetext={`${volume} percent`}
-        />
-      </label>
+      {!deviceVolume && (
+        <label id="soundtrack-volume" className="soundtrack-volume">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={volume}
+            onChange={(event) => setVolume(Number(event.currentTarget.value))}
+            aria-label="Soundtrack volume"
+            aria-valuetext={`${volume} percent`}
+          />
+        </label>
+      )}
     </section>
   );
-}
+});

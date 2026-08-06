@@ -1,6 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { LatentField } from "./LatentField";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { SoundtrackController } from "./Soundtrack";
+import { toStageProgress } from "./morphTimeline";
+import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
+
+const LatentField = lazy(() =>
+  import("./LatentField").then(({ LatentField: field }) => ({ default: field })),
+);
 
 const stages = [
   { title: "LATENT", line: "Possibility, compressed." },
@@ -18,30 +30,38 @@ function renderStageMeter(progress: number) {
   return "█".repeat(filled) + head + "░".repeat(12 - filled - head.length);
 }
 
-function ProcessTrace({ stage }: { stage: number }) {
+function ProcessTrace() {
   const iterationRef = useRef<HTMLOutputElement>(null);
   const deltaRef = useRef<HTMLOutputElement>(null);
   const bitsRef = useRef<HTMLOutputElement>(null);
   const motionScopeRef = useRef<HTMLOutputElement>(null);
+  const phaseRef = useRef<HTMLOutputElement>(null);
   const blockRefs = useRef<Array<HTMLOutputElement | null>>([]);
   const percentRefs = useRef<Array<HTMLOutputElement | null>>([]);
 
   useEffect(() => {
     let scrollFrame = 0;
+    let scrollRange = 1;
+    let previousPercentage = -1;
     const scopeGlyphs = "▁▂▃▄▅▆▇█";
     const scopeSamples = new Array<number>(12).fill(0);
 
-    const syncScrollProgress = () => {
-      scrollFrame = 0;
-      const scrollRange = Math.max(
+    const updateScrollRange = () => {
+      scrollRange = Math.max(
         document.documentElement.scrollHeight - window.innerHeight,
         1,
       );
+    };
+
+    const syncScrollProgress = () => {
+      scrollFrame = 0;
       const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
       const percentage = Math.round(progress * 100);
+      if (percentage === previousPercentage) return;
+      previousPercentage = percentage;
       const binary = percentage.toString(2).padStart(24, "0");
       progressStages.forEach((_, index) => {
-        const stageProgress = Math.min(1, Math.max(0, progress * 4 - index));
+        const stageProgress = toStageProgress(progress, index);
         const stagePercentage = Math.round(stageProgress * 100);
         const blocks = renderStageMeter(stageProgress);
         if (blockRefs.current[index]) blockRefs.current[index].value = blocks;
@@ -77,13 +97,23 @@ function ProcessTrace({ stage }: { stage: number }) {
       }
     };
 
+    const syncStage = (event: Event) => {
+      const { stage } = (event as CustomEvent<StageChangeDetail>).detail;
+      if (phaseRef.current) phaseRef.current.value = `0${stage + 1}`;
+    };
+
+    updateScrollRange();
     syncScrollProgress();
     window.addEventListener("scroll", queueScrollProgress, { passive: true });
+    window.addEventListener("resize", updateScrollRange, { passive: true });
     window.addEventListener("superneo:motion", syncMotion);
+    window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
     return () => {
       window.cancelAnimationFrame(scrollFrame);
       window.removeEventListener("scroll", queueScrollProgress);
+      window.removeEventListener("resize", updateScrollRange);
       window.removeEventListener("superneo:motion", syncMotion);
+      window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
     };
   }, []);
 
@@ -94,12 +124,8 @@ function ProcessTrace({ stage }: { stage: number }) {
       aria-label="Live system status and soundtrack controls"
     >
       <div className="process-head">
-        <div className="process-readouts" aria-hidden="true">
-          <span className="process-state"><i /> FORM / LIVE</span>
-          <span>ITER <output ref={iterationRef}>0024</output></span>
-          <span>Δ <output ref={deltaRef}>0.031</output></span>
-        </div>
-        <SoundtrackController stage={stage} />
+        <span className="process-state" aria-hidden="true"><i /> FORM / LIVE</span>
+        <SoundtrackController />
       </div>
       <span className="bit-loader" aria-hidden="true">
         <output ref={bitsRef}>00000000 00000000 00000000</output>
@@ -122,55 +148,103 @@ function ProcessTrace({ stage }: { stage: number }) {
           ))}
         </div>
         <div className="signal-monitor">
-          <span>MOTION</span>
-          <output className="motion-scope" ref={motionScopeRef}>▁▁▁▁▁▁▁▁▁▁▁▁</output>
-          <span className="signal-phase">PHASE <output>0{stage + 1}</output></span>
+          <div className="signal-readouts">
+            <span>ITER <output ref={iterationRef}>0024</output></span>
+            <span>Δ <output ref={deltaRef}>0.031</output></span>
+            <span>PHASE <output ref={phaseRef}>01</output></span>
+          </div>
+          <div className="signal-activity">
+            <span>MOTION</span>
+            <output className="motion-scope" ref={motionScopeRef}>▁▁▁▁▁▁▁▁▁▁▁▁</output>
+          </div>
         </div>
       </div>
     </aside>
   );
 }
 
+function StagePanel() {
+  const stackRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef<HTMLParagraphElement>(null);
+  const lineRef = useRef<HTMLParagraphElement>(null);
+  const headingRefs = useRef<Array<HTMLHeadingElement | null>>([]);
+
+  useEffect(() => {
+    const syncStage = (event: Event) => {
+      const { stage, previous } = (event as CustomEvent<StageChangeDetail>).detail;
+      if (stackRef.current) {
+        stackRef.current.dataset.direction = stage > previous ? "forward" : "backward";
+      }
+      if (indexRef.current) indexRef.current.textContent = `0${stage + 1} / 04`;
+      if (lineRef.current) lineRef.current.textContent = stages[stage].line;
+
+      headingRefs.current.forEach((heading, index) => {
+        if (!heading) return;
+        heading.dataset.state = index === stage
+          ? "active"
+          : index < stage ? "complete" : "pending";
+        heading.dataset.depth = String(index - stage);
+        if (index === stage) heading.setAttribute("aria-current", "step");
+        else heading.removeAttribute("aria-current");
+      });
+    };
+
+    window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
+    return () => {
+      window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
+    };
+  }, []);
+
+  return (
+    <section className="stage-panel" aria-live="polite">
+      <p className="stage-index" ref={indexRef}>01 / 04</p>
+      <div className="stage-stack" data-direction="forward" ref={stackRef}>
+        {stages.map((item, index) => (
+          <h2
+            key={item.title}
+            ref={(element) => { headingRefs.current[index] = element; }}
+            data-label={item.title}
+            data-state={index === 0 ? "active" : "pending"}
+            data-depth={index}
+            data-order={index}
+            aria-label={item.title}
+            aria-current={index === 0 ? "step" : undefined}
+          >
+            <span className="stage-outline" aria-hidden="true">{item.title}</span>
+            <span className="stage-word">
+              {item.title === "SUPERNEO" ? (
+                <>SUPER<span className="neo-accent">NEO</span></>
+              ) : item.title}
+            </span>
+          </h2>
+        ))}
+      </div>
+      <p className="stage-line" ref={lineRef}>{stages[0].line}</p>
+    </section>
+  );
+}
+
 export function App() {
   const [discovered, setDiscovered] = useState(false);
-  const [stage, setStage] = useState(0);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
-  const handleStageChange = useCallback((nextStage: number) => setStage(nextStage), []);
-  const activeStage = stages[stage];
 
   return (
     <main className="experience">
-      <LatentField onDiscover={handleDiscover} onStageChange={handleStageChange} />
+      <Suspense fallback={<div className="signal-fallback" aria-hidden="true" />}>
+        <LatentField onDiscover={handleDiscover} />
+      </Suspense>
       <div className="technical-frame" aria-hidden="true" />
 
       <header className="site-header">
         <h1>superneo.ai</h1>
         <div className="header-instruments">
-          <ProcessTrace stage={stage} />
+          <ProcessTrace />
         </div>
       </header>
 
       <p className="making-line">in the making.</p>
 
-      <section className="stage-panel" aria-live="polite">
-        <p className="stage-index">0{stage + 1} / 04</p>
-        <div className="stage-stack">
-          {stages.map((item, index) => (
-            <h2
-              key={item.title}
-              data-state={index === stage ? "active" : index < stage ? "complete" : "pending"}
-              data-depth={index - stage}
-              data-order={index}
-              aria-current={index === stage ? "step" : undefined}
-            >
-              {item.title === "SUPERNEO" ? (
-                <>SUPER<span className="neo-accent">NEO</span></>
-              ) : item.title}
-            </h2>
-          ))}
-        </div>
-        <p className="stage-line">{activeStage.line}</p>
-      </section>
+      <StagePanel />
 
       <div className="scroll-rail" aria-hidden="true">
         <span className="scroll-rail-fill" />

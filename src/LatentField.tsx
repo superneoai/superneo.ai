@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
@@ -18,7 +17,11 @@ import {
   surfaceFragmentShader,
   surfaceVertexShader,
 } from "./latentShader";
-import { createMorphGeometry } from "./morphGeometry";
+import { createMorphGeometry, createPointGeometry } from "./morphGeometry";
+import { toMorphPhase, toStageIndex } from "./morphTimeline";
+import { createRenderProfile } from "./renderProfile";
+import { createFrameProbe } from "./frameProbe";
+import { dispatchStageChange } from "./stageSignal";
 import {
   createTipArrivals,
   SIGNAL_PROGRESS_PER_SECOND,
@@ -29,22 +32,28 @@ gsap.registerPlugin(ScrollTrigger);
 
 type LatentFieldProps = {
   onDiscover: () => void;
-  onStageChange: (stage: number) => void;
 };
 
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
-
-
-export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
+export function LatentField({ onDiscover }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
+  const desktopArtworkUrl = new URL("latent-field.jpg", document.baseURI).href;
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
+    let renderProfile = createRenderProfile(
+      Math.max(host.clientWidth, 1),
+      Math.max(host.clientHeight, 1),
+      window.devicePixelRatio || 1,
+      coarsePointer.matches,
+    );
     let renderer: THREE.WebGLRenderer;
 
     try {
@@ -78,6 +87,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     const press = { value: 0 };
     const timeUniform = { value: 0 };
     const scrollUniform = { value: 0 };
+    const stagePhaseUniform = { value: 0 };
     const velocity = { value: 0 };
     const signalProgressValues = new Float32Array(MAX_ACTIVE_SIGNALS).fill(SIGNAL_LIFETIME);
     const clickAlongValues = new Float32Array(MAX_ACTIVE_SIGNALS).fill(0.5);
@@ -85,6 +95,10 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     const signalProgressUniform = { value: signalProgressValues };
     const clickAlongUniform = { value: clickAlongValues };
     const signalVariationUniform = { value: signalVariationValues };
+    const signalColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--signal")
+      .trim() || "#baf628";
+    const signalColorUniform = { value: new THREE.Color(signalColor) };
     const sharedUniforms = {
       uPointerWorld: pointerWorld,
       uPointerDelta: pointerDelta,
@@ -93,10 +107,12 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       uPress: press,
       uTime: timeUniform,
       uScroll: scrollUniform,
+      uStagePhase: stagePhaseUniform,
       uVelocity: velocity,
       uSignalProgress: signalProgressUniform,
       uClickAlong: clickAlongUniform,
       uSignalVariation: signalVariationUniform,
+      uSignalColor: signalColorUniform,
     };
 
     const backgroundGeometry = new THREE.PlaneGeometry(1, 1);
@@ -105,6 +121,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         uArtwork: { value: artwork },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uArtworkResolution: { value: new THREE.Vector2(1536, 1024) },
+        uCompactLayout: { value: renderProfile.compact ? 1 : 0 },
         uPointerScreen: pointerScreen,
         uPointerStrength: pointerStrength,
         uPointerMotion: pointerMotion,
@@ -112,6 +129,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         uTime: timeUniform,
         uScroll: scrollUniform,
         uVelocity: velocity,
+        uSignalColor: signalColorUniform,
       },
       vertexShader: backgroundVertexShader,
       fragmentShader: backgroundFragmentShader,
@@ -123,7 +141,8 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     background.renderOrder = 0;
     scene.add(background);
 
-    const geometry = createMorphGeometry(window.innerWidth < 720);
+    const geometry = createMorphGeometry(renderProfile.compact);
+    const pointGeometry = createPointGeometry(geometry);
     const surfaceMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...sharedUniforms,
@@ -205,8 +224,8 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     const echoPast = new THREE.Mesh(geometry, echoPastMaterial);
     const echoFuture = new THREE.Mesh(geometry, echoFutureMaterial);
     const surface = new THREE.Mesh(geometry, surfaceMaterial);
-    const particles = new THREE.Points(geometry, particleMaterial);
-    const halo = new THREE.Points(geometry, haloMaterial);
+    const particles = new THREE.Points(pointGeometry, particleMaterial);
+    const halo = new THREE.Points(pointGeometry, haloMaterial);
     halo.renderOrder = 1;
     echoPast.renderOrder = 2;
     echoFuture.renderOrder = 3;
@@ -216,26 +235,55 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     scene.add(objectGroup);
 
     const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(
-      new URL("latent-field.avif", document.baseURI).href,
-      (texture) => {
-        if (disposed) {
-          texture.dispose();
-          return;
-        }
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
-        backgroundMaterial.uniforms.uArtwork.value = texture;
-        artwork.dispose();
-        needsRender = true;
-      },
-      undefined,
-      () => {
-        needsRender = true;
-      },
-    );
+    const artworkPaths = renderProfile.compact
+      ? ["latent-field-mobile.jpg"]
+      : ["latent-field.avif", "latent-field.jpg"];
+    const showArtworkFallback = () => {
+      background.visible = false;
+      renderer.setClearColor(0x030403, 1);
+      host.classList.add("has-background-fallback");
+      needsRender = true;
+    };
+    const loadArtwork = (candidateIndex: number) => {
+      const artworkPath = artworkPaths[candidateIndex];
+      textureLoader.load(
+        new URL(artworkPath, document.baseURI).href,
+        (texture) => {
+          if (disposed) {
+            texture.dispose();
+            return;
+          }
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.anisotropy = Math.min(
+            renderer.capabilities.getMaxAnisotropy(),
+            renderProfile.compact ? 2 : 4,
+          );
+          const textureImage = texture.image as HTMLImageElement;
+          const artworkWidth = textureImage.naturalWidth || textureImage.width || 1;
+          const artworkHeight = textureImage.naturalHeight || textureImage.height || 1;
+          backgroundMaterial.uniforms.uArtworkResolution.value.set(
+            artworkWidth,
+            artworkHeight,
+          );
+          backgroundMaterial.uniforms.uArtwork.value = texture;
+          artwork.dispose();
+          host.classList.remove("has-background-fallback");
+          needsRender = true;
+        },
+        undefined,
+        () => {
+          if (disposed) return;
+          if (candidateIndex + 1 < artworkPaths.length) {
+            loadArtwork(candidateIndex + 1);
+            return;
+          }
+          showArtworkFallback();
+        },
+      );
+    };
+    loadArtwork(0);
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.24, 0.48, 0.38);
@@ -245,6 +293,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         uResolution: { value: new THREE.Vector2(1, 1) },
         uInteraction: { value: 0 },
         uStage: { value: 0 },
+        uSignalColor: signalColorUniform,
       },
       vertexShader: postVertexShader,
       fragmentShader: asciiDitherPostFragmentShader,
@@ -275,6 +324,12 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     let discovered = false;
     let disposed = false;
     let needsRender = true;
+    let resizeTimer: number | null = null;
+    let lastViewportWidth = 0;
+    let lastViewportHeight = 0;
+    let lastPixelRatio = 0;
+    const frameProbe = createFrameProbe();
+    const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
 
     const discover = () => {
       if (discovered) return;
@@ -283,18 +338,43 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     };
 
     const resize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, width < 720 ? 1 : 1.35);
-      renderer.setPixelRatio(pixelRatio);
-      renderer.setSize(width, height, false);
-      composer.setPixelRatio(pixelRatio);
-      composer.setSize(width, height);
+      const width = Math.max(Math.round(host.clientWidth), 1);
+      const height = Math.max(Math.round(host.clientHeight), 1);
+      const nextRenderProfile = createRenderProfile(
+        width,
+        height,
+        window.devicePixelRatio || 1,
+        coarsePointer.matches,
+      );
+      const { pixelRatio } = nextRenderProfile;
+      const sizeChanged = width !== lastViewportWidth ||
+        height !== lastViewportHeight ||
+        Math.abs(pixelRatio - lastPixelRatio) > 0.001;
+      const profileChanged = nextRenderProfile.compact !== renderProfile.compact ||
+        nextRenderProfile.bloomEnabled !== renderProfile.bloomEnabled ||
+        Math.abs(nextRenderProfile.objectScale - renderProfile.objectScale) > 0.001 ||
+        Math.abs(nextRenderProfile.fov - renderProfile.fov) > 0.001;
+      if (!sizeChanged && !profileChanged) return;
+      renderProfile = nextRenderProfile;
+      if (sizeChanged) {
+        renderer.setPixelRatio(pixelRatio);
+        renderer.setSize(width, height, false);
+        composer.setPixelRatio(pixelRatio);
+        composer.setSize(width, height);
+        lastViewportWidth = width;
+        lastViewportHeight = height;
+        lastPixelRatio = pixelRatio;
+      }
       camera.aspect = width / Math.max(height, 1);
-      camera.fov = width < 720 ? 39 : 32;
+      camera.fov = renderProfile.fov;
       camera.updateProjectionMatrix();
-      objectGroup.scale.setScalar(width < 720 ? 0.86 : 1);
+      objectGroup.scale.setScalar(renderProfile.objectScale);
       objectGroup.updateMatrixWorld(true);
+      bloomPass.enabled = renderProfile.bloomEnabled;
+      echoPastMaterial.uniforms.uSurfaceOpacity.value = renderProfile.compact ? 0.18 : 0.2;
+      echoFutureMaterial.uniforms.uSurfaceOpacity.value = renderProfile.compact ? 0.14 : 0.16;
+      haloMaterial.uniforms.uOpacity.value = renderProfile.compact ? 0.18 : 0.22;
+      particleMaterial.uniforms.uPointScale.value = renderProfile.compact ? 0.96 : 1;
       particleMaterial.uniforms.uPixelRatio.value = pixelRatio;
       const backgroundDistance = camera.position.z - background.position.z;
       const backgroundHeight =
@@ -304,8 +384,17 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         width * pixelRatio,
         height * pixelRatio,
       );
+      backgroundMaterial.uniforms.uCompactLayout.value = renderProfile.compact ? 1 : 0;
       asciiPass.uniforms.uResolution.value.set(width * pixelRatio, height * pixelRatio);
       needsRender = true;
+    };
+
+    const scheduleResize = () => {
+      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        resizeTimer = null;
+        resize();
+      }, 120);
     };
 
     const projectPointer = (event: PointerEvent) => {
@@ -326,7 +415,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       const target2 = geometry.getAttribute("aTarget2") as THREE.BufferAttribute;
       const target3 = geometry.getAttribute("aTarget3") as THREE.BufferAttribute;
       const along = geometry.getAttribute("aAlong") as THREE.BufferAttribute;
-      const phase = THREE.MathUtils.clamp(scrollUniform.value, 0, 1) * 3;
+      const phase = stagePhaseUniform.value;
       const from = phase < 1 ? base : phase < 2 ? target1 : target2;
       const to = phase < 1 ? target1 : phase < 2 ? target2 : target3;
       const localPhase = phase < 1 ? phase : phase < 2 ? phase - 1 : phase - 2;
@@ -415,20 +504,21 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       onUpdate: () => {
         const progress = scrollState.progress;
         scrollUniform.value = progress;
-        const nextStage = Math.min(3, Math.floor(progress * 3.999));
+        stagePhaseUniform.value = toMorphPhase(progress);
+        const nextStage = toStageIndex(progress);
         if (nextStage !== currentStage) {
+          const previousStage = currentStage;
           currentStage = nextStage;
-          onStageChange(nextStage);
-          targetVelocity = Math.max(targetVelocity, 0.4);
+          dispatchStageChange(nextStage, previousStage);
         }
-        document.documentElement.style.setProperty("--scroll-progress", progress.toFixed(4));
+        if (scrollRailFill) scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
         needsRender = true;
       },
       scrollTrigger: {
         trigger: document.documentElement,
         start: "top top",
         end: "bottom bottom",
-        scrub: reducedMotion.matches ? false : 0.52,
+        scrub: true,
         invalidateOnRefresh: true,
         fastScrollEnd: 2800,
         onUpdate: (self) => {
@@ -437,17 +527,6 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         },
       },
     });
-
-    const lenis = reducedMotion.matches
-      ? null
-      : new Lenis({
-        lerp: 0.095,
-        smoothWheel: true,
-        wheelMultiplier: 0.86,
-        touchMultiplier: 1.05,
-      });
-    const handleLenisScroll = () => ScrollTrigger.update();
-    if (lenis) lenis.on("scroll", handleLenisScroll);
 
     const renderFrame = (time: number) => {
       if (disposed || document.hidden) return;
@@ -480,8 +559,13 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
         );
       }
       timeUniform.value = reducedMotion.matches ? 8 : time;
+      const openTransition = THREE.MathUtils.smoothstep(scrollUniform.value, 0.68, 1);
+      const openScaleReduction = renderProfile.compact ? 0.08 : 0.05;
+      objectGroup.scale.setScalar(
+        renderProfile.objectScale * (1 - openTransition * openScaleReduction),
+      );
       if (!reducedMotion.matches) {
-        const phase = scrollUniform.value * 3;
+        const phase = stagePhaseUniform.value;
         const weight = (center: number) => {
           const distance = Math.min(1, Math.abs(phase - center));
           const smoothDistance = distance * distance * (3 - 2 * distance);
@@ -531,16 +615,18 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
           },
         }));
       }
-      bloomPass.strength = 0.16 + interactionEnergy * 0.2 + signalEnergy * 0.12;
-      bloomPass.radius = 0.4 + interactionEnergy * 0.065;
       asciiPass.uniforms.uInteraction.value = interactionEnergy * 0.68;
       asciiPass.uniforms.uStage.value = scrollUniform.value;
+      bloomPass.strength = 0.16 + interactionEnergy * 0.2 + signalEnergy * 0.12;
+      bloomPass.radius = 0.4 + interactionEnergy * 0.065;
+      const renderStarted = performance.now();
       composer.render(delta);
+      const renderEnded = performance.now();
+      frameProbe?.sample(renderEnded, renderEnded - renderStarted);
       needsRender = false;
     };
 
     const tick = (time: number) => {
-      lenis?.raf(time * 1000);
       renderFrame(time);
     };
 
@@ -554,7 +640,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     };
 
     resize();
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", scheduleResize, { passive: true });
     window.addEventListener("pointerdown", pressSurface, { passive: true });
     window.addEventListener("pointermove", setPointer, { passive: true });
     window.addEventListener("pointerup", releaseSurface, { passive: true });
@@ -562,6 +648,7 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
     window.addEventListener("pointerout", handlePointerOut, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility);
     reducedMotion.addEventListener("change", handleMotionPreference);
+    coarsePointer.addEventListener("change", scheduleResize);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
     ScrollTrigger.refresh();
@@ -571,8 +658,8 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       gsap.ticker.remove(tick);
       scrollTween.scrollTrigger?.kill();
       scrollTween.kill();
-      lenis?.destroy();
-      window.removeEventListener("resize", resize);
+      if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", scheduleResize);
       window.removeEventListener("pointerdown", pressSurface);
       window.removeEventListener("pointermove", setPointer);
       window.removeEventListener("pointerup", releaseSurface);
@@ -580,13 +667,15 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       window.removeEventListener("pointerout", handlePointerOut);
       document.removeEventListener("visibilitychange", handleVisibility);
       reducedMotion.removeEventListener("change", handleMotionPreference);
-      document.documentElement.style.removeProperty("--scroll-progress");
+      coarsePointer.removeEventListener("change", scheduleResize);
+      scrollRailFill?.style.removeProperty("transform");
       renderPass.dispose();
       bloomPass.dispose();
       asciiPass.dispose();
       outputPass.dispose();
       composer.dispose();
       geometry.dispose();
+      pointGeometry.dispose();
       backgroundGeometry.dispose();
       surfaceMaterial.dispose();
       echoPastMaterial.dispose();
@@ -598,10 +687,21 @@ export function LatentField({ onDiscover, onStageChange }: LatentFieldProps) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [onDiscover, onStageChange]);
+  }, [onDiscover]);
 
   if (failed) {
-    return <div className="signal-fallback" aria-hidden="true" />;
+    return (
+      <div className="signal-fallback" aria-hidden="true">
+        <div
+          className="signal-artwork-fallback signal-artwork-fallback--desktop"
+          style={{ backgroundImage: `url(${desktopArtworkUrl})` }}
+        />
+        <div
+          className="signal-artwork-fallback signal-artwork-fallback--mobile"
+          style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
+        />
+      </div>
+    );
   }
 
   return <div ref={hostRef} className="signal-stage" aria-hidden="true" />;
