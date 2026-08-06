@@ -1,0 +1,394 @@
+{
+  "authorityCommit": "84b94ea",
+  "testedCommit": "working-tree",
+  "browsers": {
+    "chromium": {
+      "desktop": {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "captures": [
+          "neo-full",
+          "neo-medium",
+          "neo-fault-low",
+          "stage-1",
+          "stage-2",
+          "stage-3",
+          "stage-4",
+          "transition-1",
+          "transition-2",
+          "transition-3"
+        ],
+        "geometry": {
+          "super": {
+            "x": 157.04751586914062,
+            "y": 461.06304931640625,
+            "width": 406.4757995605469,
+            "height": 116.7725830078125
+          },
+          "neo": {
+            "x": 477.1888427734375,
+            "y": 376.2431945800781,
+            "width": 447.06787109375,
+            "height": 286.1189880371094
+          },
+          "word": {
+            "x": 157.04751586914062,
+            "y": 451.8883972167969,
+            "width": 666.704345703125,
+            "height": 125.94723510742188
+          },
+          "core": {
+            "x": 572.8613671875,
+            "y": 467.4436220169067,
+            "width": 255.722822265625,
+            "height": 104.16519408226013
+          }
+        },
+        "pulse": {
+          "outsideGreen": 0.00474,
+          "routeCoverage": 0.595,
+          "tipPeak": 179.246
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8.3,
+          "p95Gap": 9.9,
+          "maxGap": 11.5,
+          "p95Render": 0.5,
+          "maxRender": 1,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 10,
+              "maxGap": 11.5,
+              "p95Render": 0.6,
+              "maxRender": 0.8,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 9.9,
+              "maxGap": 11.1,
+              "p95Render": 0.5,
+              "maxRender": 1,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 9.8,
+              "maxGap": 11.4,
+              "p95Render": 0.5,
+              "maxRender": 0.8,
+              "over25": 0,
+              "over50": 0
+            }
+          ]
+        },
+        "reducedMotionCaptured": true,
+        "audioUnlocked": true
+      },
+      "mobile": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "captures": [
+          "neo-full",
+          "neo-medium",
+          "neo-fault-low",
+          "stage-1",
+          "stage-2",
+          "stage-3",
+          "stage-4",
+          "transition-1",
+          "transition-2",
+          "transition-3"
+        ],
+        "geometry": {
+          "super": {
+            "x": 55.83638381958008,
+            "y": 641.4518432617188,
+            "width": 134.7015838623047,
+            "height": 39.14886474609375
+          },
+          "neo": {
+            "x": 162.26071166992188,
+            "y": 613.9727172851562,
+            "width": 146.39788818359375,
+            "height": 93.68927001953125
+          },
+          "word": {
+            "x": 55.83638381958008,
+            "y": 638.7399291992188,
+            "width": 219.9140167236328,
+            "height": 41.86077880859375
+          }
+        },
+        "pulse": {
+          "outsideGreen": 0.00113,
+          "routeCoverage": 0.259,
+          "tipPeak": 95.837
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8.3,
+          "p95Gap": 9.9,
+          "maxGap": 11.5,
+          "p95Render": 0.5,
+          "maxRender": 0.9,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "frames": 431,
+              "fps": 119.722,
+              "p50Gap": 8.3,
+              "p95Gap": 9.8,
+              "maxGap": 11.2,
+              "p95Render": 0.5,
+              "maxRender": 0.9,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.2,
+              "p95Gap": 10,
+              "maxGap": 11.4,
+              "p95Render": 0.5,
+              "maxRender": 0.7,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 433,
+              "fps": 120.278,
+              "p50Gap": 8.3,
+              "p95Gap": 9.9,
+              "maxGap": 11.5,
+              "p95Render": 0.5,
+              "maxRender": 0.9,
+              "over25": 0,
+              "over50": 0
+            }
+          ]
+        },
+        "reducedMotionCaptured": true,
+        "audioUnlocked": true
+      }
+    },
+    "zen": {
+      "desktop": {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "captures": [
+          "neo-full",
+          "neo-medium",
+          "neo-fault-low",
+          "stage-1",
+          "stage-2",
+          "stage-3",
+          "stage-4",
+          "transition-1",
+          "transition-2",
+          "transition-3"
+        ],
+        "geometry": {
+          "neo": {
+            "height": 286.1166687011719,
+            "width": 447.0333251953125,
+            "x": 477.1499938964844,
+            "y": 376.1666870117187
+          },
+          "super": {
+            "height": 116.76666259765624,
+            "width": 406.5,
+            "x": 156.96665954589844,
+            "y": 460.9500122070313
+          },
+          "word": {
+            "height": 125.91665649414062,
+            "width": 666.7166748046875,
+            "x": 156.96665954589844,
+            "y": 451.7999877929687
+          },
+          "core": {
+            "x": 572.8151254882813,
+            "y": 467.3663751602172,
+            "width": 255.70306201171874,
+            "height": 104.16434969902039
+          }
+        },
+        "pulse": {
+          "outsideGreen": 0.01429,
+          "routeCoverage": 0.592,
+          "tipPeak": 191.36
+        },
+        "performance": {
+          "frames": 426,
+          "fps": 118.333,
+          "p50Gap": 8,
+          "p95Gap": 11,
+          "maxGap": 19,
+          "p95Render": 1,
+          "maxRender": 5,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "fps": 118.333,
+              "frames": 426,
+              "maxGap": 19,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 2
+            },
+            {
+              "fps": 119.722,
+              "frames": 431,
+              "maxGap": 13,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 10,
+              "p95Render": 1
+            },
+            {
+              "fps": 118.333,
+              "frames": 426,
+              "maxGap": 17,
+              "maxRender": 5,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            }
+          ]
+        },
+        "reducedMotionCaptured": true,
+        "audioUnlocked": true
+      },
+      "mobile": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "captures": [
+          "neo-full",
+          "neo-medium",
+          "neo-fault-low",
+          "stage-1",
+          "stage-2",
+          "stage-3",
+          "stage-4",
+          "transition-1",
+          "transition-2",
+          "transition-3"
+        ],
+        "geometry": {
+          "neo": {
+            "height": 93.70001220703124,
+            "width": 146.39999389648438,
+            "x": 162.31666564941406,
+            "y": 613.9666748046875
+          },
+          "super": {
+            "height": 39.149993896484375,
+            "width": 134.6999969482422,
+            "x": 55.866668701171875,
+            "y": 641.1666870117188
+          },
+          "word": {
+            "height": 41.56666564941406,
+            "width": 219.9333343505859,
+            "x": 55.866668701171875,
+            "y": 638.75
+          }
+        },
+        "pulse": {
+          "outsideGreen": 0.00113,
+          "routeCoverage": 0.259,
+          "tipPeak": 96.552
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8,
+          "p95Gap": 11,
+          "maxGap": 14,
+          "p95Render": 1,
+          "maxRender": 5,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "fps": 119.722,
+              "frames": 431,
+              "maxGap": 14,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            },
+            {
+              "fps": 120,
+              "frames": 432,
+              "maxGap": 13,
+              "maxRender": 5,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 2
+            },
+            {
+              "fps": 120,
+              "frames": 432,
+              "maxGap": 12,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 10,
+              "p95Render": 1
+            }
+          ]
+        },
+        "reducedMotionCaptured": true,
+        "audioUnlocked": true
+      }
+    }
+  },
+  "neoOverlap": {
+    "desktop": {
+      "chromium/zen": 0.989
+    },
+    "mobile": {
+      "chromium/zen": 0.977
+    }
+  }
+}

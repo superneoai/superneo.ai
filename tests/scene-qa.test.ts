@@ -5,11 +5,16 @@ import { parseSceneQa } from "../src/sceneQa.ts";
 
 test("development scene QA controls accept only bounded known states", () => {
   assert.deepEqual(
-    parseSceneQa("?neoState=medium&sceneFault=shader&sceneDelay=1750"),
+    parseSceneQa(
+      "?neoState=medium&sceneFault=shader&sceneDelay=1750&freezeScene=1&reducedMotion=1&objectMask=1",
+    ),
     {
       neoState: "medium",
       sceneFault: "shader",
       sceneDelay: 1750,
+      freezeScene: true,
+      reducedMotion: true,
+      objectMask: true,
     },
   );
   assert.deepEqual(
@@ -18,12 +23,18 @@ test("development scene QA controls accept only bounded known states", () => {
       neoState: null,
       sceneFault: null,
       sceneDelay: 10_000,
+      freezeScene: false,
+      reducedMotion: false,
+      objectMask: false,
     },
   );
   assert.deepEqual(parseSceneQa("?sceneDelay=-20"), {
     neoState: null,
     sceneFault: null,
     sceneDelay: 0,
+    freezeScene: false,
+    reducedMotion: false,
+    objectMask: false,
   });
 });
 

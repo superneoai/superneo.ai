@@ -1,0 +1,221 @@
+{
+  "authorityCommit": "84b94ea",
+  "browsers": {
+    "chromium": {
+      "desktop": {
+        "pulse": {
+          "outsideGreen": 0.00487,
+          "routeCoverage": 0.595,
+          "tipPeak": 179.948
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8.3,
+          "p95Gap": 9.8,
+          "maxGap": 11.4,
+          "p95Render": 0.5,
+          "maxRender": 1.1,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 9.7,
+              "maxGap": 11.4,
+              "p95Render": 0.5,
+              "maxRender": 0.6,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 9.8,
+              "maxGap": 11.3,
+              "p95Render": 0.5,
+              "maxRender": 0.9,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 9.8,
+              "maxGap": 10.9,
+              "p95Render": 0.6,
+              "maxRender": 1.1,
+              "over25": 0,
+              "over50": 0
+            }
+          ]
+        }
+      },
+      "mobile": {
+        "pulse": {
+          "outsideGreen": 0.00114,
+          "routeCoverage": 0.254,
+          "tipPeak": 95.621
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8.3,
+          "p95Gap": 10.1,
+          "maxGap": 12.2,
+          "p95Render": 0.5,
+          "maxRender": 0.7,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 10,
+              "maxGap": 11.2,
+              "p95Render": 0.5,
+              "maxRender": 0.7,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 10.1,
+              "maxGap": 12.2,
+              "p95Render": 0.5,
+              "maxRender": 0.7,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 10.2,
+              "maxGap": 11.8,
+              "p95Render": 0.5,
+              "maxRender": 0.7,
+              "over25": 0,
+              "over50": 0
+            }
+          ]
+        }
+      }
+    },
+    "zen": {
+      "desktop": {
+        "pulse": {
+          "outsideGreen": 0.01594,
+          "routeCoverage": 0.602,
+          "tipPeak": 189.079
+        },
+        "performance": {
+          "frames": 429,
+          "fps": 119.167,
+          "p50Gap": 8,
+          "p95Gap": 11,
+          "maxGap": 18,
+          "p95Render": 2,
+          "maxRender": 4,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "fps": 120,
+              "frames": 432,
+              "maxGap": 12,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            },
+            {
+              "fps": 118.056,
+              "frames": 425,
+              "maxGap": 18,
+              "maxRender": 4,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 2
+            },
+            {
+              "fps": 119.167,
+              "frames": 429,
+              "maxGap": 17,
+              "maxRender": 3,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 2
+            }
+          ]
+        }
+      },
+      "mobile": {
+        "pulse": {
+          "outsideGreen": 0.00115,
+          "routeCoverage": 0.259,
+          "tipPeak": 96.05
+        },
+        "performance": {
+          "frames": 432,
+          "fps": 120,
+          "p50Gap": 8,
+          "p95Gap": 11,
+          "maxGap": 14,
+          "p95Render": 1,
+          "maxRender": 5,
+          "over25": 0,
+          "over50": 0,
+          "samples": [
+            {
+              "fps": 120,
+              "frames": 432,
+              "maxGap": 14,
+              "maxRender": 5,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            },
+            {
+              "fps": 120,
+              "frames": 432,
+              "maxGap": 13,
+              "maxRender": 4,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            },
+            {
+              "fps": 119.722,
+              "frames": 431,
+              "maxGap": 14,
+              "maxRender": 4,
+              "over25": 0,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 11,
+              "p95Render": 1
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -16,7 +16,7 @@ const percentile = (values: number[], ratio: number) => {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * ratio))];
 };
 
-const round = (value: number) => Math.round(value * 100) / 100;
+const round = (value: number) => Math.round(value * 1000) / 1000;
 
 export function createFrameProbe() {
   const params = new URLSearchParams(window.location.search);

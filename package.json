@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test:visual": "node tests/visual/run.mjs",
     "test": "npm run build && node --experimental-strip-types --test tests/static-build.test.mjs tests/stage-stack.test.mjs tests/neo-raster.test.mjs tests/morph-geometry.test.ts tests/morph-timeline.test.ts tests/render-profile.test.ts tests/scroll-boot.test.mjs tests/final-morph-scroll.test.mjs tests/compact-scroll-response.test.mjs tests/stage-boundary-response.test.mjs tests/render-cost.test.mjs tests/soundtrack-level.test.mjs tests/soundtrack-playback.test.ts tests/mobile-sound.test.mjs tests/tip-signal.test.ts tests/latent-stability.test.mjs tests/spectral-color.test.mjs tests/background-motion.test.mjs tests/background-compatibility.test.mjs tests/scene-qa.test.ts tests/viewport-stability.test.mjs tests/making-line.test.mjs tests/mobile-layout.test.mjs tests/metadata.test.mjs"
   },
   "dependencies": {
@@ -25,6 +26,10 @@
     "@types/react-dom": "19.2.3",
     "@types/three": "0.185.4",
     "@vitejs/plugin-react": "6.0.2",
+    "geckodriver": "6.1.1",
+    "playwright": "1.62.1",
+    "pngjs": "7.0.0",
+    "selenium-webdriver": "4.46.0",
     "typescript": "5.9.3",
     "vite": "8.2.0"
   }

@@ -49,6 +49,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     onSceneStateChange(false);
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const motionIsReduced = () => reducedMotion.matches || Boolean(qa?.reducedMotion);
     const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
     let disposed = false;
     let needsRender = true;
@@ -300,7 +301,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           backgroundMaterial.uniforms.uArtwork.value = texture;
           artwork.dispose();
           artworkReady = true;
-          background.visible = true;
+          background.visible = !qa?.objectMask;
           host.classList.remove("has-background-fallback");
           needsRender = true;
         },
@@ -560,7 +561,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
 
     const renderFrame = (time: number) => {
       if (disposed || document.hidden) return;
-      if (reducedMotion.matches && !needsRender) return;
+      if (motionIsReduced() && !needsRender) return;
 
       const timestamp = time * 1000;
       const delta = Math.min((timestamp - previousFrame) / 1000, 0.05);
@@ -588,8 +589,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           Math.sin(travelPhase * Math.PI) * (1 - travelPhase),
         );
       }
-      timeUniform.value = reducedMotion.matches ? 8 : time;
-      if (!reducedMotion.matches) {
+      timeUniform.value = motionIsReduced() || qa?.freezeScene ? 8 : time;
+      if (!motionIsReduced() && !qa?.freezeScene) {
         const phase = stagePhaseUniform.value;
         const weight = (center: number) => {
           const distance = Math.min(1, Math.abs(phase - center));
@@ -623,7 +624,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         press.value,
         velocity.value * 0.45,
       );
-      const ambientEnergy = reducedMotion.matches
+      const ambientEnergy = motionIsReduced()
         ? 0
         : 0.045 + Math.abs(Math.sin(time * 0.34)) * 0.025;
       const motionEnergy = Math.min(
