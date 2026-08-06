@@ -22,7 +22,9 @@ const stages = [
 ];
 
 const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
-const neoSignUrl = new URL("neo-sign.png?rev=b8578999", document.baseURI).href;
+const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
+const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
+const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
 const desktopArtworkUrl = new URL("latent-field.jpg", document.baseURI).href;
 const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
 
@@ -38,6 +40,53 @@ function ScenePoster() {
         style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
       />
     </div>
+  );
+}
+
+function StageWord({ title }: { title: string }) {
+  if (title !== "SUPERNEO") return <>{title}</>;
+
+  return (
+    <span className="superneo-word">
+      <span className="super-prefix">SUPER</span>
+      <span className="neo-accent">
+        <span className="neo-source" aria-hidden="true">NEO</span>
+        <img
+          className="neo-sign neo-sign--full"
+          src={neoSignFullUrl}
+          width="1000"
+          height="640"
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
+          draggable="false"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="neo-sign neo-sign--medium"
+          src={neoSignMediumUrl}
+          width="1000"
+          height="640"
+          decoding="async"
+          loading="eager"
+          draggable="false"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="neo-sign neo-sign--fault-low"
+          src={neoSignFaultLowUrl}
+          width="1000"
+          height="640"
+          decoding="async"
+          loading="eager"
+          draggable="false"
+          alt=""
+          aria-hidden="true"
+        />
+      </span>
+    </span>
   );
 }
 
@@ -208,27 +257,32 @@ function StagePanel() {
     };
 
     let disposed = false;
-    const sign = headingRefs.current[3]?.querySelector<HTMLImageElement>(".neo-sign");
-    if (sign) {
+    const signs = Array.from(
+      stackRef.current?.querySelectorAll<HTMLImageElement>(".neo-sign") ?? [],
+    );
+    if (signs.length > 0) {
       const requestedFont = document.fonts.load(
         '540 1em "Geist Variable"',
         "SUPERNEO",
       ).catch(() => []);
       const fontReady = Promise.all([requestedFont, document.fonts.ready]);
-      const imageLoaded = sign.complete && sign.naturalWidth > 0
-        ? Promise.resolve()
-        : new Promise<void>((resolve, reject) => {
-          sign.addEventListener("load", () => resolve(), { once: true });
-          sign.addEventListener("error", () => reject(new Error("NEO sign failed to load")), {
-            once: true,
+      const imagesReady = Promise.all(signs.map((sign) => {
+        const imageLoaded = sign.complete && sign.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise<void>((resolve, reject) => {
+            sign.addEventListener("load", () => resolve(), { once: true });
+            sign.addEventListener(
+              "error",
+              () => reject(new Error("NEO sign failed to load")),
+              { once: true },
+            );
           });
-        });
-      const imageReady = Promise.race([
-        sign.decode().catch(() => imageLoaded),
-        imageLoaded,
-      ]);
-      void Promise.all([imageReady, fontReady]).then(() => {
-        if (!disposed) sign.parentElement?.setAttribute("data-sign-ready", "true");
+        return Promise.race([sign.decode().catch(() => imageLoaded), imageLoaded]);
+      }));
+      void Promise.all([imagesReady, fontReady]).then(() => {
+        if (!disposed && stackRef.current) {
+          stackRef.current.dataset.signReady = "true";
+        }
       }).catch(() => undefined);
     }
     window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
@@ -246,7 +300,6 @@ function StagePanel() {
           <h2
             key={item.title}
             ref={(element) => { headingRefs.current[index] = element; }}
-            data-label={item.title}
             data-state={index === 0 ? "active" : "pending"}
             data-depth={index}
             data-order={index}
@@ -254,27 +307,14 @@ function StagePanel() {
             aria-current={index === 0 ? "step" : undefined}
           >
             <span className="stage-outline" aria-hidden="true">{item.title}</span>
-            <span className="stage-word">
-              {item.title === "SUPERNEO" ? (
-                <>
-                  SUPER
-                  <span className="neo-accent">
-                    <span className="neo-source">NEO</span>
-                    <img
-                      className="neo-sign"
-                      src={neoSignUrl}
-                      width="1000"
-                      height="640"
-                      decoding="async"
-                      loading="eager"
-                      fetchPriority="high"
-                      draggable="false"
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  </span>
-                </>
-              ) : item.title}
+            <span className="stage-trail stage-trail--near" aria-hidden="true">
+              <StageWord title={item.title} />
+            </span>
+            <span className="stage-trail stage-trail--far" aria-hidden="true">
+              <StageWord title={item.title} />
+            </span>
+            <span className="stage-word" aria-hidden="true">
+              <StageWord title={item.title} />
             </span>
           </h2>
         ))}

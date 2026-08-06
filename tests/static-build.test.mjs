@@ -42,9 +42,9 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /New structure appears between them\./);
   assert.match(app, /The structure remains open\./);
   assert.match(app, /<h1>superneo\.ai<\/h1>/);
-  assert.match(app, /className="neo-source">NEO<\/span>/);
-  assert.match(app, /className="neo-sign"/);
-  assert.match(app, /src=\{neoSignUrl\}/);
+  assert.match(app, /className="neo-source"[^>]*>NEO<\/span>/);
+  assert.match(app, /neo-sign neo-sign--full/);
+  assert.match(app, /src=\{neoSignFullUrl\}/);
   assert.doesNotMatch(app, /data-text="NEO"|className="neo-core"/);
   assert.match(app, /<SoundtrackController \/>/);
   assert.match(app, /className="process-head"/);
@@ -210,7 +210,9 @@ test("builds a complete GitHub Pages artifact", async () => {
   await access(new URL("../dist/latent-field.avif", import.meta.url));
   await access(new URL("../dist/latent-field.jpg", import.meta.url));
   await access(new URL("../dist/latent-field-mobile.jpg", import.meta.url));
-  await access(new URL("../dist/neo-sign.png", import.meta.url));
+  await access(new URL("../dist/neo-sign-full.png", import.meta.url));
+  await access(new URL("../dist/neo-sign-medium.png", import.meta.url));
+  await access(new URL("../dist/neo-sign-fault-low.png", import.meta.url));
   await access(new URL("../dist/robots.txt", import.meta.url));
   await access(new URL("../dist/sitemap.xml", import.meta.url));
 });
@@ -225,7 +227,9 @@ test("keeps the generated asset paths relative", async () => {
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /focus-visible/);
   assert.match(css, /scroll-rail-fill/);
-  assert.match(css, /neo-neon-fault/);
+  assert.match(css, /neo-state-full/);
+  assert.match(css, /neo-state-medium/);
+  assert.match(css, /neo-state-fault-low/);
   assert.doesNotMatch(css, /gecko-neon-aura/);
   assert.match(css, /soundtrack-control/);
   assert.match(css, /soundtrack-control:hover/);

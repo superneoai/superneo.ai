@@ -618,14 +618,12 @@ a {
   transition: none;
 }
 
-.stage-stack h2::before,
-.stage-stack h2::after {
+.stage-trail {
   position: absolute;
   top: 0.08em;
   left: 0.035em;
   z-index: 0;
   color: color-mix(in oklch, var(--bone) 70%, var(--signal));
-  content: attr(data-label);
   opacity: 0;
   pointer-events: none;
   text-shadow: none;
@@ -633,11 +631,11 @@ a {
   -webkit-text-stroke: 0.006em color-mix(in oklch, var(--signal) 22%, transparent);
 }
 
-.stage-stack h2::before {
+.stage-trail--near {
   color: color-mix(in oklch, var(--bone) 76%, var(--signal));
 }
 
-.stage-stack h2::after {
+.stage-trail--far {
   color: color-mix(in oklch, var(--signal) 72%, var(--bone));
 }
 
@@ -651,12 +649,12 @@ a {
   display: none;
 }
 
-.stage-stack h2[data-state="active"]::before {
+.stage-stack h2[data-state="active"] .stage-trail--near {
   animation: stage-trail-near 470ms cubic-bezier(0.2, 0.8, 0.25, 1) both;
   will-change: opacity, transform;
 }
 
-.stage-stack h2[data-state="active"]::after {
+.stage-stack h2[data-state="active"] .stage-trail--far {
   animation: stage-trail-far 640ms cubic-bezier(0.16, 0.72, 0.22, 1) both;
   will-change: opacity, transform;
 }
@@ -745,41 +743,58 @@ a {
 .stage-stack .neo-accent {
   position: relative;
   display: inline-block;
+  width: 1.872em;
+  height: 0.84em;
   margin-left: 0;
   color: var(--signal);
+  overflow: visible;
+  vertical-align: -0.04em;
   -webkit-text-stroke: 0.006em var(--signal);
   text-shadow: none;
   animation: none;
-  will-change: opacity;
-}
-
-.stage-stack h2[data-state="active"] .neo-accent {
-  animation: neo-neon-fault 5.8s steps(1, end) infinite;
 }
 
 .neo-source {
+  position: absolute;
+  top: 50%;
+  left: 0.051em;
+  line-height: 0.84;
   visibility: visible;
+  transform: translateY(-50%);
 }
 
 .neo-sign {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: calc(50% + 0.051em);
   display: block;
-  width: 3.04em;
+  width: 3.216em;
   height: auto;
   max-width: none;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -50%);
+  will-change: opacity;
 }
 
-.neo-accent[data-sign-ready="true"] .neo-source {
+.stage-stack[data-sign-ready="true"] .neo-source {
   visibility: hidden;
 }
 
-.neo-accent[data-sign-ready="true"] .neo-sign {
+.stage-stack[data-sign-ready="true"] .neo-sign--full {
   opacity: 1;
+}
+
+.stage-stack[data-sign-ready="true"] h2[data-state="active"] .stage-word .neo-sign--full {
+  animation: neo-state-full 5.8s steps(1, end) infinite;
+}
+
+.stage-stack[data-sign-ready="true"] h2[data-state="active"] .stage-word .neo-sign--medium {
+  animation: neo-state-medium 5.8s steps(1, end) infinite;
+}
+
+.stage-stack[data-sign-ready="true"] h2[data-state="active"] .stage-word .neo-sign--fault-low {
+  animation: neo-state-fault-low 5.8s steps(1, end) infinite;
 }
 
 .stage-line {
@@ -1023,42 +1038,49 @@ a {
   }
 }
 
-@keyframes neo-neon-fault {
+@keyframes neo-state-full {
   0%,
   6.4%,
-  7.7%,
-  8.6%,
-  9.9%,
-  38%,
-  40.6%,
+  7.2%,
+  7.6%,
+  8.1%,
+  37%,
+  38.4%,
   72%,
-  74.9%,
+  74%,
   100% {
     opacity: 1;
   }
 
-  6.5%,
-  7.6%,
+  6.5%, 7.1%,
+  7.7%, 8%,
+  37.1%, 38.3%,
+  72.1%, 73.9% {
+    opacity: 0;
+  }
+}
+
+@keyframes neo-state-medium {
+  0%, 37.9%, 38.4%, 73.5%, 74%, 100% {
+    opacity: 0;
+  }
+
+  38%, 38.3%, 73.6%, 73.9% {
+    opacity: 1;
+  }
+}
+
+@keyframes neo-state-fault-low {
+  0%, 6.4%, 7.2%, 7.6%, 8.1%, 37%, 38%, 72%, 73.6%, 100% {
+    opacity: 0;
+  }
+
+  6.5%, 7.1%,
+  7.7%, 8%,
+  37.1%, 37.9%,
   72.1%,
   73.5% {
-    opacity: 0.42;
-  }
-
-  8.7%,
-  9.8% {
-    opacity: 0.66;
-  }
-
-  38.1%,
-  39.4% {
-    opacity: 0.58;
-  }
-
-  39.5%,
-  40.5%,
-  73.6%,
-  74.8% {
-    opacity: 0.84;
+    opacity: 1;
   }
 }
 
@@ -1130,108 +1152,6 @@ a {
     opacity: 0.76;
     transform: scaleY(0.44);
   }
-}
-
-@keyframes gecko-stage-trail-near {
-  from {
-    opacity: 0.42;
-    transform: translate3d(var(--trail-near-x), var(--trail-near-y), 0) scale(0.992);
-  }
-
-  to {
-    opacity: 0.004;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes gecko-stage-trail-far {
-  from {
-    opacity: 0.26;
-    transform: translate3d(var(--trail-far-x), var(--trail-far-y), 0) scale(0.982);
-  }
-
-  to {
-    opacity: 0.004;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@supports (-moz-appearance: none) {
-  .stage-stack h2 {
-    color: transparent !important;
-    opacity: 1 !important;
-    text-shadow: none;
-    -webkit-text-stroke: 0 transparent !important;
-    will-change: transform;
-  }
-
-  .stage-stack h2[data-order="0"] {
-    --outline-opacity: 0.3;
-    z-index: 1;
-  }
-
-  .stage-stack h2[data-order="1"] {
-    --outline-opacity: 0.35;
-    z-index: 2;
-  }
-
-  .stage-stack h2[data-order="2"] {
-    --outline-opacity: 0.42;
-    z-index: 3;
-  }
-
-  .stage-stack h2[data-order="3"] {
-    --outline-opacity: 0.42;
-    z-index: 4;
-  }
-
-  .stage-stack h2::before,
-  .stage-stack h2::after {
-    opacity: 0.004;
-    will-change: opacity, transform;
-  }
-
-  .stage-stack h2[data-state="active"]::before {
-    animation-name: gecko-stage-trail-near;
-  }
-
-  .stage-stack h2[data-state="active"]::after {
-    animation-name: gecko-stage-trail-far;
-  }
-
-  .stage-outline {
-    position: absolute;
-    top: 0.08em;
-    left: 0.035em;
-    z-index: 0;
-    display: block;
-    color: transparent;
-    opacity: 0.004;
-    pointer-events: none;
-    text-shadow: none;
-    white-space: nowrap;
-    transform: translate3d(0, 0, 0);
-    -webkit-text-stroke: 0.01em color-mix(in oklch, var(--bone) 68%, transparent);
-    will-change: opacity, transform;
-  }
-
-  .stage-stack .stage-word {
-    color: var(--bone);
-    opacity: 0.004;
-    text-shadow: none;
-    transform: translate3d(0, 0, 0);
-    -webkit-text-stroke: 0 transparent;
-    will-change: opacity, transform;
-  }
-
-  .stage-stack h2[data-state="complete"] .stage-outline {
-    opacity: var(--outline-opacity);
-  }
-
-  .stage-stack h2[data-state="active"] .stage-word {
-    opacity: 1;
-  }
-
 }
 
 @media (max-width: 720px) {
@@ -1637,16 +1557,24 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .stage-panel,
-  .stage-stack .neo-accent,
-  .stage-stack h2::before,
-  .stage-stack h2::after,
+  .stage-trail,
   .stage-stack .stage-word,
+  .neo-sign,
   .status-dot,
   .scroll-cue i::after,
   .process-state > i,
   .bit-loader i,
   .soundtrack-bars i {
     animation: none;
+  }
+
+  .stage-stack[data-sign-ready="true"] .neo-sign--full {
+    opacity: 1;
+  }
+
+  .stage-stack[data-sign-ready="true"] .neo-sign--medium,
+  .stage-stack[data-sign-ready="true"] .neo-sign--fault-low {
+    opacity: 0;
   }
 
   .contact-link::after,
