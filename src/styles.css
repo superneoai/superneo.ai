@@ -743,6 +743,7 @@ a {
 .superneo-word {
   display: inline-flex;
   align-items: baseline;
+  transform: translateY(-0.065em);
 }
 
 .stage-stack .neo-accent {

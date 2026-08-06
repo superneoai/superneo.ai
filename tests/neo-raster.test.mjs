@@ -112,18 +112,61 @@ test("the deterministic slot projects the NEO core onto the Safari reference", a
   const slotEm = Number(styles.match(/width:\s*(1\.872)em/)?.[1]);
   const artboardEm = Number(styles.match(/width:\s*(3\.216)em/)?.[1]);
   const opticalEm = Number(styles.match(/left:\s*calc\(50% \+ (0\.051)em\)/)?.[1]);
+  const wordShiftEm = Number(styles.match(/\.superneo-word\s*{[^}]*translateY\((-0\.065)em\)/s)?.[1]);
+  const neoShiftEm = Number(styles.match(/\.stage-stack \.neo-accent\s*{[^}]*translateY\((0\.065)em\)/s)?.[1]);
   const fontSize = 1280 * 0.107;
   const activeScale = 1.015;
   const artboardWidth = artboardEm * fontSize * activeScale;
+  const artboardHeight = artboardWidth * 640 / 1000;
   const slotWidth = slotEm * fontSize * activeScale;
   const coreWidth = artboardWidth * 572 / 1000;
   const coreHeight = artboardWidth * 233 / 1000;
   const slotLeft = 564.0382;
+  const artboardTop = 376.7009 + (wordShiftEm + neoShiftEm) * fontSize * activeScale;
   const coreLeft = slotLeft + slotWidth / 2 + opticalEm * fontSize * activeScale - coreWidth / 2;
+  const coreTop = artboardTop + artboardHeight * 204 / 640;
 
   assert.ok(Math.abs(coreWidth - 256) / 256 <= 0.01, `projected width is ${coreWidth}`);
   assert.ok(Math.abs(coreHeight - 104) / 104 <= 0.01, `projected height is ${coreHeight}`);
   assert.ok(Math.abs(coreLeft - 573) <= 2, `projected left edge is ${coreLeft}`);
+  assert.ok(Math.abs(coreTop - 467) <= 2, `projected top edge is ${coreTop}`);
+});
+
+test("the projected NEO pixels overlap the authoritative Safari mask", async () => {
+  const fixture = JSON.parse(await readFile(
+    new URL("./fixtures/neo-safari-mask.json", import.meta.url),
+    "utf8",
+  ));
+  const packed = inflateSync(Buffer.from(fixture.data, "base64"));
+  const reference = new Uint8Array(fixture.region[2] * fixture.region[3]);
+  for (let index = 0; index < reference.length; index += 1) {
+    reference[index] = (packed[index >> 3] >> (7 - (index & 7))) & 1;
+  }
+
+  const png = await readFile(new URL("../public/neo-sign-full.png", import.meta.url));
+  const { width, height, rgba } = decodeRgbaPng(png);
+  const artboardWidth = 256 * 1000 / 572;
+  const artboardHeight = artboardWidth * height / width;
+  const artboardLeft = 573 - artboardWidth * 214 / width;
+  const artboardTop = 467 - artboardHeight * 204 / height;
+  const [regionLeft, regionTop, regionWidth, regionHeight] = fixture.region;
+  let candidateCount = 0;
+  let intersection = 0;
+
+  for (let y = 0; y < regionHeight; y += 1) {
+    for (let x = 0; x < regionWidth; x += 1) {
+      const sourceX = Math.floor((regionLeft + x - artboardLeft) / artboardWidth * width);
+      const sourceY = Math.floor((regionTop + y - artboardTop) / artboardHeight * height);
+      const candidate = sourceX >= 0 && sourceX < width && sourceY >= 0 && sourceY < height &&
+        rgba[(sourceY * width + sourceX) * 4 + 3] > 100;
+      const index = y * regionWidth + x;
+      if (candidate) candidateCount += 1;
+      if (candidate && reference[index]) intersection += 1;
+    }
+  }
+
+  const overlap = intersection / Math.min(candidateCount, fixture.count);
+  assert.ok(overlap >= 0.95, `Safari mask overlap is ${(overlap * 100).toFixed(2)}%`);
 });
 
 test("the NEO slot shares SUPER's baseline without browser inline-box inference", async () => {
@@ -133,6 +176,7 @@ test("the NEO slot shares SUPER's baseline without browser inline-box inference"
     styles,
     /\.superneo-word\s*{[^}]*display:\s*inline-flex;[^}]*align-items:\s*baseline;/s,
   );
+  assert.match(styles, /\.superneo-word\s*{[^}]*transform:\s*translateY\(-0\.065em\);/s);
   assert.match(
     styles,
     /\.stage-stack \.neo-accent\s*{[^}]*align-self:\s*baseline;[^}]*transform:\s*translateY\(0\.065em\);/s,

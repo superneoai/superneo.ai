@@ -1,0 +1,12 @@
+{
+  "source": "/private/tmp/superneo-final-safari.png normalized to 1280x720",
+  "region": [500, 430, 400, 180],
+  "threshold": {
+    "greenMin": 120,
+    "greenOverRed": 1.1,
+    "greenOverBlue": 1.15
+  },
+  "count": 29061,
+  "encoding": "zlib+base64 packed row-major bits",
+  "data": "eNrtmc9r01AcwN+WLataljIn8zBp8eLBwwZeCqIpCPM49OC14A47KGxetIKSoIftoO7QP6B/guDFYwMDt1vxB+wkC/QwYcIqU5OuWZ7JS1rd8n2v7wtjFMn3ki39fvL9+d43fSUklVRS6ckoHjHTrMlJCZuqIXnVXJcYLeGMjBF1UlI10zpL1Io3QyltyhEV78v9ceP7kjSRMai3PGc81A8DpCRDnKHUq9y+WdEDgP6WIZ6Gmp832EWCGHEjwltiAP3Ql9CodT3U9I2IcCSIvVCxUY8JaoOlqjtW/OdwrEe1LuHBz42eNEuyY11ihYoIPb4fXLWu4l6PaAmIwJE8PS4+FEjXdnDVEwR1YcKNr0kbtAUTfpgyCgpADMWEAhNuclWxZ7fNaxpM+EkbUxExiyWsogETlHC8+jTNAagJNQnLCY+weMQPNMGVZJvMRx/wAgfaJOoMr8wjPKh1w/tjPKLFIaiGtYEhIlWHG0fSrX7ZTRJ6P4KgCRNN2CkhTXxDE+4pEN5/QvgDRvjwIhTZ2EYTNXDZGgJiDbQhImawhLGAJPz2A2wc7ZoBGSkL9k9wV1QEJuxFAzAhIHY3b0GE1uASzusmFIZoGKw1oU7UBF2irIM2BNl9uQIR5/hEW1mBKqjx6+HFHh8nBKFr4IrS5vlEvgPlakpAqCBxRUDsgITOj8Nx9qGBPi6IfHEPCn2aX4+OU4VyNSJa50PgDocn6oJc3QGJGp9w1kFiTeAVTLzlA50tcOIITBTL2FwdbGN3UU/HToNteOL0HTgeooKc6Zw/+XnuYjoRfkPuS9gDSVinQJgn9G2idgpEHfFCxkanj2nEaNgeYgjm1UdE60Y2rLp860Y2bB1J+Dkd8f1cY9Hp8m3FTiY88ki+rRjhk2X5kpNRdvu5fMljQpcvIIv8F3/XAs6Wwte+TRNLWCRfly4HI1bJJYojXmVu6NIFJErgz5vCBUO6gKyxduyrhnRyGdEs3X1/TLXBPxwk+a2vtbnLT44YcayG4CR1/HynYU2oR4icbfN6JDxwJfTeZml4gTr/eO8us+QdcE51n02SF2SX7pQ7sfNFks0WObkNpcDCe1ctkQkGbAQZzZKL4TsyDKiFsHfUVi544GO9um8p3T385ypMZAvRqfpwVCylV7PMCO/8O/4gE///13c1J/u7xyCJmf6ClUoqqaQiL38ABGQN4Q=="
+}
