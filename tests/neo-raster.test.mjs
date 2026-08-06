@@ -135,11 +135,11 @@ test("the NEO slot shares SUPER's baseline without browser inline-box inference"
   );
   assert.match(
     styles,
-    /\.stage-stack \.neo-accent\s*{[^}]*align-self:\s*baseline;/s,
+    /\.stage-stack \.neo-accent\s*{[^}]*align-self:\s*baseline;[^}]*transform:\s*translateY\(0\.065em\);/s,
   );
   assert.doesNotMatch(
     styles,
-    /\.stage-stack \.neo-accent\s*{[^}]*(?:vertical-align|transform):/s,
+    /\.stage-stack \.neo-accent\s*{[^}]*vertical-align:/s,
   );
 });
 
