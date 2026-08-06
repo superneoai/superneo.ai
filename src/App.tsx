@@ -23,6 +23,23 @@ const stages = [
 
 const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
 const neoSignUrl = new URL("neo-sign.png?rev=b8578999", document.baseURI).href;
+const desktopArtworkUrl = new URL("latent-field.jpg", document.baseURI).href;
+const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
+
+function ScenePoster() {
+  return (
+    <div className="signal-poster" aria-hidden="true">
+      <div
+        className="signal-artwork-fallback signal-artwork-fallback--desktop"
+        style={{ backgroundImage: `url(${desktopArtworkUrl})` }}
+      />
+      <div
+        className="signal-artwork-fallback signal-artwork-fallback--mobile"
+        style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
+      />
+    </div>
+  );
+}
 
 function renderStageMeter(progress: number) {
   const exact = Math.min(12, Math.max(0, progress * 12));
@@ -269,12 +286,20 @@ function StagePanel() {
 
 export function App() {
   const [discovered, setDiscovered] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
+  const handleSceneStateChange = useCallback((ready: boolean) => {
+    setSceneReady(ready);
+  }, []);
 
   return (
-    <main className="experience">
-      <Suspense fallback={<div className="signal-fallback" aria-hidden="true" />}>
-        <LatentField onDiscover={handleDiscover} />
+    <main className="experience" data-scene-ready={sceneReady}>
+      <ScenePoster />
+      <Suspense fallback={null}>
+        <LatentField
+          onDiscover={handleDiscover}
+          onSceneStateChange={handleSceneStateChange}
+        />
       </Suspense>
       <div className="technical-frame" aria-hidden="true" />
 

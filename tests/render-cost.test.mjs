@@ -16,7 +16,7 @@ test("the scene preserves its original bloom without engine-specific branches", 
   assert.doesNotMatch(field, /HIGH_REFRESH_THRESHOLD/);
   assert.doesNotMatch(shader, /uGlowStrength/);
   assert.match(styles, /\.signal-artwork-fallback\s*\{[^}]*display:\s*none/s);
-  assert.match(styles, /\.signal-fallback \.signal-artwork-fallback--desktop/);
-  assert.match(styles, /\.signal-fallback \.signal-artwork-fallback--mobile/);
+  assert.match(styles, /\.signal-poster \.signal-artwork-fallback--desktop/);
+  assert.match(styles, /\.signal-poster \.signal-artwork-fallback--mobile/);
   assert.doesNotMatch(styles, /\.signal-stage \.signal-artwork-fallback/);
 });

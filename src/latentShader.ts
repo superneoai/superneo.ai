@@ -562,6 +562,7 @@ export const backgroundFragmentShader = /* glsl */ `
   uniform float uTime;
   uniform float uScroll;
   uniform float uVelocity;
+  uniform vec3 uSignalColor;
 
   varying vec2 vUv;
 

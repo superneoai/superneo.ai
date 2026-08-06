@@ -30,7 +30,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.doesNotMatch(profile, /bloomEnabled: !phone/);
   assert.match(app, /lazy\(\(\) =>/);
   assert.match(app, /import\("\.\/LatentField"\)/);
-  assert.match(app, /<Suspense fallback=/);
+  assert.match(app, /<Suspense fallback=\{null\}>/);
   assert.match(field, /createMorphGeometry\(renderProfile\.compact\)/);
   assert.doesNotMatch(field, /window\.visualViewport\?\.addEventListener\("resize", scheduleResize/);
   assert.match(field, /host\.clientWidth/);

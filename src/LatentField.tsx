@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
@@ -32,22 +32,32 @@ gsap.registerPlugin(ScrollTrigger);
 
 type LatentFieldProps = {
   onDiscover: () => void;
+  onSceneStateChange: (ready: boolean) => void;
 };
 
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
-export function LatentField({ onDiscover }: LatentFieldProps) {
+export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [failed, setFailed] = useState(false);
-  const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
-  const desktopArtworkUrl = new URL("latent-field.jpg", document.baseURI).href;
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    host.dataset.sceneReady = "false";
+    onSceneStateChange(false);
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
+    let disposed = false;
+    let needsRender = true;
+    let artworkReady = false;
+    let sceneReady = false;
+    const reportSceneState = (ready: boolean) => {
+      if (sceneReady === ready) return;
+      sceneReady = ready;
+      host.dataset.sceneReady = String(ready);
+      onSceneStateChange(ready);
+    };
     let renderProfile = createRenderProfile(
       Math.max(host.clientWidth, 1),
       Math.max(host.clientHeight, 1),
@@ -63,7 +73,7 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
         powerPreference: "high-performance",
       });
     } catch {
-      setFailed(true);
+      onSceneStateChange(false);
       return;
     }
 
@@ -239,9 +249,11 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
       ? ["latent-field-mobile.jpg"]
       : ["latent-field.avif", "latent-field.jpg"];
     const showArtworkFallback = () => {
+      artworkReady = false;
       background.visible = false;
       renderer.setClearColor(0x030403, 1);
       host.classList.add("has-background-fallback");
+      reportSceneState(false);
       needsRender = true;
     };
     const loadArtwork = (candidateIndex: number) => {
@@ -269,6 +281,8 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
           );
           backgroundMaterial.uniforms.uArtwork.value = texture;
           artwork.dispose();
+          artworkReady = true;
+          background.visible = true;
           host.classList.remove("has-background-fallback");
           needsRender = true;
         },
@@ -322,8 +336,6 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
     let motionAccumulator = 0;
     let currentStage = 0;
     let discovered = false;
-    let disposed = false;
-    let needsRender = true;
     let resizeTimer: number | null = null;
     let lastViewportWidth = 0;
     let lastViewportHeight = 0;
@@ -620,7 +632,19 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
       bloomPass.strength = 0.16 + interactionEnergy * 0.2 + signalEnergy * 0.12;
       bloomPass.radius = 0.4 + interactionEnergy * 0.065;
       const renderStarted = performance.now();
-      composer.render(delta);
+      try {
+        composer.render(delta);
+        if (!sceneReady && artworkReady) {
+          const context = renderer.getContext();
+          if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
+            reportSceneState(true);
+          }
+        }
+      } catch {
+        reportSceneState(false);
+        needsRender = false;
+        return;
+      }
       const renderEnded = performance.now();
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
       needsRender = false;
@@ -639,6 +663,16 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
       needsRender = true;
     };
 
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      reportSceneState(false);
+    };
+
+    const handleContextRestored = () => {
+      reportSceneState(false);
+      needsRender = true;
+    };
+
     resize();
     window.addEventListener("resize", scheduleResize, { passive: true });
     window.addEventListener("pointerdown", pressSurface, { passive: true });
@@ -647,6 +681,8 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
     window.addEventListener("pointercancel", releaseSurface, { passive: true });
     window.addEventListener("pointerout", handlePointerOut, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility);
+    renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
+    renderer.domElement.addEventListener("webglcontextrestored", handleContextRestored);
     reducedMotion.addEventListener("change", handleMotionPreference);
     coarsePointer.addEventListener("change", scheduleResize);
     gsap.ticker.add(tick);
@@ -666,6 +702,8 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
       window.removeEventListener("pointercancel", releaseSurface);
       window.removeEventListener("pointerout", handlePointerOut);
       document.removeEventListener("visibilitychange", handleVisibility);
+      renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
+      renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       reducedMotion.removeEventListener("change", handleMotionPreference);
       coarsePointer.removeEventListener("change", scheduleResize);
       scrollRailFill?.style.removeProperty("transform");
@@ -687,22 +725,7 @@ export function LatentField({ onDiscover }: LatentFieldProps) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [onDiscover]);
-
-  if (failed) {
-    return (
-      <div className="signal-fallback" aria-hidden="true">
-        <div
-          className="signal-artwork-fallback signal-artwork-fallback--desktop"
-          style={{ backgroundImage: `url(${desktopArtworkUrl})` }}
-        />
-        <div
-          className="signal-artwork-fallback signal-artwork-fallback--mobile"
-          style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
-        />
-      </div>
-    );
-  }
+  }, [onDiscover, onSceneStateChange]);
 
   return <div ref={hostRef} className="signal-stage" aria-hidden="true" />;
 }

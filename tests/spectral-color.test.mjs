@@ -112,7 +112,7 @@ test("the routed tip signal preserves the shared accent through additive bloom",
   assert.match(field, /new THREE\.Color\(signalColor\)/);
   assert.equal(
     (shader.match(/uniform vec3 uSignalColor;/g) ?? []).length,
-    4,
+    5,
     "every accent-bearing shader shares the same color-managed signal",
   );
   assert.doesNotMatch(shader, /routedPhosphor|vec3 phosphor =/);

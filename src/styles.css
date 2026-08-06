@@ -62,7 +62,7 @@ a {
 }
 
 .signal-stage,
-.signal-fallback {
+.signal-poster {
   position: fixed;
   top: 0;
   right: 0;
@@ -75,6 +75,22 @@ a {
   overflow: hidden;
   pointer-events: none;
   background: var(--ink);
+}
+
+.signal-stage {
+  z-index: 1;
+}
+
+.signal-poster {
+  z-index: 0;
+}
+
+.experience[data-scene-ready="false"] .signal-stage {
+  visibility: hidden;
+}
+
+.experience[data-scene-ready="true"] .signal-poster {
+  display: none;
 }
 
 .signal-canvas {
@@ -94,27 +110,9 @@ a {
   background-size: cover;
 }
 
-.signal-fallback .signal-artwork-fallback--desktop {
+.signal-poster .signal-artwork-fallback--desktop {
   display: block;
   animation: mobile-background-drift 11s ease-in-out infinite alternate;
-}
-
-.signal-fallback {
-  background: var(--ink);
-}
-
-.signal-fallback::before {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  color: color-mix(in oklch, var(--bone) 55%, transparent);
-  font-size: clamp(0.42rem, 0.72vw, 0.66rem);
-  line-height: 0.88;
-  letter-spacing: 0.09em;
-  white-space: pre;
-  content: "· · : + · · : + * : · + ·\A : + * # + : · + * # + : ·\A · : + * # @ # * + : · : +\A : + * # @ # * + : · + * #\A · · : + * # * + : · · : +";
-  opacity: 0.58;
-  transform: translate(-50%, -50%);
 }
 
 .technical-frame {
@@ -1237,11 +1235,11 @@ a {
 }
 
 @media (max-width: 720px) {
-  .signal-fallback .signal-artwork-fallback--desktop {
+  .signal-poster .signal-artwork-fallback--desktop {
     display: none;
   }
 
-  .signal-fallback .signal-artwork-fallback--mobile {
+  .signal-poster .signal-artwork-fallback--mobile {
     display: block;
     animation: mobile-background-drift 11s ease-in-out infinite alternate;
   }
