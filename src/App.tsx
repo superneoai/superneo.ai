@@ -22,6 +22,7 @@ const stages = [
 ];
 
 const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
+const neoSignUrl = new URL("neo-sign.png?rev=b8578999", document.baseURI).href;
 
 function renderStageMeter(progress: number) {
   const exact = Math.min(12, Math.max(0, progress * 12));
@@ -189,8 +190,33 @@ function StagePanel() {
       });
     };
 
+    let disposed = false;
+    const sign = headingRefs.current[3]?.querySelector<HTMLImageElement>(".neo-sign");
+    if (sign) {
+      const requestedFont = document.fonts.load(
+        '540 1em "Geist Variable"',
+        "SUPERNEO",
+      ).catch(() => []);
+      const fontReady = Promise.all([requestedFont, document.fonts.ready]);
+      const imageLoaded = sign.complete && sign.naturalWidth > 0
+        ? Promise.resolve()
+        : new Promise<void>((resolve, reject) => {
+          sign.addEventListener("load", () => resolve(), { once: true });
+          sign.addEventListener("error", () => reject(new Error("NEO sign failed to load")), {
+            once: true,
+          });
+        });
+      const imageReady = Promise.race([
+        sign.decode().catch(() => imageLoaded),
+        imageLoaded,
+      ]);
+      void Promise.all([imageReady, fontReady]).then(() => {
+        if (!disposed) sign.parentElement?.setAttribute("data-sign-ready", "true");
+      }).catch(() => undefined);
+    }
     window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
     return () => {
+      disposed = true;
       window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
     };
   }, []);
@@ -213,7 +239,24 @@ function StagePanel() {
             <span className="stage-outline" aria-hidden="true">{item.title}</span>
             <span className="stage-word">
               {item.title === "SUPERNEO" ? (
-                <>SUPER<span className="neo-accent">NEO</span></>
+                <>
+                  SUPER
+                  <span className="neo-accent">
+                    <span className="neo-source">NEO</span>
+                    <img
+                      className="neo-sign"
+                      src={neoSignUrl}
+                      width="1000"
+                      height="640"
+                      decoding="async"
+                      loading="eager"
+                      fetchPriority="high"
+                      draggable="false"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                </>
               ) : item.title}
             </span>
           </h2>

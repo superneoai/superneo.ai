@@ -750,19 +750,38 @@ a {
   margin-left: 0;
   color: var(--signal);
   -webkit-text-stroke: 0.006em var(--signal);
-  text-shadow:
-    0 0 0.018em var(--signal),
-    0 0 0.075em var(--signal),
-    0 0 0.22em var(--signal),
-    0 0 0.58em color-mix(in oklch, var(--signal) 78%, transparent),
-    0 0 1.15em color-mix(in oklch, var(--signal) 48%, transparent),
-    0 0 2.1em color-mix(in oklch, var(--signal) 24%, transparent);
+  text-shadow: none;
   animation: none;
-  will-change: opacity, text-shadow;
+  will-change: opacity;
 }
 
 .stage-stack h2[data-state="active"] .neo-accent {
   animation: neo-neon-fault 5.8s steps(1, end) infinite;
+}
+
+.neo-source {
+  visibility: visible;
+}
+
+.neo-sign {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 3.04em;
+  height: auto;
+  max-width: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.neo-accent[data-sign-ready="true"] .neo-source {
+  visibility: hidden;
+}
+
+.neo-accent[data-sign-ready="true"] .neo-sign {
+  opacity: 1;
 }
 
 .stage-line {
