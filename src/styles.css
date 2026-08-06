@@ -740,15 +740,21 @@ a {
   --stack-y: 0.87em;
 }
 
+.superneo-word {
+  display: inline-flex;
+  align-items: baseline;
+}
+
 .stage-stack .neo-accent {
   position: relative;
   display: inline-block;
   width: 1.872em;
   height: 0.84em;
+  flex: 0 0 1.872em;
+  align-self: baseline;
   margin-left: 0;
   color: var(--signal);
   overflow: visible;
-  vertical-align: -0.04em;
   -webkit-text-stroke: 0.006em var(--signal);
   text-shadow: none;
   animation: none;

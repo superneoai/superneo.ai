@@ -126,6 +126,23 @@ test("the deterministic slot projects the NEO core onto the Safari reference", a
   assert.ok(Math.abs(coreLeft - 573) <= 2, `projected left edge is ${coreLeft}`);
 });
 
+test("the NEO slot shares SUPER's baseline without browser inline-box inference", async () => {
+  const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    styles,
+    /\.superneo-word\s*{[^}]*display:\s*inline-flex;[^}]*align-items:\s*baseline;/s,
+  );
+  assert.match(
+    styles,
+    /\.stage-stack \.neo-accent\s*{[^}]*align-self:\s*baseline;/s,
+  );
+  assert.doesNotMatch(
+    styles,
+    /\.stage-stack \.neo-accent\s*{[^}]*(?:vertical-align|transform):/s,
+  );
+});
+
 test("every NEO state stores one neon color in a smooth alpha halo", async () => {
   const signal = [0xba, 0xf6, 0x28];
   for (const state of stateNames) {
