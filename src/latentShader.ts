@@ -414,8 +414,9 @@ export const surfaceFragmentShader = /* glsl */ `
     color += uSignalColor * semanticSignal * (0.07 + rim * 0.11);
     color += bone * rim * 0.13;
     color += uSignalColor * uVelocity * rim * 0.08;
-    vec3 routedColor = uSignalColor * (0.46 + rim * 0.08);
-    color = mix(color, routedColor, routedSignal * 0.96);
+    color += uSignalColor * vSignalPulse * 0.68;
+    color += uSignalColor * vEndpointGlow * 0.36;
+    color += bone * vEndpointGlow * 0.05;
 
     float fade = 0.74 + threshold * 0.2 + rim * 0.06;
     gl_FragColor = vec4(color * fade, uSurfaceOpacity);
@@ -521,16 +522,14 @@ export const particleFragmentShader = /* glsl */ `
       0.0,
       1.0
     );
-    float routedSignal = max(vSignalPulse, vEndpointGlow);
-    routedSignal = clamp(routedSignal, 0.0, 1.0);
-    routedSignal = smoothstep(0.04, 0.72, routedSignal);
     vec3 dormantColor = mix(
       bone * (0.42 + vSeed * 0.36),
       spectral,
       0.38 + vSeed * 0.18
     );
-    vec3 color = mix(dormantColor, uSignalColor, signal * 0.62);
-    color = mix(color, uSignalColor * 0.58, routedSignal * 0.96);
+    vec3 color = mix(dormantColor, uSignalColor, signal * 0.9);
+    color += uSignalColor * vSignalPulse * 0.64;
+    color += uSignalColor * vEndpointGlow * 0.32;
     float alpha = mask * (0.24 + vSeed * 0.34 + signal * 0.42) *
       (1.0 + vEndpointGlow * 0.2) * uOpacity * vPointWeight;
     gl_FragColor = vec4(color, alpha);

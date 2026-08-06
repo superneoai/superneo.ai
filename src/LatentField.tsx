@@ -383,10 +383,10 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
       objectGroup.scale.setScalar(renderProfile.objectScale);
       objectGroup.updateMatrixWorld(true);
       bloomPass.enabled = renderProfile.bloomEnabled;
-      echoPastMaterial.uniforms.uSurfaceOpacity.value = renderProfile.compact ? 0.18 : 0.2;
-      echoFutureMaterial.uniforms.uSurfaceOpacity.value = renderProfile.compact ? 0.14 : 0.16;
-      haloMaterial.uniforms.uOpacity.value = renderProfile.compact ? 0.18 : 0.22;
-      particleMaterial.uniforms.uPointScale.value = renderProfile.compact ? 0.96 : 1;
+      echoPastMaterial.uniforms.uSurfaceOpacity.value = 0.2;
+      echoFutureMaterial.uniforms.uSurfaceOpacity.value = 0.16;
+      haloMaterial.uniforms.uOpacity.value = 0.22;
+      particleMaterial.uniforms.uPointScale.value = 1;
       particleMaterial.uniforms.uPixelRatio.value = pixelRatio;
       const backgroundDistance = camera.position.z - background.position.z;
       const backgroundHeight =
@@ -571,11 +571,6 @@ export function LatentField({ onDiscover, onSceneStateChange }: LatentFieldProps
         );
       }
       timeUniform.value = reducedMotion.matches ? 8 : time;
-      const openTransition = THREE.MathUtils.smoothstep(scrollUniform.value, 0.68, 1);
-      const openScaleReduction = renderProfile.compact ? 0.08 : 0.05;
-      objectGroup.scale.setScalar(
-        renderProfile.objectScale * (1 - openTransition * openScaleReduction),
-      );
       if (!reducedMotion.matches) {
         const phase = stagePhaseUniform.value;
         const weight = (center: number) => {

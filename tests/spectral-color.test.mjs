@@ -121,11 +121,13 @@ test("the routed tip signal preserves the shared accent through additive bloom",
   for (const [label, fragment] of [["surface", surface], ["particle", particle]]) {
     assert.match(fragment, /uniform vec3 uSignalColor;/, `${label} shares the CSS accent`);
   }
-  assert.match(surface, /routedSignal = smoothstep\(0\.04, 0\.72, routedSignal\);/);
-  assert.match(surface, /vec3 routedColor = uSignalColor \* \(0\.46 \+ rim \* 0\.08\);/);
-  assert.match(surface, /color = mix\(color, routedColor, routedSignal \* 0\.96\);/);
-  assert.match(particle, /float routedSignal = max\(vSignalPulse, vEndpointGlow\);/);
-  assert.match(particle, /color = mix\(color, uSignalColor \* 0\.58, routedSignal \* 0\.96\);/);
+  assert.match(surface, /color \+= uSignalColor \* vSignalPulse \* 0\.68;/);
+  assert.match(surface, /color \+= uSignalColor \* vEndpointGlow \* 0\.36;/);
+  assert.match(surface, /color \+= bone \* vEndpointGlow \* 0\.05;/);
+  assert.match(particle, /color \+= uSignalColor \* vSignalPulse \* 0\.64;/);
+  assert.match(particle, /color \+= uSignalColor \* vEndpointGlow \* 0\.32;/);
+  assert.doesNotMatch(surface, /routedColor|mix\(color, routedColor/);
+  assert.doesNotMatch(particle, /uSignalColor \* 0\.58/);
 });
 
 test("pointer activity cannot wash the whole ASCII field green", async () => {

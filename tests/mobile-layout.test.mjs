@@ -38,10 +38,10 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(field, /bloomPass\.enabled = renderProfile\.bloomEnabled/);
   assert.doesNotMatch(field, /halo\.visible\s*=/);
   assert.doesNotMatch(field, /echoFuture\.visible\s*=/);
-  assert.match(field, /echoPastMaterial\.uniforms\.uSurfaceOpacity\.value = renderProfile\.compact \? 0\.18 : 0\.2/);
-  assert.match(field, /echoFutureMaterial\.uniforms\.uSurfaceOpacity\.value = renderProfile\.compact \? 0\.14 : 0\.16/);
-  assert.match(field, /haloMaterial\.uniforms\.uOpacity\.value = renderProfile\.compact \? 0\.18 : 0\.22/);
-  assert.match(field, /particleMaterial\.uniforms\.uPointScale\.value = renderProfile\.compact \? 0\.96 : 1/);
+  assert.match(field, /echoPastMaterial\.uniforms\.uSurfaceOpacity\.value = 0\.2/);
+  assert.match(field, /echoFutureMaterial\.uniforms\.uSurfaceOpacity\.value = 0\.16/);
+  assert.match(field, /haloMaterial\.uniforms\.uOpacity\.value = 0\.22/);
+  assert.match(field, /particleMaterial\.uniforms\.uPointScale\.value = 1/);
   await access(new URL("../public/latent-field-mobile.jpg", import.meta.url));
   assert.match(field, /renderProfile\.compact\s*\? \["latent-field-mobile\.jpg"\]/);
   assert.match(field, /textureImage\.naturalWidth \|\| textureImage\.width/);
@@ -50,6 +50,6 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(styles, /\.signal-artwork-fallback/);
   assert.match(shader, /gl_FragColor = vec4\(color, sourceSample\.a\)/);
   assert.doesNotMatch(shader, /max\(scale\.x, 0\.42\)/);
-  assert.match(field, /openScaleReduction = renderProfile\.compact \? 0\.08 : 0\.05/);
+  assert.doesNotMatch(field, /openScaleReduction|openTransition/);
   assert.match(shader, /mix\(0\.93, 1\.0, uCompactLayout\)/);
 });
