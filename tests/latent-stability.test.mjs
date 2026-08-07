@@ -34,12 +34,12 @@ test("ambient morph layers converge at settled topology endpoints", async () => 
   assert.match(morphFunction[1], /\* 4\.0 \* transitionEnvelope/);
 });
 
-test("the idle orbit cannot turn the recognizable silhouette edge-on", async () => {
+test("the isometric chase framing cannot turn the actor edge-on", async () => {
   const field = await readFile(
     new URL("../src/LatentField.tsx", import.meta.url),
     "utf8",
   );
 
-  assert.doesNotMatch(field, /const ambientTurn = time \* 0\.045/);
-  assert.match(field, /const ambientTurn = Math\.sin\(time \* 0\.11\) \* 0\.26/);
+  assert.match(field, /objectGroup\.rotation\.y = -0\.52 \+ Math\.sin\(time \* 0\.11\) \* 0\.035/);
+  assert.doesNotMatch(field, /ambientTurn|time \* 0\.045/);
 });

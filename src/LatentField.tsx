@@ -11,13 +11,9 @@ import {
   asciiDitherPostFragmentShader,
   backgroundFragmentShader,
   backgroundVertexShader,
-  particleFragmentShader,
-  particleVertexShader,
   postVertexShader,
-  surfaceFragmentShader,
-  surfaceVertexShader,
 } from "./latentShader";
-import { createMorphGeometry, createPointGeometry } from "./morphGeometry";
+import { createNeoformRig } from "./neoformRig";
 import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { createFrameProbe } from "./frameProbe";
@@ -129,29 +125,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     const signalProgressValues = new Float32Array(MAX_ACTIVE_SIGNALS).fill(SIGNAL_LIFETIME);
     const clickAlongValues = new Float32Array(MAX_ACTIVE_SIGNALS).fill(0.5);
     const signalVariationValues = new Float32Array(MAX_ACTIVE_SIGNALS).fill(0.5);
-    const signalProgressUniform = { value: signalProgressValues };
-    const clickAlongUniform = { value: clickAlongValues };
-    const signalVariationUniform = { value: signalVariationValues };
     const signalColor = getComputedStyle(document.documentElement)
       .getPropertyValue("--signal")
       .trim() || "#baf628";
     const signalColorUniform = { value: new THREE.Color(signalColor) };
-    const sharedUniforms = {
-      uPointerWorld: pointerWorld,
-      uPointerDelta: pointerDelta,
-      uPointerStrength: pointerStrength,
-      uPointerMotion: pointerMotion,
-      uPress: press,
-      uTime: timeUniform,
-      uScroll: scrollUniform,
-      uStagePhase: stagePhaseUniform,
-      uVelocity: velocity,
-      uSignalProgress: signalProgressUniform,
-      uClickAlong: clickAlongUniform,
-      uSignalVariation: signalVariationUniform,
-      uSignalColor: signalColorUniform,
-    };
-
     const backgroundGeometry = new THREE.PlaneGeometry(1, 1);
     const backgroundMaterial = new THREE.ShaderMaterial({
       uniforms: {
@@ -180,97 +157,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     background.renderOrder = 0;
     scene.add(background);
 
-    const geometry = createMorphGeometry(renderProfile.compact);
-    const pointGeometry = createPointGeometry(geometry);
-    const surfaceMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...sharedUniforms,
-        uDisplacementScale: { value: 1 },
-        uMorphBias: { value: 0 },
-        uSurfaceOpacity: { value: 1 },
-      },
-      vertexShader: surfaceVertexShader,
-      fragmentShader: surfaceFragmentShader,
-      side: THREE.DoubleSide,
-      depthWrite: true,
-    });
-    const echoPastMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...sharedUniforms,
-        uDisplacementScale: { value: 1.08 },
-        uMorphBias: { value: -0.18 },
-        uSurfaceOpacity: { value: 0.2 },
-      },
-      vertexShader: surfaceVertexShader,
-      fragmentShader: surfaceFragmentShader,
-      side: THREE.DoubleSide,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: false,
-    });
-    const echoFutureMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...sharedUniforms,
-        uDisplacementScale: { value: 1.18 },
-        uMorphBias: { value: 0.18 },
-        uSurfaceOpacity: { value: 0.16 },
-      },
-      vertexShader: surfaceVertexShader,
-      fragmentShader: surfaceFragmentShader,
-      side: THREE.DoubleSide,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: false,
-    });
-    const particleMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...sharedUniforms,
-        uPixelRatio: { value: 1 },
-        uShell: { value: 0.024 },
-        uPointScale: { value: 1 },
-        uOpacity: { value: 0.96 },
-        uDisplacementScale: { value: 1.65 },
-        uMorphBias: { value: 0.055 },
-      },
-      vertexShader: particleVertexShader,
-      fragmentShader: particleFragmentShader,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: true,
-    });
-    const haloMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...sharedUniforms,
-        uPixelRatio: particleMaterial.uniforms.uPixelRatio,
-        uShell: { value: 0.19 },
-        uPointScale: { value: 0.62 },
-        uOpacity: { value: 0.22 },
-        uDisplacementScale: { value: 2.05 },
-        uMorphBias: { value: -0.09 },
-      },
-      vertexShader: particleVertexShader,
-      fragmentShader: particleFragmentShader,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: false,
-    });
-
+    const neoform = createNeoformRig(renderProfile.compact);
     const objectGroup = new THREE.Group();
-    const echoPast = new THREE.Mesh(geometry, echoPastMaterial);
-    const echoFuture = new THREE.Mesh(geometry, echoFutureMaterial);
-    const surface = new THREE.Mesh(geometry, surfaceMaterial);
-    const particles = new THREE.Points(pointGeometry, particleMaterial);
-    const halo = new THREE.Points(pointGeometry, haloMaterial);
-    halo.renderOrder = 1;
-    echoPast.renderOrder = 2;
-    echoFuture.renderOrder = 3;
-    surface.renderOrder = 4;
-    particles.renderOrder = 5;
-    objectGroup.add(halo, echoPast, echoFuture, surface, particles);
+    objectGroup.add(neoform.group);
+    objectGroup.position.y = -0.67;
+    objectGroup.rotation.set(-0.08, -0.52, 0);
     scene.add(objectGroup);
 
     const textureLoader = new THREE.TextureLoader();
@@ -417,11 +308,6 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       objectGroup.scale.setScalar(renderProfile.objectScale);
       objectGroup.updateMatrixWorld(true);
       bloomPass.enabled = renderProfile.bloomEnabled;
-      echoPastMaterial.uniforms.uSurfaceOpacity.value = 0.2;
-      echoFutureMaterial.uniforms.uSurfaceOpacity.value = 0.16;
-      haloMaterial.uniforms.uOpacity.value = 0.22;
-      particleMaterial.uniforms.uPointScale.value = 1;
-      particleMaterial.uniforms.uPixelRatio.value = pixelRatio;
       const backgroundDistance = camera.position.z - background.position.z;
       const backgroundHeight =
         2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * backgroundDistance;
@@ -458,34 +344,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     };
 
     const locateClickAlong = () => {
-      const base = geometry.getAttribute("position") as THREE.BufferAttribute;
-      const target1 = geometry.getAttribute("aTarget1") as THREE.BufferAttribute;
-      const target2 = geometry.getAttribute("aTarget2") as THREE.BufferAttribute;
-      const target3 = geometry.getAttribute("aTarget3") as THREE.BufferAttribute;
-      const along = geometry.getAttribute("aAlong") as THREE.BufferAttribute;
-      const phase = stagePhaseUniform.value;
-      const from = phase < 1 ? base : phase < 2 ? target1 : target2;
-      const to = phase < 1 ? target1 : phase < 2 ? target2 : target3;
-      const localPhase = phase < 1 ? phase : phase < 2 ? phase - 1 : phase - 2;
-      const blend = localPhase * localPhase * (3 - 2 * localPhase);
-      let nearestDistance = Number.POSITIVE_INFINITY;
-      let nearestAlong = 0.5;
-
-      for (let index = 0; index < along.count; index += 1) {
-        const x = THREE.MathUtils.lerp(from.getX(index), to.getX(index), blend);
-        const y = THREE.MathUtils.lerp(from.getY(index), to.getY(index), blend);
-        const z = THREE.MathUtils.lerp(from.getZ(index), to.getZ(index), blend);
-        const dx = x - targetPointerWorld.x;
-        const dy = y - targetPointerWorld.y;
-        const dz = (z - targetPointerWorld.z) * 0.18;
-        const distance = dx * dx + dy * dy + dz * dz;
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestAlong = along.getX(index);
-        }
-      }
-
-      return nearestAlong;
+      return THREE.MathUtils.clamp(0.5 + targetPointerWorld.x * 0.22, 0.06, 0.94);
     };
 
     const isInterfaceTarget = (target: EventTarget | null) =>
@@ -634,33 +493,36 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         );
       }
       timeUniform.value = motionIsReduced() || qa?.freezeScene ? 8 : time;
+      const semanticPhase = stagePhaseUniform.value;
+      const formBlend = THREE.MathUtils.smoothstep(semanticPhase, 1.18, 2.28);
+      const runSpeed = THREE.MathUtils.lerp(
+        0.58,
+        1.48,
+        THREE.MathUtils.smoothstep(semanticPhase, 0.2, 2.7),
+      );
+      const predictionStrength = THREE.MathUtils.smoothstep(semanticPhase, 0.55, 1.05) *
+        (1 - THREE.MathUtils.smoothstep(semanticPhase, 2.25, 2.82));
+      const finaleStrength = THREE.MathUtils.smoothstep(semanticPhase, 2.62, 3);
+      const leap = finaleStrength * Math.pow(
+        Math.max(Math.sin(timeUniform.value * 1.32 - 0.8), 0),
+        5,
+      );
+      neoform.update({
+        time: timeUniform.value,
+        formBlend,
+        speed: runSpeed,
+        leap,
+        pointerX: pointerWorld.value.x,
+        pointerY: pointerWorld.value.y,
+        pointerStrength: pointerStrength.value,
+        predictionStrength,
+        signalProgress: signalProgressValues,
+        reducedMotion: motionIsReduced() || Boolean(qa?.freezeScene),
+      });
       if (!motionIsReduced() && !qa?.freezeScene) {
-        const phase = stagePhaseUniform.value;
-        const weight = (center: number) => {
-          const distance = Math.min(1, Math.abs(phase - center));
-          const smoothDistance = distance * distance * (3 - 2 * distance);
-          return 1 - smoothDistance;
-        };
-        const latentWeight = weight(0);
-        const inferenceWeight = weight(1);
-        const emergenceWeight = weight(2);
-        const openWeight = weight(3);
-        const ambientTurn = Math.sin(time * 0.11) * 0.26;
-        objectGroup.rotation.x =
-          Math.sin(time * 0.1) * 0.045 +
-          latentWeight * Math.sin(time * 0.17) * 0.012 +
-          inferenceWeight * Math.sin(time * 0.24) * 0.025 +
-          emergenceWeight * Math.sin(time * 0.31) * 0.062 +
-          openWeight * Math.sin(time * 0.16) * 0.038;
-        objectGroup.rotation.y =
-          ambientTurn +
-          latentWeight * Math.sin(time * 0.14) * 0.016 +
-          inferenceWeight * Math.sin(time * 0.38) * 0.078 +
-          emergenceWeight * Math.cos(time * 0.22) * 0.036 +
-          openWeight * (
-            Math.sin(time * 0.2) * 0.09 + Math.sin(time * 0.071) * 0.035
-          );
-        objectGroup.rotation.z = Math.sin(time * 0.073 + 0.8) * 0.032;
+        objectGroup.rotation.x = -0.08 + Math.sin(time * 0.17) * 0.012;
+        objectGroup.rotation.y = -0.52 + Math.sin(time * 0.11) * 0.035;
+        objectGroup.rotation.z = Math.sin(time * 0.09 + 0.8) * 0.008;
       }
 
       const interactionEnergy = Math.max(
@@ -790,14 +652,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       asciiPass.dispose();
       outputPass.dispose();
       composer.dispose();
-      geometry.dispose();
-      pointGeometry.dispose();
+      neoform.dispose();
       backgroundGeometry.dispose();
-      surfaceMaterial.dispose();
-      echoPastMaterial.dispose();
-      echoFutureMaterial.dispose();
-      particleMaterial.dispose();
-      haloMaterial.dispose();
       backgroundMaterial.uniforms.uArtwork.value.dispose();
       backgroundMaterial.dispose();
       renderer.dispose();

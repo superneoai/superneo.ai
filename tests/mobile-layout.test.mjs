@@ -7,6 +7,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
   const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
+  const rig = await readFile(new URL("../src/neoformRig.ts", import.meta.url), "utf8");
   const shader = await readFile(new URL("../src/latentShader.ts", import.meta.url), "utf8");
   const profile = await readFile(new URL("../src/renderProfile.ts", import.meta.url), "utf8");
 
@@ -46,7 +47,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(app, /import\("\.\/LatentField"\)/);
   assert.match(app, /desktopArtworkUrl = new URL\("latent-field\.avif"/);
   assert.match(app, /<Suspense fallback=\{null\}>/);
-  assert.match(field, /createMorphGeometry\(renderProfile\.compact\)/);
+  assert.match(field, /createNeoformRig\(renderProfile\.compact\)/);
   assert.doesNotMatch(field, /window\.visualViewport\?\.addEventListener\("resize", scheduleResize/);
   assert.match(field, /host\.clientWidth/);
   assert.match(field, /host\.clientHeight/);
@@ -56,12 +57,10 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(field, /const pointerWidth = lastViewportWidth \|\| Math\.max\(host\.clientWidth, 1\)/);
   assert.match(field, /const pointerHeight = lastViewportHeight \|\| Math\.max\(host\.clientHeight, 1\)/);
   assert.match(field, /bloomPass\.enabled = renderProfile\.bloomEnabled/);
-  assert.doesNotMatch(field, /halo\.visible\s*=/);
-  assert.doesNotMatch(field, /echoFuture\.visible\s*=/);
-  assert.match(field, /echoPastMaterial\.uniforms\.uSurfaceOpacity\.value = 0\.2/);
-  assert.match(field, /echoFutureMaterial\.uniforms\.uSurfaceOpacity\.value = 0\.16/);
-  assert.match(field, /haloMaterial\.uniforms\.uOpacity\.value = 0\.22/);
-  assert.match(field, /particleMaterial\.uniforms\.uPointScale\.value = 1/);
+  assert.match(rig, /createNeoformRig\(compact: boolean\)/);
+  assert.match(rig, /new THREE\.InstancedMesh/);
+  assert.match(rig, /past\.group\.visible = input\.predictionStrength/);
+  assert.match(rig, /future\.group\.visible = input\.predictionStrength/);
   await access(new URL("../public/latent-field-mobile.jpg", import.meta.url));
   assert.match(field, /renderProfile\.compact\s*\? \["latent-field-mobile\.jpg"\]/);
   assert.match(field, /textureImage\.naturalWidth \|\| textureImage\.width/);

@@ -7,7 +7,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
-  const morph = await readFile(new URL("../src/morphGeometry.ts", import.meta.url), "utf8");
+  const rig = await readFile(new URL("../src/neoformRig.ts", import.meta.url), "utf8");
   const shader = await readFile(new URL("../src/latentShader.ts", import.meta.url), "utf8");
   const soundtrack = await readFile(new URL("../src/Soundtrack.tsx", import.meta.url), "utf8");
   const soundtrackEngine = await readFile(
@@ -70,12 +70,10 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.doesNotMatch(html, /rel="(?:shortcut )?icon"|apple-touch-icon|site\.webmanifest/i);
   assert.match(html, /src="\.\/assets\//);
   assert.doesNotMatch(`${html}\n${app}`, /quietly|becoming|unannounced/i);
-  assert.match(morph, /reactorRadius/);
-  assert.match(morph, /tunnelRadius/);
-  assert.match(morph, /twists: 0\.5/);
-  assert.doesNotMatch(morph, /polygonRadius|CatmullRomCurve3/);
-  assert.match(morph, /new THREE\.BufferGeometry/);
-  assert.match(field, /new THREE\.Points/);
+  assert.match(rig, /createNeoformPoseSampler/);
+  assert.match(rig, /sampleQuadruped/);
+  assert.match(rig, /new THREE\.InstancedMesh/);
+  assert.match(rig, /predictionStrength/);
   assert.match(field, /data-no-scene/);
   assert.match(soundtrack, /type="range"/);
   assert.match(soundtrack, /Soundtrack volume/);
@@ -164,8 +162,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(field, /signalVariationValues\[availableSignal\] = variation/);
   assert.match(field, /signalProgressValues\[signalIndex\] \+ delta \* SIGNAL_PROGRESS_PER_SECOND/);
   assert.match(field, /motionAccumulator/);
-  assert.match(field, /ambientTurn = Math\.sin\(time \* 0\.11\) \* 0\.26/);
-  assert.doesNotMatch(field, /ambientTurn = time \* 0\.045/);
+  assert.match(field, /objectGroup\.rotation\.y = -0\.52/);
+  assert.doesNotMatch(field, /ambientTurn/);
   assert.match(field, /objectGroup\.rotation\.z/);
   assert.match(field, /superneo:motion/);
   assert.match(app, /syncMotion/);
@@ -174,14 +172,12 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /MOTION/);
   assert.match(app, /className="signal-readouts"/);
   assert.match(app, /className="signal-activity"/);
-  assert.match(field, /echoPastMaterial/);
-  assert.match(field, /echoFutureMaterial/);
-  assert.match(field, /uMorphBias: \{ value: -0\.18 \}/);
-  assert.match(field, /uMorphBias: \{ value: 0\.18 \}/);
-  assert.match(field, /uDisplacementScale: \{ value: 1\.65 \}/);
-  assert.match(field, /uDisplacementScale: \{ value: 2\.05 \}/);
+  assert.match(rig, /const past = createRigLayer/);
+  assert.match(rig, /const future = createRigLayer/);
+  assert.match(rig, /formBlend/);
+  assert.match(rig, /signalProgress/);
   assert.match(field, /TextureLoader/);
-  assert.doesNotMatch(field, /IcosahedronGeometry/);
+  assert.match(rig, /IcosahedronGeometry/);
 
   assert.equal(
     (await readFile(new URL("../dist/CNAME", import.meta.url), "utf8")).trim(),

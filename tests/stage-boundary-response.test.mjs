@@ -23,7 +23,7 @@ test("stage boundaries respond immediately without a synthetic visual tail", asy
   assert.match(shader, /float basePhase = uStagePhase/);
   assert.match(shader, /float glyphPhase = uStagePhase/);
   assert.match(field, /stagePhaseUniform\.value = toMorphPhase\(progress\)/);
-  assert.match(field, /const phase = stagePhaseUniform\.value/);
+  assert.match(field, /const semanticPhase = stagePhaseUniform\.value/);
   assert.match(shader, /smoothstep\(1\.32, 1\.68, glyphPhase\)/);
   assert.doesNotMatch(shader, /clamp\([^;\n]*\) \* 3\.0/);
   assert.doesNotMatch(field, /scrollUniform\.value \* 3/);

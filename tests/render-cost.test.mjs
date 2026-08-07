@@ -5,13 +5,15 @@ import test from "node:test";
 test("the scene preserves its original bloom without engine-specific branches", async () => {
   const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
   const shader = await readFile(new URL("../src/latentShader.ts", import.meta.url), "utf8");
+  const rig = await readFile(new URL("../src/neoformRig.ts", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(field, /new UnrealBloomPass\(new THREE\.Vector2\(1, 1\), 0\.24, 0\.48, 0\.38\)/);
   assert.match(field, /bloomPass\.strength = 0\.16 \+ interactionEnergy \* 0\.2 \+ signalEnergy \* 0\.04/);
   assert.match(field, /bloomPass\.radius = 0\.4 \+ interactionEnergy \* 0\.065/);
   assert.doesNotMatch(field, /uGlowStrength/);
-  assert.match(field, /pointGeometry/);
+  assert.match(rig, /InstancedMesh/);
+  assert.match(rig, /DynamicDrawUsage/);
   assert.doesNotMatch(field, /forceSinglePass = true/);
   assert.doesNotMatch(field, /HIGH_REFRESH_THRESHOLD/);
   assert.doesNotMatch(shader, /uGlowStrength/);
