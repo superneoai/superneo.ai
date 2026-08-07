@@ -11,43 +11,70 @@ function samplePath(
   state: number,
   u: number,
   strand: number,
-  nCurve: THREE.CatmullRomCurve3,
+  mantaSpine: THREE.CatmullRomCurve3,
   target: THREE.Vector3,
 ) {
   const centered = u - 0.5;
   const strandOffset = strand - 1;
   if (state === 0) {
-    const angle = u * Math.PI * 5.2 - Math.PI * 2.6;
-    const compression = 0.42 + Math.cos(u * Math.PI * 6) * 0.07;
+    const strandPhase = strand * Math.PI * 2 / 3;
+    const angle = centered * Math.PI * 1.5 + strandPhase;
+    const radius = 0.29 + Math.sin(u * Math.PI) * 0.15;
     return target.set(
-      Math.sin(angle) * compression,
-      Math.sin(angle * 0.61 + strandOffset * 0.18) * 0.48,
-      Math.cos(angle) * 0.34 + centered * 0.12,
+      Math.cos(angle) * radius * 0.82,
+      Math.sin(angle) * radius * 1.16,
+      strandOffset * 0.11 + Math.cos(angle * 2 + strandPhase) * 0.075,
     );
   }
   if (state === 1) {
-    nCurve.getPointAt(u, target);
-    const convergence = Math.pow(Math.abs(centered) * 2, 1.45);
-    target.y += strandOffset * convergence * 0.24;
-    target.z += strandOffset * convergence * 0.13;
-    return target;
+    if (strand === 2) {
+      mantaSpine.getPointAt(u, target);
+      target.x += Math.sin(u * Math.PI * 2) * 0.035;
+      return target;
+    }
+    const wing = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.68);
+    const edgeDrop = Math.pow(Math.abs(centered) * 2, 1.6);
+    const upperWing = strand === 0;
+    return target.set(
+      centered * (upperWing ? 3.04 : 2.84),
+      upperWing
+        ? 0.035 + wing * 0.36 - edgeDrop * 0.09
+        : -0.08 - wing * 0.34 + edgeDrop * 0.06,
+      upperWing
+        ? wing * 0.19 + Math.sin(u * Math.PI * 2) * 0.035
+        : -0.055 + wing * 0.11 - Math.sin(u * Math.PI * 2) * 0.025,
+    );
   }
   if (state === 2) {
-    const split = THREE.MathUtils.smoothstep(u, 0.34, 0.9);
-    const branchCurl = Math.sin((u - 0.32) * Math.PI * 1.4 + strandOffset * 0.82);
+    if (strand === 2) {
+      return target.set(
+        Math.sin(u * Math.PI * 2) * 0.17,
+        0.84 - u * 1.68,
+        Math.sin(u * Math.PI) * 0.24,
+      );
+    }
+    const aperture = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.72);
+    const upperLid = strand === 0;
     return target.set(
-      strandOffset * split * 0.82 + branchCurl * split * 0.14,
-      centered * 2.12 + Math.sin(u * Math.PI * 2) * 0.045,
-      strandOffset * split * 0.21 + Math.sin(u * Math.PI * 3 + strandOffset) * 0.12,
+      centered * 1.86,
+      (upperLid ? 1 : -1) * aperture * 0.64,
+      (upperLid ? 0.13 : -0.045) + aperture * (upperLid ? 0.1 : 0.07),
     );
   }
 
-  const arc = centered * Math.PI * 1.34;
-  const radialLayer = 1 + strandOffset * 0.17;
+  if (strand === 2) {
+    return target.set(
+      Math.sin(u * Math.PI * 3) * 0.13,
+      0.78 - u * 1.56,
+      Math.sin(u * Math.PI) * 0.29,
+    );
+  }
+  const gatewayArc = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.62);
+  const upperGate = strand === 0;
   return target.set(
-    Math.sin(arc) * 1.42 * radialLayer,
-    (0.48 - Math.cos(arc)) * 0.42 + strandOffset * 0.075,
-    strandOffset * 0.27 + Math.sin(arc * 2 + strandOffset * 0.9) * 0.14,
+    centered * 3.08,
+    (upperGate ? 1 : -1) * gatewayArc * 0.56,
+    (upperGate ? 0.15 : -0.08) + gatewayArc * 0.1,
   );
 }
 
@@ -67,25 +94,24 @@ export function createMorphGeometry(compact: boolean) {
   const along = new Float32Array(count);
   const strandIds = new Float32Array(count);
   const indices: number[] = [];
-  const nCurve = new THREE.CatmullRomCurve3(
+  const mantaSpine = new THREE.CatmullRomCurve3(
     [
-      new THREE.Vector3(-0.98, -0.52, 0.04),
-      new THREE.Vector3(-0.72, -0.29, -0.12),
-      new THREE.Vector3(-0.24, -0.08, 0.08),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0.24, 0.06, -0.08),
-      new THREE.Vector3(0.72, 0.27, 0.12),
-      new THREE.Vector3(0.98, 0.52, -0.04),
+      new THREE.Vector3(0, 0.54, 0.04),
+      new THREE.Vector3(-0.035, 0.28, 0.2),
+      new THREE.Vector3(0.025, 0.02, 0.3),
+      new THREE.Vector3(-0.02, -0.22, 0.18),
+      new THREE.Vector3(0.015, -0.58, 0.04),
+      new THREE.Vector3(0, -1.02, -0.08),
     ],
     false,
     "centripetal",
     0.42,
   );
   const stateSettings = [
-    { braid: 0.1, width: 0.12, twists: 3.1, fold: 0.055 },
-    { braid: 0.16, width: 0.14, twists: 2.2, fold: 0.075 },
-    { braid: 0.12, width: 0.155, twists: 1.65, fold: 0.1 },
-    { braid: 0.055, width: 0.18, twists: 0.8, fold: 0.065 },
+    { braid: 0.062, width: 0.11, twists: 1.3, fold: 0.072 },
+    { braid: 0.028, width: 0.24, twists: 0.08, fold: 0.035 },
+    { braid: 0.032, width: 0.17, twists: 0.12, fold: 0.046 },
+    { braid: 0.025, width: 0.2, twists: 0.1, fold: 0.042 },
   ];
   const point = new THREE.Vector3();
   const previous = new THREE.Vector3();
@@ -113,21 +139,22 @@ export function createMorphGeometry(compact: boolean) {
         strandIds[index] = strand / Math.max(strandCount - 1, 1);
 
         stateSettings.forEach((settings, state) => {
-          samplePath(state, u, strand, nCurve, point);
-          samplePath(state, Math.max(0, u - 0.002), strand, nCurve, previous);
-          samplePath(state, Math.min(1, u + 0.002), strand, nCurve, next);
+          samplePath(state, u, strand, mantaSpine, point);
+          samplePath(state, Math.max(0, u - 0.002), strand, mantaSpine, previous);
+          samplePath(state, Math.min(1, u + 0.002), strand, mantaSpine, next);
           tangent.copy(next).sub(previous).normalize();
           side.set(-tangent.y, tangent.x, 0).normalize();
           if (side.lengthSq() < 0.001) side.set(1, 0, 0);
           depth.crossVectors(tangent, side).normalize();
 
-          const twist = u * Math.PI * 2 * settings.twists + strandPhase;
+          const twist = u * Math.PI * 2 * settings.twists +
+            (state === 0 ? strandPhase : 0);
           const twistCos = Math.cos(twist);
           const twistSin = Math.sin(twist);
-          let braidProfile = 0.68 + Math.sin(Math.PI * u) * 0.32;
-          if (state === 1) braidProfile = 0.14 + Math.abs(u - 0.5) * 1.72;
-          if (state === 2) braidProfile = 0.14 + THREE.MathUtils.smoothstep(u, 0.28, 0.84) * 0.86;
-          if (state === 3) braidProfile = 0.42;
+          let braidProfile = 0.62 + Math.sin(Math.PI * u) * 0.38;
+          if (state === 1) braidProfile = 0.24 + Math.abs(u - 0.5) * 0.5;
+          if (state === 2) braidProfile = 0.34 + Math.sin(Math.PI * u) * 0.26;
+          if (state === 3) braidProfile = 0.3 + Math.sin(Math.PI * u) * 0.2;
           const braidRadius = settings.braid * braidProfile;
           result
             .copy(point)
@@ -137,11 +164,14 @@ export function createMorphGeometry(compact: boolean) {
 
           ribbonDirection
             .copy(side)
-            .multiplyScalar(Math.cos(twist + state * 0.31))
-            .addScaledVector(depth, Math.sin(twist + state * 0.31))
+            .multiplyScalar(Math.cos(twist + strandOffset * 0.07))
+            .addScaledVector(depth, Math.sin(twist + strandOffset * 0.07))
             .normalize();
-          const width =
-            settings.width * taper * (0.84 + Math.sin(u * Math.PI * 7 + strandPhase) * 0.16);
+          const spineWidth = strand === 2 && state > 0
+            ? state === 1 ? 0.54 : 0.46
+            : 1;
+          const width = settings.width * spineWidth * taper *
+            (0.94 + Math.sin(u * Math.PI * 7 + strandPhase) * 0.06);
           result.addScaledVector(ribbonDirection, across * width);
           setVector(positions[state], index, result);
         });

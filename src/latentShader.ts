@@ -166,11 +166,13 @@ const morphVertexChunk = /* glsl */ `
     current.x += inferenceMotion * routeWave * 0.008;
     current.z += inferenceMotion * routeWave * 0.024 * uDisplacementScale;
 
-    // EMERGENCE: pulses split from the center and lift through the branches.
-    float branchDirection = sin(aStrand * 6.28318);
+    // EMERGENCE: the opposing lids breathe around the opening iris.
+    float apertureDirection = aStrand < 0.25
+      ? 1.0
+      : aStrand < 0.75 ? -1.0 : 0.0;
     float growthWave = sin(uTime * 0.82 - aAlong * 10.0 + aStrand * 4.0);
-    current.x += emergenceMotion * branchDirection * growthWave * 0.014;
-    current.y += emergenceMotion * growthWave * (0.009 + aAlong * 0.009);
+    current.x += emergenceMotion * growthWave * 0.006;
+    current.y += emergenceMotion * apertureDirection * growthWave * 0.018;
 
     // OPEN: layers counter-move without closing into a fixed silhouette.
     float openAngle = openMotion * (
