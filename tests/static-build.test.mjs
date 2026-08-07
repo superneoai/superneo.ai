@@ -70,7 +70,9 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.doesNotMatch(html, /rel="(?:shortcut )?icon"|apple-touch-icon|site\.webmanifest/i);
   assert.match(html, /src="\.\/assets\//);
   assert.doesNotMatch(`${html}\n${app}`, /quietly|becoming|unannounced/i);
-  assert.match(morph, /CatmullRomCurve3/);
+  assert.match(morph, /polygonRadius/);
+  assert.match(morph, /twists: 0\.5/);
+  assert.doesNotMatch(morph, /CatmullRomCurve3/);
   assert.match(morph, /new THREE\.BufferGeometry/);
   assert.match(field, /new THREE\.Points/);
   assert.match(field, /data-no-scene/);

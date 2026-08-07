@@ -66,100 +66,88 @@ test("morph targets have genuinely different silhouettes", () => {
     Math.max(...aspects) - Math.min(...aspects) > 0.75,
     `expected major silhouette change; aspect ratios were ${aspects.map((value) => value.toFixed(2)).join(", ")}`,
   );
-  assert.ok(aspects[0] < 1.05, `latent state should read as an upright sprout; got ${aspects[0].toFixed(2)}`);
-  assert.ok(aspects[1] > 1.7, `inference should unfold into a manta; got ${aspects[1].toFixed(2)}`);
+  assert.ok(aspects[0] < 0.9, `latent state should read as an upright energy core; got ${aspects[0].toFixed(2)}`);
+  assert.ok(aspects[1] > 1.3, `inference should unfold into a Mobius field; got ${aspects[1].toFixed(2)}`);
   assert.ok(
-    aspects[2] > 1.3 && aspects[2] < 1.65,
-    `emergence should contract into an eye; got ${aspects[2].toFixed(2)}`,
+    aspects[2] > 0.95 && aspects[2] < 1.25,
+    `emergence should contract into a gyroscopic cage; got ${aspects[2].toFixed(2)}`,
   );
-  assert.ok(aspects[3] > 2.15, `open state should expand into Saturn's rings; got ${aspects[3].toFixed(2)}`);
+  assert.ok(aspects[3] > 1.8, `open state should expand into a hex gate; got ${aspects[3].toFixed(2)}`);
   geometry.dispose();
 });
 
-test("the first state is a seed with a stem and leaf", () => {
+test("the first state is a nested faceted energy core", () => {
   const geometry = createMorphGeometry(true);
-  const seed = geometry.getAttribute("position") as BufferAttribute;
+  const core = geometry.getAttribute("position") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const seedTop = routeEndpoint(seed, along, strands, 0, 0);
-  const stemBottom = routeEndpoint(seed, along, strands, 0.5, 0);
-  const stemTop = routeEndpoint(seed, along, strands, 0.5, 1);
-  const leafStart = routeEndpoint(seed, along, strands, 1, 0);
-  const leafEnd = routeEndpoint(seed, along, strands, 1, 1);
+  const outerStart = routeEndpoint(core, along, strands, 0, 0);
+  const outerEnd = routeEndpoint(core, along, strands, 0, 1);
+  const innerStart = routeEndpoint(core, along, strands, 0.5, 0);
+  const innerEnd = routeEndpoint(core, along, strands, 0.5, 1);
+  const axisTop = routeEndpoint(core, along, strands, 1, 0);
+  const axisBottom = routeEndpoint(core, along, strands, 1, 1);
 
-  assert.ok(seedTop.y > 0.25 && Math.abs(seedTop.x) < 0.05);
-  assert.ok(stemBottom.y < 0.02 && stemTop.y > 0.98);
-  assert.ok(Math.abs(leafStart.x - leafEnd.x) < 0.02);
-  assert.ok(Math.abs(leafStart.y - leafEnd.y) < 0.02);
-  assert.ok(leafStart.y > 0.7);
+  assert.ok(Math.abs(outerStart.x - outerEnd.x) < 0.02);
+  assert.ok(Math.abs(outerStart.y - outerEnd.y) < 0.02);
+  assert.ok(Math.abs(innerStart.x - innerEnd.x) < 0.02);
+  assert.ok(Math.abs(innerStart.y - innerEnd.y) < 0.02);
+  assert.ok(axisTop.y > 1 && axisBottom.y < -1);
   geometry.dispose();
 });
 
-test("the manta keeps a recognizable wing span and nose-tail axis", () => {
+test("the second state is a closed three-band Mobius field", () => {
   const geometry = createMorphGeometry(true);
-  const manta = geometry.getAttribute("aTarget1") as BufferAttribute;
+  const mobius = geometry.getAttribute("aTarget1") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const mantaBounds = bounds(manta);
-  const nose = routeEndpoint(manta, along, strands, 1, 0);
-  const tail = routeEndpoint(manta, along, strands, 1, 1);
+  const fieldBounds = bounds(mobius);
 
-  assert.ok(mantaBounds.maxX - mantaBounds.minX > 3);
-  assert.ok(Math.abs(nose.x) < 0.1 && nose.y > 0.48);
-  assert.ok(Math.abs(tail.x) < 0.1 && tail.y < -0.95);
+  for (const strand of [0, 0.5, 1]) {
+    const start = routeEndpoint(mobius, along, strands, strand, 0);
+    const end = routeEndpoint(mobius, along, strands, strand, 1);
+    assert.ok(Math.abs(start.x - end.x) < 0.02);
+    assert.ok(Math.abs(start.y - end.y) < 0.02);
+  }
+  assert.ok(fieldBounds.maxX - fieldBounds.minX > 1.8);
   geometry.dispose();
 });
 
-test("the manta wing ribbons join into one continuous membrane", () => {
+test("the third state is a closed three-axis gyroscopic cage", () => {
   const geometry = createMorphGeometry(true);
-  const manta = geometry.getAttribute("aTarget1") as BufferAttribute;
+  const cage = geometry.getAttribute("aTarget2") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const leftRoot = routeEndpoint(manta, along, strands, 0, 0);
-  const rightRoot = routeEndpoint(manta, along, strands, 0.5, 0);
-  const leftTip = routeEndpoint(manta, along, strands, 0, 0.5);
-  const rightTip = routeEndpoint(manta, along, strands, 0.5, 0.5);
 
-  assert.ok(Math.abs(leftRoot.x - rightRoot.x) < 0.02);
-  assert.ok(Math.abs(leftRoot.y - rightRoot.y) < 0.02);
-  assert.ok(leftTip.x < -1.5 && rightTip.x > 1.5);
+  for (const strand of [0, 0.5, 1]) {
+    const start = routeEndpoint(cage, along, strands, strand, 0);
+    const end = routeEndpoint(cage, along, strands, strand, 1);
+    assert.ok(Math.abs(start.x - end.x) < 0.02);
+    assert.ok(Math.abs(start.y - end.y) < 0.02);
+  }
+  const cageBounds = bounds(cage);
+  assert.ok(cageBounds.maxX > 1 && cageBounds.minX < -1);
+  assert.ok(cageBounds.maxY > 0.9 && cageBounds.minY < -0.9);
   geometry.dispose();
 });
 
-test("the third state is an eye with closed iris geometry", () => {
+test("the final state is a concentric hex gate with an energy slit", () => {
   const geometry = createMorphGeometry(true);
-  const eye = geometry.getAttribute("aTarget2") as BufferAttribute;
+  const gate = geometry.getAttribute("aTarget3") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const leftUpper = routeEndpoint(eye, along, strands, 0, 0);
-  const rightUpper = routeEndpoint(eye, along, strands, 0, 1);
-  const upperCenter = routeEndpoint(eye, along, strands, 0, 0.5);
-  const lowerCenter = routeEndpoint(eye, along, strands, 0.5, 0.5);
-  const irisStart = routeEndpoint(eye, along, strands, 1, 0);
-  const irisEnd = routeEndpoint(eye, along, strands, 1, 1);
+  const outerStart = routeEndpoint(gate, along, strands, 0, 0);
+  const outerEnd = routeEndpoint(gate, along, strands, 0, 1);
+  const innerStart = routeEndpoint(gate, along, strands, 0.5, 0);
+  const innerEnd = routeEndpoint(gate, along, strands, 0.5, 1);
+  const slitLeft = routeEndpoint(gate, along, strands, 1, 0);
+  const slitRight = routeEndpoint(gate, along, strands, 1, 1);
 
-  assert.ok(leftUpper.x < -1 && rightUpper.x > 1);
-  assert.ok(upperCenter.y > 0.55 && lowerCenter.y < -0.55);
-  assert.ok(Math.abs(irisStart.x - irisEnd.x) < 0.02);
-  assert.ok(Math.abs(irisStart.y - irisEnd.y) < 0.02);
-  geometry.dispose();
-});
-
-test("the final state is Saturn with a planet and two closed rings", () => {
-  const geometry = createMorphGeometry(true);
-  const saturn = geometry.getAttribute("aTarget3") as BufferAttribute;
-  const along = geometry.getAttribute("aAlong") as BufferAttribute;
-  const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const planetStart = routeEndpoint(saturn, along, strands, 0, 0);
-  const planetEnd = routeEndpoint(saturn, along, strands, 0, 1);
-  const outerLeft = routeEndpoint(saturn, along, strands, 0.5, 0.5);
-  const outerRight = routeEndpoint(saturn, along, strands, 0.5, 0);
-  const innerLeft = routeEndpoint(saturn, along, strands, 1, 0.5);
-
-  assert.ok(Math.abs(planetStart.x - planetEnd.x) < 0.02);
-  assert.ok(Math.abs(planetStart.y - planetEnd.y) < 0.02);
-  assert.ok(outerLeft.x < -1.5 && outerRight.x > 1.5);
-  assert.ok(innerLeft.x < -1.3);
+  assert.ok(Math.abs(outerStart.x - outerEnd.x) < 0.02);
+  assert.ok(Math.abs(outerStart.y - outerEnd.y) < 0.02);
+  assert.ok(Math.abs(innerStart.x - innerEnd.x) < 0.02);
+  assert.ok(Math.abs(innerStart.y - innerEnd.y) < 0.02);
+  assert.ok(slitLeft.x < -1.95 && slitRight.x > 1.95);
   geometry.dispose();
 });
 
