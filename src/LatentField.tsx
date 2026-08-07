@@ -39,6 +39,7 @@ type LatentFieldProps = {
 
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
+const SCENE_REVEAL_DURATION = 1_200;
 export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
 
@@ -57,9 +58,20 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let sceneReady = false;
     let shaderHealthy = true;
     let readinessStartedAt = 0;
+    let sceneRevealStartedAt = 0;
+    let validFrameCount = 0;
+    const sceneReveal = { value: 0 };
     const reportSceneState = (ready: boolean) => {
       if (sceneReady === ready) return;
       sceneReady = ready;
+      if (ready) {
+        sceneRevealStartedAt = performance.now();
+        sceneReveal.value = motionIsReduced() ? 1 : 0;
+      } else {
+        sceneRevealStartedAt = 0;
+        sceneReveal.value = 0;
+        validFrameCount = 0;
+      }
       host.dataset.sceneReady = String(ready);
       onSceneStateChange(ready);
     };
@@ -566,6 +578,18 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       const timestamp = time * 1000;
       const delta = Math.min((timestamp - previousFrame) / 1000, 0.05);
       previousFrame = timestamp;
+      if (sceneReady && sceneReveal.value < 1) {
+        const elapsed = performance.now() - sceneRevealStartedAt;
+        const revealProgress = Math.min(Math.max(elapsed / SCENE_REVEAL_DURATION, 0), 1);
+        sceneReveal.value = motionIsReduced()
+          ? 1
+          : revealProgress * revealProgress * (3 - 2 * revealProgress);
+        backgroundMaterial.uniforms.uCompactLayout.value = THREE.MathUtils.lerp(
+          1,
+          renderProfile.compact ? 1 : 0,
+          sceneReveal.value,
+        );
+      }
       pointerWorld.value.lerp(targetPointerWorld, 0.14);
       pointerDelta.value.lerp(targetPointerDelta, 0.18);
       pointerScreen.value.lerp(targetPointerScreen, 0.14);
@@ -651,8 +675,15 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         if (!sceneReady && artworkReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
+            validFrameCount += 1;
             if (readinessStartedAt === 0) readinessStartedAt = performance.now();
-            if (performance.now() - readinessStartedAt >= (qa?.sceneDelay ?? 0)) {
+            if (
+              validFrameCount >= 2 &&
+              performance.now() - readinessStartedAt >= (qa?.sceneDelay ?? 0)
+            ) {
+              if (!motionIsReduced()) {
+                backgroundMaterial.uniforms.uCompactLayout.value = 1;
+              }
               reportSceneState(true);
             } else {
               needsRender = true;
@@ -666,9 +697,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       }
       const renderEnded = performance.now();
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
-      needsRender = !sceneReady && artworkReady && shaderHealthy &&
+      needsRender = (sceneReady && sceneReveal.value < 1) || (
+        !sceneReady && artworkReady && shaderHealthy &&
         (readinessStartedAt === 0 ||
-          performance.now() - readinessStartedAt < (qa?.sceneDelay ?? 0));
+          performance.now() - readinessStartedAt < (qa?.sceneDelay ?? 0))
+      );
     };
 
     const tick = (time: number) => {

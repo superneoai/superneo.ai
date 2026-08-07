@@ -307,10 +307,21 @@ async function waitForRoot(session) {
 }
 
 async function waitForScene(session, ready = true) {
+  const readyCondition = `
+    const experience = document.querySelector('.experience');
+    if (experience?.dataset.sceneReady !== 'true') return false;
+    const stage = document.querySelector('.signal-stage');
+    const poster = document.querySelector('.signal-poster');
+    if (!stage || !poster) return false;
+    return Number(getComputedStyle(stage).opacity) >= 0.999 &&
+      getComputedStyle(poster).visibility === 'hidden';
+  `;
   await waitFor(
     session,
-    `return document.querySelector('.experience')?.dataset.sceneReady === '${ready}';`,
-    ready ? "the first valid WebGL frame" : "the poster fallback",
+    ready
+      ? readyCondition
+      : "return document.querySelector('.experience')?.dataset.sceneReady === 'false';",
+    ready ? "the completed WebGL reveal" : "the poster fallback",
   );
 }
 
@@ -660,11 +671,17 @@ const previousBaseline = await readJson(BASELINE_FILE, {
   authorityCommit: "84b94ea",
   browsers: {},
 });
+const previousResults = await readJson(RESULTS_FILE, {
+  authorityCommit: "84b94ea",
+  testedCommit: "working-tree",
+  browsers: {},
+  neoOverlap: {},
+});
 const results = {
   authorityCommit: "84b94ea",
   testedCommit: recordingBaseline ? "84b94ea" : "working-tree",
-  browsers: {},
-  neoOverlap: {},
+  browsers: recordingBaseline ? {} : { ...previousResults.browsers },
+  neoOverlap: recordingBaseline ? {} : { ...previousResults.neoOverlap },
 };
 const maskResults = {};
 const failures = [];
@@ -713,10 +730,11 @@ try {
 
   if (!recordingBaseline) {
     for (const viewportName of Object.keys(VIEWPORTS)) {
-      results.neoOverlap[viewportName] = {};
       const available = requestedBrowsers
         .map((browserName) => [browserName, maskResults[`${viewportName}.${browserName}`]])
         .filter(([, mask]) => mask);
+      if (available.length < 2) continue;
+      results.neoOverlap[viewportName] = {};
       for (let leftIndex = 0; leftIndex < available.length; leftIndex += 1) {
         for (let rightIndex = leftIndex + 1; rightIndex < available.length; rightIndex += 1) {
           const [leftName, leftMask] = available[leftIndex];
@@ -733,17 +751,19 @@ try {
     }
   }
 
-  const resultFile = recordingBaseline ? BASELINE_FILE : RESULTS_FILE;
-  if (recordingBaseline) {
-    for (const [browserName, browserResults] of Object.entries(results.browsers)) {
-      previousBaseline.browsers[browserName] = {
-        ...(previousBaseline.browsers[browserName] || {}),
-        ...browserResults,
-      };
+  if (failures.length === 0) {
+    const resultFile = recordingBaseline ? BASELINE_FILE : RESULTS_FILE;
+    if (recordingBaseline) {
+      for (const [browserName, browserResults] of Object.entries(results.browsers)) {
+        previousBaseline.browsers[browserName] = {
+          ...(previousBaseline.browsers[browserName] || {}),
+          ...browserResults,
+        };
+      }
+      await writeFile(resultFile, `${JSON.stringify(previousBaseline, null, 2)}\n`);
+    } else {
+      await writeFile(resultFile, `${JSON.stringify(results, null, 2)}\n`);
     }
-    await writeFile(resultFile, `${JSON.stringify(previousBaseline, null, 2)}\n`);
-  } else {
-    await writeFile(resultFile, `${JSON.stringify(results, null, 2)}\n`);
   }
 } finally {
   server.process?.kill("SIGTERM");

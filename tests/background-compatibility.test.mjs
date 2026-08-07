@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("the scene poster stays visible until the first valid WebGL frame", async () => {
+test("the scene poster crossfades through the first valid WebGL frame", async () => {
   const field = await readFile(
     new URL("../src/LatentField.tsx", import.meta.url),
     "utf8",
@@ -40,8 +40,38 @@ test("the scene poster stays visible until the first valid WebGL frame", async (
     baseStyles,
     /\.signal-poster \.signal-artwork-fallback--desktop\s*\{[\s\S]*?display:\s*block/,
   );
-  assert.match(styles, /data-scene-ready="true"[\s\S]*?\.signal-poster\s*\{[\s\S]*?display:\s*none/);
-  assert.match(styles, /data-scene-ready="false"[\s\S]*?\.signal-stage\s*\{[\s\S]*?visibility:\s*hidden/);
+  assert.match(
+    styles,
+    /\.signal-stage\s*\{[\s\S]*?opacity:\s*0[\s\S]*?visibility:\s*hidden[\s\S]*?transition:/,
+  );
+  assert.match(
+    styles,
+    /data-scene-ready="true"[\s\S]*?\.signal-stage\s*\{[\s\S]*?opacity:\s*1[\s\S]*?visibility:\s*visible/,
+  );
+  assert.match(
+    styles,
+    /data-scene-ready="true"[\s\S]*?\.signal-poster\s*\{[\s\S]*?opacity:\s*0[\s\S]*?visibility:\s*hidden/,
+  );
+  const readyPosterRule = styles.match(
+    /\.experience\[data-scene-ready="true"\] \.signal-poster\s*\{([^}]*)\}/,
+  );
+  assert.ok(readyPosterRule, "expected the ready poster rule");
+  assert.doesNotMatch(readyPosterRule[1], /display:\s*none/);
+  assert.match(
+    styles,
+    /\.signal-artwork-fallback\s*\{[\s\S]*?inset:\s*0;/,
+  );
+  assert.doesNotMatch(styles, /mobile-background-drift/);
+  assert.match(field, /sceneRevealStartedAt/);
+  assert.match(field, /validFrameCount\s*>=\s*2/);
+  assert.match(
+    field,
+    /uCompactLayout\.value\s*=\s*THREE\.MathUtils\.lerp\(\s*1,[\s\S]*?sceneReveal\.value/,
+  );
+  assert.match(
+    field,
+    /needsRender\s*=\s*\(sceneReady\s*&&\s*sceneReveal\.value\s*<\s*1\)/,
+  );
 });
 
 test("the WebGL scene stays opaque and never composites the fallback artwork", async () => {
