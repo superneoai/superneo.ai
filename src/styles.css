@@ -201,7 +201,7 @@ a {
 .scene-loader-track > i[data-state="active"] {
   background: var(--signal);
   box-shadow: 0 0 0.7rem color-mix(in oklch, var(--signal) 30%, transparent);
-  animation: scene-loader-active 700ms ease-in-out infinite alternate;
+  animation: scene-loader-neon-step 300ms steps(1, end) both;
 }
 
 .scene-loader-final {
@@ -232,10 +232,23 @@ a {
 }
 
 .scene-loader-final output {
+  display: inline-flex;
   color: var(--signal);
   font: inherit;
   letter-spacing: 0.12em;
-  animation: scene-loader-active 700ms ease-in-out infinite alternate;
+}
+
+.scene-loader-final output span {
+  opacity: 0.18;
+  animation: scene-loader-dot 900ms steps(1, end) infinite;
+}
+
+.scene-loader-final output span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.scene-loader-final output span:nth-child(3) {
+  animation-delay: 300ms;
 }
 
 .experience[data-scene-ready="true"] .signal-stage {
@@ -250,6 +263,18 @@ a {
   transition:
     opacity 0s linear 950ms,
     visibility 0s linear 950ms;
+}
+
+.experience:not([data-scene-ready="true"]) > :is(
+  .technical-frame,
+  .site-header,
+  .making-line,
+  .stage-panel,
+  .scroll-rail,
+  .scroll-cue,
+  .site-footer
+) {
+  visibility: hidden;
 }
 
 .signal-canvas {
@@ -1340,6 +1365,39 @@ a {
   }
 }
 
+@keyframes scene-loader-neon-step {
+  0%,
+  12%,
+  38% {
+    opacity: 0.22;
+    box-shadow: none;
+  }
+
+  16%,
+  32%,
+  46%,
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 0.55rem color-mix(in oklch, var(--signal) 48%, transparent),
+      0 0 1.2rem color-mix(in oklch, var(--signal) 24%, transparent);
+  }
+}
+
+@keyframes scene-loader-dot {
+  0%,
+  24%,
+  76%,
+  100% {
+    opacity: 0.18;
+  }
+
+  25%,
+  75% {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 720px) {
   .signal-poster .signal-artwork-fallback--desktop {
     display: none;
@@ -1737,7 +1795,7 @@ a {
   .signal-poster::after,
   .scene-loader-step[data-state="active"] output,
   .scene-loader-track > i[data-state="active"],
-  .scene-loader-final output {
+  .scene-loader-final output span {
     animation: none;
   }
 

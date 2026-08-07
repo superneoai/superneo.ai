@@ -90,7 +90,11 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
         <span className="scene-loader-final" data-visible={finalizing}>
           <i>&gt;</i>
           <span>INITIALIZING</span>
-          <output>...</output>
+          <output>
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </output>
         </span>
       </div>
     </div>

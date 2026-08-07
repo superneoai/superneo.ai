@@ -89,6 +89,13 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(styles, /\.signal-poster::after\s*\{[\s\S]*?scene-loader-scan/);
   assert.match(styles, /\.scene-loader-step\[data-state="active"\]/);
   assert.match(styles, /\.scene-loader-track > i\[data-state="active"\]/);
+  assert.match(styles, /@keyframes scene-loader-neon-step/);
+  assert.match(styles, /@keyframes scene-loader-dot/);
+  assert.match(styles, /\.scene-loader-final output span:nth-child\(3\)/);
+  assert.match(
+    styles,
+    /\.experience:not\(\[data-scene-ready="true"\]\) > :is\([\s\S]*?\.site-header,[\s\S]*?\.stage-panel,[\s\S]*?\.site-footer[\s\S]*?visibility:\s*hidden/,
+  );
   assert.doesNotMatch(styles, /@keyframes scene-loader-progress/);
   assert.doesNotMatch(styles, /@keyframes scene-loader-code/);
   assert.match(field, /sceneRevealStartedAt/);
