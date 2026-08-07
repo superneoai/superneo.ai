@@ -8,6 +8,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
   const rig = await readFile(new URL("../src/neoformRig.ts", import.meta.url), "utf8");
+  const world = await readFile(new URL("../src/neoformWorld.ts", import.meta.url), "utf8");
   const shader = await readFile(new URL("../src/latentShader.ts", import.meta.url), "utf8");
   const soundtrack = await readFile(new URL("../src/Soundtrack.tsx", import.meta.url), "utf8");
   const soundtrackEngine = await readFile(
@@ -74,6 +75,12 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(rig, /sampleQuadruped/);
   assert.match(rig, /new THREE\.InstancedMesh/);
   assert.match(rig, /predictionStrength/);
+  assert.match(world, /DESKTOP_SWARM_COUNT = 700/);
+  assert.match(world, /COMPACT_SWARM_COUNT = 260/);
+  assert.match(world, /new THREE\.InstancedBufferGeometry/);
+  assert.match(world, /uPulseOrigins\[5\]/);
+  assert.match(world, /uContacts\[4\]/);
+  assert.doesNotMatch(world, /setMatrixAt/);
   assert.match(field, /data-no-scene/);
   assert.match(soundtrack, /type="range"/);
   assert.match(soundtrack, /Soundtrack volume/);

@@ -14,6 +14,7 @@ import {
   postVertexShader,
 } from "./latentShader";
 import { createNeoformRig } from "./neoformRig";
+import { createNeoformWorld } from "./neoformWorld";
 import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { createFrameProbe } from "./frameProbe";
@@ -158,8 +159,12 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     scene.add(background);
 
     const neoform = createNeoformRig(renderProfile.compact);
+    const neoformWorld = createNeoformWorld(
+      renderProfile.compact,
+      signalColorUniform.value,
+    );
     const objectGroup = new THREE.Group();
-    objectGroup.add(neoform.group);
+    objectGroup.add(neoformWorld.group, neoform.group);
     objectGroup.position.y = -0.67;
     objectGroup.rotation.set(-0.08, -0.52, 0);
     scene.add(objectGroup);
@@ -398,6 +403,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         clickAlongValues[availableSignal] = clickAlong;
         signalVariationValues[availableSignal] = variation;
         signalProgressValues[availableSignal] = 0;
+        neoformWorld.triggerPulse(availableSignal, targetPointerWorld);
         window.dispatchEvent(new CustomEvent(TIP_SIGNAL_EVENT, {
           detail: { arrivals: createTipArrivals(clickAlong, variation) },
         }));
@@ -517,6 +523,17 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         pointerStrength: pointerStrength.value,
         predictionStrength,
         signalProgress: signalProgressValues,
+        reducedMotion: motionIsReduced() || Boolean(qa?.freezeScene),
+      });
+      neoformWorld.update({
+        time: timeUniform.value,
+        phase: semanticPhase,
+        speed: runSpeed,
+        bloom: finaleStrength,
+        pointer: pointerWorld.value,
+        pointerStrength: pointerStrength.value,
+        signalProgress: signalProgressValues,
+        contacts: neoform.tipPositions,
         reducedMotion: motionIsReduced() || Boolean(qa?.freezeScene),
       });
       if (!motionIsReduced() && !qa?.freezeScene) {
@@ -653,6 +670,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       outputPass.dispose();
       composer.dispose();
       neoform.dispose();
+      neoformWorld.dispose();
       backgroundGeometry.dispose();
       backgroundMaterial.uniforms.uArtwork.value.dispose();
       backgroundMaterial.dispose();

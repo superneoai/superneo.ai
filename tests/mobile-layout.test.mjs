@@ -8,6 +8,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
   const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
   const rig = await readFile(new URL("../src/neoformRig.ts", import.meta.url), "utf8");
+  const world = await readFile(new URL("../src/neoformWorld.ts", import.meta.url), "utf8");
   const shader = await readFile(new URL("../src/latentShader.ts", import.meta.url), "utf8");
   const profile = await readFile(new URL("../src/renderProfile.ts", import.meta.url), "utf8");
 
@@ -61,6 +62,8 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(rig, /new THREE\.InstancedMesh/);
   assert.match(rig, /past\.group\.visible = input\.predictionStrength/);
   assert.match(rig, /future\.group\.visible = input\.predictionStrength/);
+  assert.match(world, /compact \? COMPACT_SWARM_COUNT : DESKTOP_SWARM_COUNT/);
+  assert.match(world, /COMPACT_SWARM_COUNT = 260/);
   await access(new URL("../public/latent-field-mobile.jpg", import.meta.url));
   assert.match(field, /renderProfile\.compact\s*\? \["latent-field-mobile\.jpg"\]/);
   assert.match(field, /textureImage\.naturalWidth \|\| textureImage\.width/);
