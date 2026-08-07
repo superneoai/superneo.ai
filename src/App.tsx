@@ -40,6 +40,10 @@ function ScenePoster() {
         className="signal-artwork-fallback signal-artwork-fallback--mobile"
         style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
       />
+      <div className="scene-loader">
+        <span className="scene-loader-label">LOADING</span>
+        <span className="scene-loader-track" />
+      </div>
     </div>
   );
 }

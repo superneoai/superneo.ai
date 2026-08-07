@@ -36,6 +36,9 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(app, /className="signal-poster"/);
   assert.match(app, /signal-artwork-fallback--desktop/);
   assert.match(app, /signal-artwork-fallback--mobile/);
+  assert.match(app, /className="scene-loader"/);
+  assert.match(app, /className="scene-loader-label">LOADING/);
+  assert.match(app, /className="scene-loader-track"/);
   assert.match(
     baseStyles,
     /\.signal-poster \.signal-artwork-fallback--desktop\s*\{[\s\S]*?display:\s*block/,
@@ -62,6 +65,9 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     /\.signal-artwork-fallback\s*\{[\s\S]*?inset:\s*0;/,
   );
   assert.doesNotMatch(styles, /mobile-background-drift/);
+  assert.match(styles, /\.signal-poster::after\s*\{[\s\S]*?scene-loader-scan/);
+  assert.match(styles, /\.scene-loader-track::after\s*\{[\s\S]*?scene-loader-progress/);
+  assert.match(styles, /@keyframes scene-loader-code/);
   assert.match(field, /sceneRevealStartedAt/);
   assert.match(field, /validFrameCount\s*>=\s*2/);
   assert.match(
