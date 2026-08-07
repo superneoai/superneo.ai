@@ -78,10 +78,12 @@ export class WebDriverViewport {
       const service = new firefox.ServiceBuilder(driverPath);
       const options = new firefox.Options()
         .setBinary(ZEN_BINARY)
-        .addArguments("-headless")
         .setPreference("media.autoplay.default", 0)
         .setPreference("media.autoplay.blocking_policy", 0)
         .setPreference("ui.prefersReducedMotion", 0);
+      if (process.env.SUPERNEO_ZEN_HEADFUL !== "1") {
+        options.addArguments("-headless");
+      }
       builder = builder
         .forBrowser("firefox")
         .setFirefoxOptions(options)
@@ -96,6 +98,7 @@ export class WebDriverViewport {
       pageLoad: 15_000,
       script: 15_000,
     });
+    await driver.get("about:blank");
     const session = new WebDriverViewport(browserName, driver);
     await session.calibrateViewport(viewport);
     return session;
@@ -125,6 +128,7 @@ export class WebDriverViewport {
         width: Math.max(200, rect.width + target.width - inner.width),
         height: Math.max(200, rect.height + target.height - inner.height),
       });
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     const inner = await this.driver.executeScript(
       "return { width: window.innerWidth, height: window.innerHeight };",

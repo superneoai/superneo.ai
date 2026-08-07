@@ -94,7 +94,7 @@ export const showcaseVertexShader = /* glsl */ `
   }
 
   vec3 palette(float act, float kind, float seed) {
-    vec3 bone = vec3(0.91, 0.898, 0.863);
+    vec3 bone = vec3(0.82, 0.805, 0.77);
     vec3 graphite = vec3(0.055, 0.06, 0.075);
     vec3 violet = vec3(0.47, 0.075, 1.0);
     vec3 blue = vec3(0.02, 0.44, 1.0);
@@ -216,7 +216,7 @@ export const showcaseVertexShader = /* glsl */ `
     vec3 tangent = normalize(cross(normal, abs(normal.y) > 0.86 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
     vec3 bitangent = normalize(cross(normal, tangent));
     vec3 local = position * cellScale;
-    local.xy = rotate2d(aSeed * TAU + uTime * 0.04 * (1.0 - uReducedMotion)) * local.xy;
+    local.xz = rotate2d(aSeed * TAU + uTime * 0.04 * (1.0 - uReducedMotion)) * local.xz;
     vec3 transformed = center + tangent * local.x + normal * local.y + bitangent * local.z;
 
     vec3 fromColor = palette(uFromAct, fromKind, aSeed);
@@ -256,11 +256,11 @@ export const showcaseFragmentShader = /* glsl */ `
     if (vMorph > 0.22 && threshold > 1.02 - vMorph * 0.18) discard;
     vec3 normal = normalize(vNormal);
     vec3 lightDirection = normalize(vec3(-0.42, 0.82, 0.48));
-    float diffuse = 0.34 + max(dot(normal, lightDirection), 0.0) * 0.72;
+    float diffuse = 0.28 + max(dot(normal, lightDirection), 0.0) * 0.62;
     float rim = pow(1.0 - abs(normal.z), 2.2);
     vec3 color = vColor * diffuse;
-    color += vColor * rim * (0.18 + vMorph * 0.24);
-    color += vec3(0.91, 0.898, 0.863) * threshold * 0.025;
+    color += vColor * rim * (0.1 + vMorph * 0.18);
+    color += vec3(0.91, 0.898, 0.863) * threshold * 0.012;
     color += vSignal * vec3(0.52, 0.72, 0.12) * 0.42;
     float depthFade = 1.0 - smoothstep(6.0, 8.0, vDepth);
     gl_FragColor = vec4(color * depthFade, 1.0);
@@ -268,9 +268,16 @@ export const showcaseFragmentShader = /* glsl */ `
 `;
 
 function makeGeometry(count: number) {
-  const base = new THREE.TetrahedronGeometry(1, 0);
+  const base = new THREE.BufferGeometry();
+  base.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([
+      -0.7, 0, -0.42,
+      0.7, 0, -0.42,
+      0, 0, 0.78,
+    ], 3),
+  );
   const geometry = new THREE.InstancedBufferGeometry();
-  geometry.index = base.index;
   for (const [name, attribute] of Object.entries(base.attributes)) {
     geometry.setAttribute(name, attribute);
   }

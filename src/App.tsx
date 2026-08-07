@@ -11,24 +11,28 @@ import { SoundtrackController } from "./Soundtrack";
 import { toStageProgress } from "./morphTimeline";
 import { parseSceneQa, type NeoQaState } from "./sceneQa";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
+import {
+  SHOWCASE_STATE_EVENT,
+  type ShowcaseStateDetail,
+} from "./showcaseEvents";
 
 const LatentField = lazy(() =>
   import("./LatentField").then(({ LatentField: field }) => ({ default: field })),
 );
 
 const stages = [
-  { title: "LATENT", line: "Possibility, compressed." },
-  { title: "INFERENCE", line: "Signals converge on a path." },
-  { title: "EMERGENCE", line: "New structure appears between them." },
-  { title: "SUPERNEO", line: "The structure remains open." },
+  { title: "LATENT", line: "Velocity before certainty." },
+  { title: "INFERENCE", line: "A move, predicted." },
+  { title: "EMERGENCE", line: "The world resolves." },
+  { title: "SUPERNEO", line: "Scale keeps opening." },
 ];
 
 const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
-const desktopArtworkUrl = new URL("latent-field.avif", document.baseURI).href;
-const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
+const desktopPosterUrl = new URL("showcase-poster-desktop.jpg", document.baseURI).href;
+const mobilePosterUrl = new URL("showcase-poster-mobile.jpg", document.baseURI).href;
 const SCENE_LOADING_STEP_MS = 300;
 const INITIALIZING_LINGER_BASE_MS = 550;
 const INITIALIZING_LINGER_JITTER_MS = 350;
@@ -49,14 +53,11 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
 
   return (
     <div className="signal-poster" aria-hidden="true">
-      <div
-        className="signal-artwork-fallback signal-artwork-fallback--desktop"
-        style={{ backgroundImage: `url(${desktopArtworkUrl})` }}
-      />
-      <div
-        className="signal-artwork-fallback signal-artwork-fallback--mobile"
-        style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
-      />
+      <picture className="signal-poster-art">
+        <source media="(max-width: 720px)" srcSet={mobilePosterUrl} />
+        <img src={desktopPosterUrl} alt="" decoding="async" fetchPriority="high" />
+      </picture>
+      <div className="signal-poster-atmosphere" />
       <div className="scene-loader">
         <span className="scene-loader-label">
           <span>SYSTEM BOOT</span>
@@ -175,6 +176,10 @@ function ProcessTrace() {
   const bitsRef = useRef<HTMLOutputElement>(null);
   const motionScopeRef = useRef<HTMLOutputElement>(null);
   const phaseRef = useRef<HTMLOutputElement>(null);
+  const primaryLabelRef = useRef<HTMLSpanElement>(null);
+  const primaryValueRef = useRef<HTMLOutputElement>(null);
+  const secondaryLabelRef = useRef<HTMLSpanElement>(null);
+  const secondaryValueRef = useRef<HTMLOutputElement>(null);
   const blockRefs = useRef<Array<HTMLOutputElement | null>>([]);
   const percentRefs = useRef<Array<HTMLOutputElement | null>>([]);
 
@@ -241,18 +246,28 @@ function ProcessTrace() {
       if (phaseRef.current) phaseRef.current.value = `0${stage + 1}`;
     };
 
+    const syncShowcase = (event: Event) => {
+      const { primary, secondary } = (event as CustomEvent<ShowcaseStateDetail>).detail;
+      if (primaryLabelRef.current) primaryLabelRef.current.textContent = primary.label;
+      if (primaryValueRef.current) primaryValueRef.current.value = primary.value;
+      if (secondaryLabelRef.current) secondaryLabelRef.current.textContent = secondary.label;
+      if (secondaryValueRef.current) secondaryValueRef.current.value = secondary.value;
+    };
+
     updateScrollRange();
     syncScrollProgress();
     window.addEventListener("scroll", queueScrollProgress, { passive: true });
     window.addEventListener("resize", updateScrollRange, { passive: true });
     window.addEventListener("superneo:motion", syncMotion);
     window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
+    window.addEventListener(SHOWCASE_STATE_EVENT, syncShowcase);
     return () => {
       window.cancelAnimationFrame(scrollFrame);
       window.removeEventListener("scroll", queueScrollProgress);
       window.removeEventListener("resize", updateScrollRange);
       window.removeEventListener("superneo:motion", syncMotion);
       window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
+      window.removeEventListener(SHOWCASE_STATE_EVENT, syncShowcase);
     };
   }, []);
 
@@ -291,6 +306,8 @@ function ProcessTrace() {
             <span>ITER <output ref={iterationRef}>0024</output></span>
             <span>Δ <output ref={deltaRef}>0.031</output></span>
             <span>PHASE <output ref={phaseRef}>01</output></span>
+            <span><span ref={primaryLabelRef}>SPD</span> <output ref={primaryValueRef}>286 KM/H</output></span>
+            <span><span ref={secondaryLabelRef}>SUSP</span> <output ref={secondaryValueRef}>38%</output></span>
           </div>
           <div className="signal-activity">
             <span>MOTION</span>

@@ -4,7 +4,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import {
@@ -12,15 +11,19 @@ import {
   backgroundFragmentShader,
   backgroundVertexShader,
   postVertexShader,
+  semanticBloomFragmentShader,
 } from "./latentShader";
 import { createFrameProbe } from "./frameProbe";
 import { createRenderProfile } from "./renderProfile";
 import type { SceneQaConfig } from "./sceneQa";
-import { dispatchShowcaseImpulse } from "./showcaseEvents";
+import {
+  dispatchShowcaseImpulse,
+  dispatchShowcaseState,
+  SHOWCASE_SIGNAL_PROGRESS_PER_SECOND,
+} from "./showcaseEvents";
 import { createShowcaseMorphSystem } from "./showcaseMorph.ts";
 import { toShowcaseTimeline, type ShowcaseTimelineState } from "./showcaseTimeline";
 import { dispatchStageChange } from "./stageSignal";
-import { SIGNAL_PROGRESS_PER_SECOND } from "./tipSignal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -61,7 +64,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     const motionIsReduced = () => reducedMotion.matches || Boolean(qa?.reducedMotion);
     let disposed = false;
     let needsRender = true;
-    let artworkReady = false;
+    const resourcesReady = qa?.sceneFault !== "texture";
     let sceneReady = false;
     let shaderHealthy = true;
     let validFrameCount = 0;
@@ -136,14 +139,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       .trim() || "#baf628";
     const signalColorUniform = { value: new THREE.Color(signalColor) };
 
-    const artwork = new THREE.Texture();
-    let loadedArtwork: THREE.Texture | null = null;
     const backgroundGeometry = new THREE.PlaneGeometry(1, 1);
     const backgroundMaterial = new THREE.ShaderMaterial({
       uniforms: {
-        uArtwork: { value: artwork },
         uResolution: { value: new THREE.Vector2(1, 1) },
-        uArtworkResolution: { value: new THREE.Vector2(1536, 1024) },
         uCompactLayout: { value: renderProfile.compact ? 1 : 0 },
         uPointerScreen: pointerScreen,
         uPointerStrength: pointerStrength,
@@ -152,7 +151,6 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         uTime: timeUniform,
         uScroll: scrollUniform,
         uVelocity: velocity,
-        uSignalColor: signalColorUniform,
       },
       vertexShader: backgroundVertexShader,
       fragmentShader: qa?.sceneFault === "shader"
@@ -170,61 +168,22 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     objectGroup.add(showcase.group);
     scene.add(objectGroup);
 
-    const textureLoader = new THREE.TextureLoader();
-    const artworkPaths = qa?.sceneFault === "texture"
-      ? ["qa-missing-texture.jpg"]
-      : renderProfile.compact
-        ? ["latent-field-mobile.jpg"]
-        : ["latent-field.avif", "latent-field.jpg"];
-    const showArtworkFallback = () => {
-      artworkReady = false;
-      background.visible = false;
-      host.classList.add("has-background-fallback");
-      reportSceneState(false);
-      needsRender = true;
-    };
-    const loadArtwork = (candidateIndex: number) => {
-      textureLoader.load(
-        new URL(artworkPaths[candidateIndex], document.baseURI).href,
-        (texture) => {
-          if (disposed) {
-            texture.dispose();
-            return;
-          }
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.minFilter = THREE.LinearMipmapLinearFilter;
-          texture.magFilter = THREE.LinearFilter;
-          texture.anisotropy = Math.min(
-            renderer.capabilities.getMaxAnisotropy(),
-            renderProfile.compact ? 2 : 4,
-          );
-          const image = texture.image as HTMLImageElement;
-          backgroundMaterial.uniforms.uArtworkResolution.value.set(
-            image.naturalWidth || image.width || 1,
-            image.naturalHeight || image.height || 1,
-          );
-          loadedArtwork?.dispose();
-          loadedArtwork = texture;
-          backgroundMaterial.uniforms.uArtwork.value = texture;
-          artworkReady = true;
-          if (import.meta.env.DEV) host.dataset.artworkReady = "true";
-          background.visible = !qa?.objectMask;
-          host.classList.remove("has-background-fallback");
-          needsRender = true;
-        },
-        undefined,
-        () => {
-          if (disposed) return;
-          if (candidateIndex + 1 < artworkPaths.length) loadArtwork(candidateIndex + 1);
-          else showArtworkFallback();
-        },
-      );
-    };
-    loadArtwork(0);
+    background.visible = !qa?.objectMask;
+    if (import.meta.env.DEV) host.dataset.resourcesReady = String(resourcesReady);
 
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.42, 0.46);
+    const bloomPass = new ShaderPass({
+      uniforms: {
+        tDiffuse: { value: null },
+        uResolution: { value: new THREE.Vector2(1, 1) },
+        uStrength: { value: 0.42 },
+        uRadius: { value: 2.2 },
+        uSignalColor: signalColorUniform,
+      },
+      vertexShader: postVertexShader,
+      fragmentShader: semanticBloomFragmentShader,
+    });
     const asciiPass = new ShaderPass({
       uniforms: {
         tDiffuse: { value: null },
@@ -268,6 +227,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let lastViewportWidth = 0;
     let lastViewportHeight = 0;
     let lastPixelRatio = 0;
+    let lastCompactProfile = renderProfile.compact;
     const frameProbe = createFrameProbe();
     const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
 
@@ -288,7 +248,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       );
       const sizeChanged = width !== lastViewportWidth || height !== lastViewportHeight ||
         Math.abs(nextProfile.pixelRatio - lastPixelRatio) > 0.001;
-      if (!sizeChanged) return;
+      const profileChanged = nextProfile.compact !== lastCompactProfile;
+      if (!sizeChanged && !profileChanged) return;
       renderProfile = nextProfile;
       renderer.setPixelRatio(renderProfile.pixelRatio);
       renderer.setSize(width, height, false);
@@ -297,23 +258,20 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       lastViewportWidth = width;
       lastViewportHeight = height;
       lastPixelRatio = renderProfile.pixelRatio;
+      lastCompactProfile = renderProfile.compact;
 
       const aspect = width / Math.max(height, 1);
-      const viewHeight = renderProfile.compact ? 4.25 : 3.35;
-      const viewWidth = viewHeight * aspect;
+      const baseViewHeight = renderProfile.compact ? 4.25 : 3.35;
+      const viewWidth = renderProfile.compact
+        ? Math.max(baseViewHeight * aspect, 3.08)
+        : baseViewHeight * aspect;
+      const viewHeight = renderProfile.compact ? viewWidth / aspect : baseViewHeight;
       camera.left = -viewWidth * 0.5;
       camera.right = viewWidth * 0.5;
       camera.top = viewHeight * 0.5;
       camera.bottom = -viewHeight * 0.5;
       camera.updateProjectionMatrix();
-      objectGroup.scale.setScalar(
-        renderProfile.objectScale * (renderProfile.compact ? 0.74 : 1),
-      );
-      objectGroup.position.set(
-        renderProfile.compact ? 0 : 0.48,
-        renderProfile.compact ? 0.3 : -0.05,
-        0,
-      );
+      objectGroup.scale.setScalar(renderProfile.objectScale);
       objectGroup.updateMatrixWorld(true);
 
       const forward = new THREE.Vector3();
@@ -327,6 +285,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       );
       backgroundMaterial.uniforms.uCompactLayout.value = renderProfile.compact ? 1 : 0;
       asciiPass.uniforms.uResolution.value.set(
+        width * renderProfile.pixelRatio,
+        height * renderProfile.pixelRatio,
+      );
+      bloomPass.uniforms.uResolution.value.set(
         width * renderProfile.pixelRatio,
         height * renderProfile.pixelRatio,
       );
@@ -476,13 +438,25 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       for (let index = 0; index < MAX_ACTIVE_SIGNALS; index += 1) {
         signalProgressValues[index] = Math.min(
           SIGNAL_LIFETIME,
-          signalProgressValues[index] + delta * SIGNAL_PROGRESS_PER_SECOND,
+          signalProgressValues[index] + delta * SHOWCASE_SIGNAL_PROGRESS_PER_SECOND,
         );
         const travel = Math.min(signalProgressValues[index], 1);
         signalEnergy = Math.max(signalEnergy, Math.sin(travel * Math.PI) * (1 - travel));
       }
 
       timeUniform.value = motionIsReduced() || qa?.freezeScene ? 6.4 : time;
+      const fromOffset = renderProfile.compact
+        ? [[0, 0.55], [0, 0.45], [0, 0.38], [0, 0.52]][showcaseState.fromAct]
+        : [[0.62, -0.05], [1.08, -0.02], [0.86, -0.1], [0.76, -0.04]][showcaseState.fromAct];
+      const toOffset = renderProfile.compact
+        ? [[0, 0.55], [0, 0.45], [0, 0.38], [0, 0.52]][showcaseState.toAct]
+        : [[0.62, -0.05], [1.08, -0.02], [0.86, -0.1], [0.76, -0.04]][showcaseState.toAct];
+      objectGroup.position.set(
+        THREE.MathUtils.lerp(fromOffset[0], toOffset[0], showcaseState.transition),
+        THREE.MathUtils.lerp(fromOffset[1], toOffset[1], showcaseState.transition),
+        0,
+      );
+      objectGroup.updateMatrixWorld(true);
       showcase.update({
         time: timeUniform.value,
         fromAct: showcaseState.fromAct,
@@ -510,6 +484,15 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       motionAccumulator += motionEnergy * delta * 18;
       if (timestamp - previousTelemetry >= 110) {
         previousTelemetry = timestamp;
+        const visibleAct = showcaseState.transition > 0.5
+          ? showcaseState.toAct
+          : showcaseState.fromAct;
+        dispatchShowcaseState(
+          visibleAct,
+          showcaseState.actProgress,
+          timeUniform.value,
+          showcase.count,
+        );
         window.dispatchEvent(new CustomEvent("superneo:motion", {
           detail: {
             iteration: 24 + Math.floor(motionAccumulator),
@@ -521,12 +504,12 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       asciiPass.uniforms.uInteraction.value = interactionEnergy * 0.46 +
         showcaseState.transition * 0.32;
       asciiPass.uniforms.uStage.value = scrollUniform.value;
-      bloomPass.strength = 0.13 + interactionEnergy * 0.14 + signalEnergy * 0.1;
-      bloomPass.radius = 0.34 + interactionEnergy * 0.05;
+      bloomPass.uniforms.uStrength.value = 0.38 + interactionEnergy * 0.16 + signalEnergy * 0.12;
+      bloomPass.uniforms.uRadius.value = 2.1 + interactionEnergy * 0.65;
       const renderStarted = performance.now();
       try {
         composer.render(delta);
-        if (!sceneReady && artworkReady && shaderHealthy) {
+        if (!sceneReady && resourcesReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
             validFrameCount += 1;
@@ -548,7 +531,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       const renderEnded = performance.now();
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
       needsRender = (sceneReady && sceneReveal.value < 1) ||
-        (!sceneReady && artworkReady && shaderHealthy);
+        (!sceneReady && resourcesReady && shaderHealthy);
     };
 
     const handleVisibility = () => {
@@ -611,8 +594,6 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       frameProbe?.dispose();
       showcase.dispose();
       backgroundGeometry.dispose();
-      loadedArtwork?.dispose();
-      artwork.dispose();
       backgroundMaterial.dispose();
       renderer.dispose();
       renderer.domElement.remove();

@@ -1,5 +1,5 @@
 {
-  "authorityCommit": "84b94ea",
+  "designAuthorityCommit": "3988496",
   "testedCommit": "working-tree",
   "browsers": {
     "chromium": {
@@ -8,188 +8,166 @@
           "width": 1280,
           "height": 720
         },
-        "captures": [
-          "neo-full",
-          "neo-medium",
-          "neo-fault-low",
-          "stage-1",
-          "stage-2",
-          "stage-3",
-          "stage-4",
-          "transition-1",
-          "transition-2",
-          "transition-3"
-        ],
-        "geometry": {
-          "super": {
-            "x": 156.9827117919922,
-            "y": 461.00543212890625,
-            "width": 406.47576904296875,
-            "height": 116.7725830078125
+        "captures": {
+          "act-car": {
+            "mean": 19.178,
+            "deviation": 35.004,
+            "illuminated": 79766
           },
-          "neo": {
-            "x": 477.1239929199219,
-            "y": 376.1855773925781,
-            "width": 447.0679016113281,
-            "height": 286.1189880371094
+          "act-ninja": {
+            "mean": 18.501,
+            "deviation": 34.046,
+            "illuminated": 72999
           },
-          "word": {
-            "x": 156.9827117919922,
-            "y": 451.8307800292969,
-            "width": 666.7042846679688,
-            "height": 125.94723510742188
+          "act-island": {
+            "mean": 24.96,
+            "deviation": 48.864,
+            "illuminated": 98663
           },
-          "core": {
-            "x": 572.7965238647461,
-            "y": 467.3860048294067,
-            "width": 255.7228397216797,
-            "height": 104.16519408226013
+          "act-cosmos": {
+            "mean": 15.97,
+            "deviation": 28.517,
+            "illuminated": 50860
+          },
+          "morph-car-25": {
+            "mean": 18.077,
+            "deviation": 33.919,
+            "illuminated": 70636
+          },
+          "morph-car-50": {
+            "mean": 15.168,
+            "deviation": 28.557,
+            "illuminated": 52086
+          },
+          "morph-car-75": {
+            "mean": 16.577,
+            "deviation": 30.761,
+            "illuminated": 71741
+          },
+          "morph-ninja-25": {
+            "mean": 19.333,
+            "deviation": 35.525,
+            "illuminated": 83710
+          },
+          "morph-ninja-50": {
+            "mean": 18.571,
+            "deviation": 36.911,
+            "illuminated": 68889
+          },
+          "morph-ninja-75": {
+            "mean": 22.643,
+            "deviation": 46.148,
+            "illuminated": 92630
+          },
+          "morph-island-25": {
+            "mean": 23.298,
+            "deviation": 46.105,
+            "illuminated": 94244
+          },
+          "morph-island-50": {
+            "mean": 18.335,
+            "deviation": 36.942,
+            "illuminated": 65621
+          },
+          "morph-island-75": {
+            "mean": 17.531,
+            "deviation": 35.133,
+            "illuminated": 65666
+          },
+          "reducedMotion": {
+            "mean": 19.64,
+            "deviation": 35.408,
+            "illuminated": 77527
           }
         },
-        "pulse": {
-          "outsideGreen": 0.00049,
-          "routeCoverage": 0.517,
-          "tipPeak": 200.311
-        },
         "performance": {
-          "frames": 432,
-          "fps": 120,
-          "p50Gap": 8.3,
-          "p95Gap": 9,
-          "maxGap": 22.1,
-          "p95Render": 0.3,
-          "maxRender": 0.7,
-          "over25": 0,
-          "over50": 0,
-          "samples": [
-            {
-              "frames": 430,
-              "fps": 119.444,
-              "p50Gap": 8.3,
-              "p95Gap": 9,
-              "maxGap": 22.1,
-              "p95Render": 0.4,
-              "maxRender": 0.7,
-              "over25": 0,
-              "over50": 0
-            },
-            {
-              "frames": 432,
-              "fps": 120,
-              "p50Gap": 8.3,
-              "p95Gap": 8.9,
-              "maxGap": 9.3,
-              "p95Render": 0.3,
-              "maxRender": 0.5,
-              "over25": 0,
-              "over50": 0
-            },
-            {
-              "frames": 432,
-              "fps": 120,
-              "p50Gap": 8.3,
-              "p95Gap": 9,
-              "maxGap": 9.5,
-              "p95Render": 0.3,
-              "maxRender": 0.4,
-              "over25": 0,
-              "over50": 0
-            }
-          ]
-        },
-        "reducedMotionCaptured": true,
-        "audioUnlocked": true
+          "frames": 129,
+          "p95Gap": 8.9,
+          "maxGap": 9.4
+        }
       },
       "mobile": {
         "viewport": {
           "width": 390,
           "height": 844
         },
-        "captures": [
-          "neo-full",
-          "neo-medium",
-          "neo-fault-low",
-          "stage-1",
-          "stage-2",
-          "stage-3",
-          "stage-4",
-          "transition-1",
-          "transition-2",
-          "transition-3"
-        ],
-        "geometry": {
-          "super": {
-            "x": 55.83675765991211,
-            "y": 641.4522094726562,
-            "width": 134.70159912109375,
-            "height": 39.14886474609375
+        "captures": {
+          "act-car": {
+            "mean": 16.055,
+            "deviation": 26.313,
+            "illuminated": 16271
           },
-          "neo": {
-            "x": 162.26109313964844,
-            "y": 613.9730834960938,
-            "width": 146.3979034423828,
-            "height": 93.68927001953125
+          "act-ninja": {
+            "mean": 15.755,
+            "deviation": 26.828,
+            "illuminated": 15775
           },
-          "word": {
-            "x": 55.83675765991211,
-            "y": 638.740234375,
-            "width": 219.91403198242188,
-            "height": 41.86083984375
+          "act-island": {
+            "mean": 18.731,
+            "deviation": 34.774,
+            "illuminated": 20188
+          },
+          "act-cosmos": {
+            "mean": 16.465,
+            "deviation": 28.239,
+            "illuminated": 17233
+          },
+          "morph-car-25": {
+            "mean": 14.981,
+            "deviation": 24.892,
+            "illuminated": 14209
+          },
+          "morph-car-50": {
+            "mean": 13.628,
+            "deviation": 22.804,
+            "illuminated": 11238
+          },
+          "morph-car-75": {
+            "mean": 13.669,
+            "deviation": 23.106,
+            "illuminated": 13231
+          },
+          "morph-ninja-25": {
+            "mean": 15.434,
+            "deviation": 26.762,
+            "illuminated": 15835
+          },
+          "morph-ninja-50": {
+            "mean": 15.01,
+            "deviation": 27.364,
+            "illuminated": 14060
+          },
+          "morph-ninja-75": {
+            "mean": 16.278,
+            "deviation": 31.528,
+            "illuminated": 16715
+          },
+          "morph-island-25": {
+            "mean": 17.369,
+            "deviation": 32.511,
+            "illuminated": 17680
+          },
+          "morph-island-50": {
+            "mean": 15.547,
+            "deviation": 29.278,
+            "illuminated": 14641
+          },
+          "morph-island-75": {
+            "mean": 15.008,
+            "deviation": 28.611,
+            "illuminated": 14595
+          },
+          "reducedMotion": {
+            "mean": 16.896,
+            "deviation": 28.903,
+            "illuminated": 18409
           }
         },
-        "pulse": {
-          "outsideGreen": 0.00089,
-          "routeCoverage": 0.325,
-          "tipPeak": 211.554
-        },
         "performance": {
-          "frames": 432,
-          "fps": 120,
-          "p50Gap": 8.3,
-          "p95Gap": 8.9,
-          "maxGap": 10.3,
-          "p95Render": 0.4,
-          "maxRender": 0.9,
-          "over25": 0,
-          "over50": 0,
-          "samples": [
-            {
-              "frames": 432,
-              "fps": 120,
-              "p50Gap": 8.3,
-              "p95Gap": 8.8,
-              "maxGap": 9.3,
-              "p95Render": 0.3,
-              "maxRender": 0.4,
-              "over25": 0,
-              "over50": 0
-            },
-            {
-              "frames": 432,
-              "fps": 120,
-              "p50Gap": 8.3,
-              "p95Gap": 8.9,
-              "maxGap": 10.2,
-              "p95Render": 0.4,
-              "maxRender": 0.9,
-              "over25": 0,
-              "over50": 0
-            },
-            {
-              "frames": 432,
-              "fps": 120,
-              "p50Gap": 8.3,
-              "p95Gap": 8.9,
-              "maxGap": 10.3,
-              "p95Render": 0.5,
-              "maxRender": 0.6,
-              "over25": 0,
-              "over50": 0
-            }
-          ]
-        },
-        "reducedMotionCaptured": true,
-        "audioUnlocked": true
+          "frames": 125,
+          "p95Gap": 10.2,
+          "maxGap": 16
+        }
       }
     },
     "zen": {
@@ -198,197 +176,165 @@
           "width": 1280,
           "height": 720
         },
-        "captures": [
-          "neo-full",
-          "neo-medium",
-          "neo-fault-low",
-          "stage-1",
-          "stage-2",
-          "stage-3",
-          "stage-4",
-          "transition-1",
-          "transition-2",
-          "transition-3"
-        ],
-        "geometry": {
-          "neo": {
-            "height": 286.1166687011719,
-            "width": 447.0333251953125,
-            "x": 477.1499938964844,
-            "y": 376.1666870117187
+        "captures": {
+          "act-car": {
+            "mean": 19.7,
+            "deviation": 36.576,
+            "illuminated": 83153
           },
-          "super": {
-            "height": 116.76666259765624,
-            "width": 406.5,
-            "x": 156.96665954589844,
-            "y": 460.9500122070313
+          "act-ninja": {
+            "mean": 19.15,
+            "deviation": 36.166,
+            "illuminated": 76901
           },
-          "word": {
-            "height": 125.91665649414062,
-            "width": 666.7166748046875,
-            "x": 156.96665954589844,
-            "y": 451.7999877929687
+          "act-island": {
+            "mean": 25.665,
+            "deviation": 50.542,
+            "illuminated": 102562
           },
-          "core": {
-            "x": 572.8151254882813,
-            "y": 467.3663751602172,
-            "width": 255.70306201171874,
-            "height": 104.16434969902039
+          "act-cosmos": {
+            "mean": 17.97,
+            "deviation": 33.982,
+            "illuminated": 63797
+          },
+          "morph-car-25": {
+            "mean": 18.629,
+            "deviation": 35.596,
+            "illuminated": 74145
+          },
+          "morph-car-50": {
+            "mean": 15.691,
+            "deviation": 30.464,
+            "illuminated": 55507
+          },
+          "morph-car-75": {
+            "mean": 17.108,
+            "deviation": 32.539,
+            "illuminated": 75124
+          },
+          "morph-ninja-25": {
+            "mean": 19.997,
+            "deviation": 37.575,
+            "illuminated": 87569
+          },
+          "morph-ninja-50": {
+            "mean": 19.207,
+            "deviation": 38.833,
+            "illuminated": 72701
+          },
+          "morph-ninja-75": {
+            "mean": 23.339,
+            "deviation": 47.85,
+            "illuminated": 96373
+          },
+          "morph-island-25": {
+            "mean": 23.998,
+            "deviation": 47.876,
+            "illuminated": 98051
+          },
+          "morph-island-50": {
+            "mean": 18.999,
+            "deviation": 39.054,
+            "illuminated": 69355
+          },
+          "morph-island-75": {
+            "mean": 18.206,
+            "deviation": 37.402,
+            "illuminated": 69329
+          },
+          "reducedMotion": {
+            "mean": 20.21,
+            "deviation": 37.131,
+            "illuminated": 81660
           }
         },
-        "pulse": {
-          "outsideGreen": 0.00038,
-          "routeCoverage": 0.496,
-          "tipPeak": 203.532
-        },
         "performance": {
-          "frames": 369,
-          "fps": 102.5,
-          "p50Gap": 8,
-          "p95Gap": 17,
-          "maxGap": 46,
-          "p95Render": 1,
-          "maxRender": 3,
-          "over25": 24,
-          "over50": 0,
-          "samples": [
-            {
-              "fps": 102.5,
-              "frames": 369,
-              "maxGap": 44,
-              "maxRender": 2,
-              "over25": 9,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 17,
-              "p95Render": 1
-            },
-            {
-              "fps": 103.611,
-              "frames": 373,
-              "maxGap": 32,
-              "maxRender": 3,
-              "over25": 4,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 17,
-              "p95Render": 1
-            },
-            {
-              "fps": 101.944,
-              "frames": 367,
-              "maxGap": 46,
-              "maxRender": 3,
-              "over25": 11,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 17,
-              "p95Render": 1
-            }
-          ]
-        },
-        "reducedMotionCaptured": true,
-        "audioUnlocked": true
+          "status": "not-run",
+          "reason": "visual-only browser compatibility run"
+        }
       },
       "mobile": {
         "viewport": {
           "width": 390,
           "height": 844
         },
-        "captures": [
-          "neo-full",
-          "neo-medium",
-          "neo-fault-low",
-          "stage-1",
-          "stage-2",
-          "stage-3",
-          "stage-4",
-          "transition-1",
-          "transition-2",
-          "transition-3"
-        ],
-        "geometry": {
-          "neo": {
-            "height": 93.6999969482422,
-            "width": 146.39999389648438,
-            "x": 162.28334045410156,
-            "y": 613.9500122070312
+        "captures": {
+          "act-car": {
+            "mean": 16.99,
+            "deviation": 30.117,
+            "illuminated": 18778
           },
-          "super": {
-            "height": 39.15000915527344,
-            "width": 134.6999969482422,
-            "x": 55.850006103515625,
-            "y": 641.1500244140625
+          "act-ninja": {
+            "mean": 16.843,
+            "deviation": 31.267,
+            "illuminated": 18660
           },
-          "word": {
-            "height": 41.56666564941406,
-            "width": 219.9333343505859,
-            "x": 55.850006103515625,
-            "y": 638.7333374023438
+          "act-island": {
+            "mean": 19.893,
+            "deviation": 38.633,
+            "illuminated": 23216
+          },
+          "act-cosmos": {
+            "mean": 17.387,
+            "deviation": 32.238,
+            "illuminated": 19907
+          },
+          "morph-car-25": {
+            "mean": 15.968,
+            "deviation": 28.973,
+            "illuminated": 16882
+          },
+          "morph-car-50": {
+            "mean": 14.593,
+            "deviation": 27.195,
+            "illuminated": 13826
+          },
+          "morph-car-75": {
+            "mean": 14.641,
+            "deviation": 27.407,
+            "illuminated": 15883
+          },
+          "morph-ninja-25": {
+            "mean": 16.562,
+            "deviation": 31.379,
+            "illuminated": 18679
+          },
+          "morph-ninja-50": {
+            "mean": 16.158,
+            "deviation": 32.014,
+            "illuminated": 16801
+          },
+          "morph-ninja-75": {
+            "mean": 17.405,
+            "deviation": 35.523,
+            "illuminated": 19447
+          },
+          "morph-island-25": {
+            "mean": 18.539,
+            "deviation": 36.66,
+            "illuminated": 20667
+          },
+          "morph-island-50": {
+            "mean": 16.633,
+            "deviation": 33.578,
+            "illuminated": 17622
+          },
+          "morph-island-75": {
+            "mean": 16.122,
+            "deviation": 33.056,
+            "illuminated": 17545
+          },
+          "reducedMotion": {
+            "mean": 17.808,
+            "deviation": 32.734,
+            "illuminated": 21089
           }
         },
-        "pulse": {
-          "outsideGreen": 0.00109,
-          "routeCoverage": 0.328,
-          "tipPeak": 211.481
-        },
         "performance": {
-          "frames": 432,
-          "fps": 120,
-          "p50Gap": 8,
-          "p95Gap": 10,
-          "maxGap": 14,
-          "p95Render": 1,
-          "maxRender": 6,
-          "over25": 0,
-          "over50": 0,
-          "samples": [
-            {
-              "fps": 120,
-              "frames": 432,
-              "maxGap": 14,
-              "maxRender": 6,
-              "over25": 0,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 9,
-              "p95Render": 1
-            },
-            {
-              "fps": 120,
-              "frames": 432,
-              "maxGap": 11,
-              "maxRender": 2,
-              "over25": 0,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 10,
-              "p95Render": 1
-            },
-            {
-              "fps": 120,
-              "frames": 432,
-              "maxGap": 11,
-              "maxRender": 4,
-              "over25": 0,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 10,
-              "p95Render": 1
-            }
-          ]
-        },
-        "reducedMotionCaptured": true,
-        "audioUnlocked": true
+          "status": "not-run",
+          "reason": "visual-only browser compatibility run"
+        }
       }
-    }
-  },
-  "neoOverlap": {
-    "desktop": {
-      "chromium/zen": 0.989
-    },
-    "mobile": {
-      "chromium/zen": 0.977
     }
   }
 }

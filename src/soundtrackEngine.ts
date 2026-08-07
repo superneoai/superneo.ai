@@ -1,4 +1,3 @@
-import type { TipArrival } from "./tipSignal";
 import type { ShowcaseImpulseDetail } from "./showcaseEvents";
 
 const BPM = 72;
@@ -171,26 +170,6 @@ export class SuperneoSoundtrack {
     );
   }
 
-  async playTipArrivals(arrivals: TipArrival[]) {
-    if (this.suspendTimer !== null) {
-      window.clearTimeout(this.suspendTimer);
-      this.suspendTimer = null;
-    }
-    await this.context.resume();
-    if (this.context.state !== "running") {
-      throw new Error("Audio context did not enter the running state");
-    }
-
-    const now = this.context.currentTime;
-    arrivals.forEach((arrival) => this.scheduleTipTone(arrival, now + arrival.delay));
-    if (!this.playing) {
-      const lastArrival = Math.max(0, ...arrivals.map((arrival) => arrival.delay));
-      this.suspendTimer = window.setTimeout(() => {
-        if (!this.playing) void this.context.suspend();
-      }, (lastArrival + 0.86) * 1000);
-    }
-  }
-
   setStage(stage: number) {
     this.stage = Math.min(3, Math.max(0, stage));
     const cutoff = [620, 920, 1380, 2100][this.stage];
@@ -353,26 +332,6 @@ export class SuperneoSoundtrack {
     this.trackSource(source);
     source.start(time);
     source.stop(time + 0.09);
-  }
-
-  private scheduleTipTone(arrival: TipArrival, time: number) {
-    const oscillator = this.context.createOscillator();
-    const envelope = this.context.createGain();
-    const panner = this.context.createStereoPanner();
-    const chord = chords[Math.floor(this.step / 16) % chords.length];
-    const voiceIndex = Math.abs(Math.round(arrival.frequency / 74)) % chord.length;
-    const frequency = midiToFrequency(chord[voiceIndex] + 12);
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency * 1.012, time);
-    oscillator.frequency.exponentialRampToValueAtTime(frequency, time + 0.52);
-    panner.pan.value = arrival.pan;
-    envelope.gain.setValueAtTime(0.0001, time);
-    envelope.gain.exponentialRampToValueAtTime(0.035, time + 0.065);
-    envelope.gain.exponentialRampToValueAtTime(0.0001, time + 0.78);
-    oscillator.connect(envelope).connect(panner).connect(this.sfxBus);
-    this.trackSource(oscillator);
-    oscillator.start(time);
-    oscillator.stop(time + 0.82);
   }
 
   private trackSource(source: TrackedSource) {

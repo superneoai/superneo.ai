@@ -258,7 +258,15 @@ function ninjaTarget(index: number, count: number): Point {
   const limbs = right ? NINJA_RIGHT_LIMBS : NINJA_LEFT_LIMBS;
   const bodyKind = right ? 2 : 1;
   if (localT < 0.13) {
-    return spherePoint(index, 54, [right ? 0.63 : -0.63, 0.79, 0], 0.17, bodyKind, 0.55, 0.034);
+    return boxPoint(
+      index,
+      54,
+      [right ? 0.63 : -0.63, 0.79, 0],
+      [0.22, 0.25, 0.2],
+      bodyKind,
+      0.55,
+      0.031,
+    );
   }
   if (localT < 0.72) {
     const limb = limbs[Math.min(limbs.length - 1, Math.floor(hash(index, 57) * limbs.length))];

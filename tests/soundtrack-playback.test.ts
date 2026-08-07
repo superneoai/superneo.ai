@@ -114,7 +114,7 @@ test("playback can recover when the first AudioContext resume is interrupted", a
   }
 });
 
-test("tip arrivals schedule subtle tones at their visual arrival times", async () => {
+test("showcase impulses unlock and schedule a restrained two-tone cue", async () => {
   const originalWindow = globalThis.window;
   globalThis.window = {
     AudioContext: FakeAudioContext,
@@ -127,25 +127,23 @@ test("tip arrivals schedule subtle tones at their visual arrival times", async (
   try {
     FakeAudioContext.interruptFirstResume = false;
     const soundtrack = new SuperneoSoundtrack();
-    await soundtrack.playTipArrivals([
-      { delay: 0.24, frequency: 820, pan: -0.4 },
-      { delay: 0.61, frequency: 1040, pan: 0.45 },
-    ]);
+    await soundtrack.playShowcaseImpulse({ kind: "clash", intensity: 0.8, pan: -0.4 });
 
     assert.deepEqual(
       FakeAudioContext.latest.oscillators.map(({ startTime }) => startTime),
-      [0.24, 0.61],
+      [0, 0.035],
     );
-    assert.ok(FakeAudioContext.latest.oscillators.every(
-      ({ frequency }) => frequency.value >= 190 && frequency.value <= 700,
-    ));
+    assert.deepEqual(
+      FakeAudioContext.latest.oscillators.map(({ frequency }) => frequency.value),
+      [184, 368],
+    );
     soundtrack.dispose();
   } finally {
     globalThis.window = originalWindow;
   }
 });
 
-test("foot contacts stay silent until playback and then add one restrained impact", async () => {
+test("each act maps to its own simulation cue", async () => {
   const originalWindow = globalThis.window;
   globalThis.window = {
     AudioContext: FakeAudioContext,
@@ -158,16 +156,15 @@ test("foot contacts stay silent until playback and then add one restrained impac
   try {
     FakeAudioContext.interruptFirstResume = false;
     const soundtrack = new SuperneoSoundtrack();
-    soundtrack.playFootstep(1, -0.4);
-    assert.equal(FakeAudioContext.latest.oscillators.length, 0);
-
-    await soundtrack.play();
-    const scheduledByMusic = FakeAudioContext.latest.oscillators.length;
-    soundtrack.setStage(2);
-    soundtrack.playFootstep(0.8, 0.35);
-
-    assert.equal(FakeAudioContext.latest.oscillators.length, scheduledByMusic + 1);
-    assert.equal(FakeAudioContext.latest.oscillators.at(-1)?.frequency.value, 76);
+    for (const kind of ["drive", "clash", "terrain", "orbit"] as const) {
+      await soundtrack.playShowcaseImpulse({ kind, intensity: 0.7, pan: 0.2 });
+    }
+    assert.deepEqual(
+      FakeAudioContext.latest.oscillators
+        .filter((_, index) => index % 2 === 0)
+        .map(({ frequency }) => frequency.value),
+      [92, 184, 72, 246],
+    );
     soundtrack.dispose();
   } finally {
     globalThis.window = originalWindow;

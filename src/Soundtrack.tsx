@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { SuperneoSoundtrack } from "./soundtrackEngine";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
-import { TIP_SIGNAL_EVENT, type TipArrival } from "./tipSignal";
 import {
   SHOWCASE_IMPULSE_EVENT,
   type ShowcaseImpulseDetail,
@@ -106,19 +105,6 @@ export const SoundtrackController = memo(function SoundtrackController() {
     window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
     return () => window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
   }, []);
-
-  useEffect(() => {
-    const playTipArrivals = (event: Event) => {
-      if (!supported) return;
-      const { arrivals } = (event as CustomEvent<{ arrivals: TipArrival[] }>).detail;
-      void ensureEngine().playTipArrivals(arrivals).catch(() => {
-        // A later pointer gesture can retry if the browser interrupts audio startup.
-      });
-    };
-
-    window.addEventListener(TIP_SIGNAL_EVENT, playTipArrivals);
-    return () => window.removeEventListener(TIP_SIGNAL_EVENT, playTipArrivals);
-  }, [ensureEngine, supported]);
 
   useEffect(() => {
     const playShowcaseImpulse = (event: Event) => {
