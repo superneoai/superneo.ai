@@ -96,6 +96,20 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     styles,
     /\.experience:not\(\[data-scene-ready="true"\]\) > :is\([\s\S]*?\.site-header,[\s\S]*?\.stage-panel,[\s\S]*?\.site-footer[\s\S]*?visibility:\s*hidden/,
   );
+  for (const animation of [
+    "overlay-frame-in",
+    "overlay-brand-in",
+    "overlay-instruments-in",
+    "overlay-making-in",
+    "stage-enter",
+    "overlay-status-in",
+    "overlay-links-in",
+    "overlay-rail-in",
+    "overlay-cue-in",
+  ]) {
+    assert.match(styles, new RegExp(`animation: ${animation}`));
+    assert.match(styles, new RegExp(`@keyframes ${animation}`));
+  }
   assert.doesNotMatch(styles, /@keyframes scene-loader-progress/);
   assert.doesNotMatch(styles, /@keyframes scene-loader-code/);
   assert.match(field, /sceneRevealStartedAt/);

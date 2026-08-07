@@ -751,7 +751,6 @@ a {
   left: clamp(1.25rem, 2.3vw, 2.25rem);
   z-index: 2;
   pointer-events: none;
-  animation: stage-enter 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .stage-panel .stage-index {
@@ -1160,6 +1159,42 @@ a {
   animation: scroll-line 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
+.experience[data-scene-ready="true"] > .technical-frame {
+  animation: overlay-frame-in 620ms cubic-bezier(0.16, 1, 0.3, 1) 60ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .site-header h1 {
+  animation: overlay-brand-in 480ms cubic-bezier(0.16, 1, 0.3, 1) 110ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .site-header .header-instruments {
+  animation: overlay-instruments-in 540ms cubic-bezier(0.16, 1, 0.3, 1) 170ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .making-line {
+  animation: overlay-making-in 620ms cubic-bezier(0.16, 1, 0.3, 1) 230ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .stage-panel {
+  animation: stage-enter 700ms cubic-bezier(0.16, 1, 0.3, 1) 290ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .site-footer .status-line {
+  animation: overlay-status-in 480ms cubic-bezier(0.16, 1, 0.3, 1) 420ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .site-footer .footer-links {
+  animation: overlay-links-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 480ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .scroll-rail {
+  animation: overlay-rail-in 540ms cubic-bezier(0.16, 1, 0.3, 1) 550ms backwards;
+}
+
+.experience[data-scene-ready="true"] > .scroll-cue:not([data-hidden="true"]) {
+  animation: overlay-cue-in 480ms cubic-bezier(0.16, 1, 0.3, 1) 640ms backwards;
+}
+
 .no-script {
   position: fixed;
   inset: 0;
@@ -1192,6 +1227,102 @@ a {
     opacity: 1;
     clip-path: inset(0);
     transform: none;
+  }
+}
+
+@keyframes overlay-frame-in {
+  from {
+    opacity: 0;
+    clip-path: inset(46% 46%);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes overlay-brand-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.85rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes overlay-instruments-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes overlay-making-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 50%);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes overlay-status-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.7rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes overlay-links-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes overlay-rail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+@keyframes overlay-cue-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.7rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
 
@@ -1796,6 +1927,17 @@ a {
   .scene-loader-step[data-state="active"] output,
   .scene-loader-track > i[data-state="active"],
   .scene-loader-final output span {
+    animation: none;
+  }
+
+  .experience[data-scene-ready="true"] > .technical-frame,
+  .experience[data-scene-ready="true"] > .site-header h1,
+  .experience[data-scene-ready="true"] > .site-header .header-instruments,
+  .experience[data-scene-ready="true"] > .making-line,
+  .experience[data-scene-ready="true"] > .site-footer .status-line,
+  .experience[data-scene-ready="true"] > .site-footer .footer-links,
+  .experience[data-scene-ready="true"] > .scroll-rail,
+  .experience[data-scene-ready="true"] > .scroll-cue {
     animation: none;
   }
 

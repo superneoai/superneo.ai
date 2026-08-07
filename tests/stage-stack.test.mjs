@@ -85,7 +85,10 @@ test("stage headings leave a visible compositor-only text trail", async () => {
 
 test("the stage entrance releases its reveal clip after finishing", async () => {
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
-  const panel = ruleBody(styles, ".stage-panel");
+  const panel = ruleBody(
+    styles,
+    '.experience[data-scene-ready="true"] > .stage-panel',
+  );
 
   assert.match(panel, /animation:\s*stage-enter\s+700ms/);
   assert.doesNotMatch(panel, /\b(?:both|forwards)\b/);
