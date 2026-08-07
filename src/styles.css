@@ -75,6 +75,7 @@ a {
   overflow: hidden;
   pointer-events: none;
   background: var(--ink);
+  contain: layout paint size;
 }
 
 .signal-stage {
@@ -1536,6 +1537,12 @@ a {
 
   .signal-poster .signal-artwork-fallback--mobile {
     display: block;
+  }
+
+  .scene-loader {
+    width: min(16.5rem, calc(100vw - 3rem));
+    gap: 0.64rem;
+    font-size: 0.5rem;
   }
 
   .experience,

@@ -368,6 +368,9 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let currentStage = 0;
     let discovered = false;
     let resizeTimer: number | null = null;
+    let pointerMoveFrame: number | null = null;
+    let pendingPointerX = 0;
+    let pendingPointerY = 0;
     let lastViewportWidth = 0;
     let lastViewportHeight = 0;
     let lastPixelRatio = 0;
@@ -440,10 +443,12 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       }, 120);
     };
 
-    const projectPointer = (event: PointerEvent) => {
+    const projectPointer = (clientX: number, clientY: number) => {
+      const pointerWidth = lastViewportWidth || Math.max(host.clientWidth, 1);
+      const pointerHeight = lastViewportHeight || Math.max(host.clientHeight, 1);
       pointerNdc.set(
-        (event.clientX / Math.max(window.innerWidth, 1)) * 2 - 1,
-        1 - (event.clientY / Math.max(window.innerHeight, 1)) * 2,
+        (clientX / pointerWidth) * 2 - 1,
+        1 - (clientY / pointerHeight) * 2,
       );
       raycaster.setFromCamera(pointerNdc, camera);
       if (!raycaster.ray.intersectPlane(interactionPlane, worldHit)) return false;
@@ -488,15 +493,14 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         target.closest("a, button, input, label, [data-no-scene]"),
       );
 
-    const setPointer = (event: PointerEvent) => {
-      if (isInterfaceTarget(event.target)) return;
+    const setPointerPosition = (clientX: number, clientY: number) => {
       const now = performance.now();
       const elapsed = Math.max(now - previousPointerTime, 8);
       targetPointerScreen.set(
-        event.clientX / Math.max(window.innerWidth, 1),
-        1 - event.clientY / Math.max(window.innerHeight, 1),
+        clientX / (lastViewportWidth || Math.max(host.clientWidth, 1)),
+        1 - clientY / (lastViewportHeight || Math.max(host.clientHeight, 1)),
       );
-      if (!projectPointer(event)) return;
+      if (!projectPointer(clientX, clientY)) return;
       targetPointerDelta.copy(targetPointerWorld).sub(previousPointerWorld);
       const speed = Math.min(targetPointerDelta.length() * (1000 / elapsed) * 0.42, 1);
       previousPointerWorld.copy(targetPointerWorld);
@@ -505,6 +509,22 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       targetPointerMotion = Math.max(targetPointerMotion, speed);
       needsRender = true;
       discover();
+    };
+
+    const setPointer = (event: PointerEvent) => {
+      if (isInterfaceTarget(event.target)) return;
+      setPointerPosition(event.clientX, event.clientY);
+    };
+
+    const schedulePointer = (event: PointerEvent) => {
+      if (isInterfaceTarget(event.target)) return;
+      pendingPointerX = event.clientX;
+      pendingPointerY = event.clientY;
+      if (pointerMoveFrame !== null) return;
+      pointerMoveFrame = window.requestAnimationFrame(() => {
+        pointerMoveFrame = null;
+        setPointerPosition(pendingPointerX, pendingPointerY);
+      });
     };
 
     const pressSurface = (event: PointerEvent) => {
@@ -730,7 +750,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     resize();
     window.addEventListener("resize", scheduleResize, { passive: true });
     window.addEventListener("pointerdown", pressSurface, { passive: true });
-    window.addEventListener("pointermove", setPointer, { passive: true });
+    window.addEventListener("pointermove", schedulePointer, { passive: true });
     window.addEventListener("pointerup", releaseSurface, { passive: true });
     window.addEventListener("pointercancel", releaseSurface, { passive: true });
     window.addEventListener("pointerout", handlePointerOut, { passive: true });
@@ -752,9 +772,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       scrollTween.scrollTrigger?.kill();
       scrollTween.kill();
       if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+      if (pointerMoveFrame !== null) window.cancelAnimationFrame(pointerMoveFrame);
       window.removeEventListener("resize", scheduleResize);
       window.removeEventListener("pointerdown", pressSurface);
-      window.removeEventListener("pointermove", setPointer);
+      window.removeEventListener("pointermove", schedulePointer);
       window.removeEventListener("pointerup", releaseSurface);
       window.removeEventListener("pointercancel", releaseSurface);
       window.removeEventListener("pointerout", handlePointerOut);

@@ -30,6 +30,11 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(styles, /env\(safe-area-inset-bottom/);
   assert.match(styles, /min-height: 2\.75rem/);
   assert.match(styles, /touch-action: manipulation/);
+  assert.match(styles, /contain: layout paint size/);
+  assert.match(
+    styles,
+    /@media \(max-width: 720px\)[\s\S]*?\.scene-loader\s*\{[\s\S]*?width:\s*min\(16\.5rem, calc\(100vw - 3rem\)\)/,
+  );
   assert.match(styles, /\.making-line\s*\{[^}]*writing-mode: vertical-rl/s);
   assert.match(styles, /\.making-line\s*\{[^}]*transform: translateY\(-50%\) rotate\(180deg\)/s);
   assert.match(profile, /PHONE_PIXEL_BUDGET = 420_000/);
@@ -45,6 +50,11 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.doesNotMatch(field, /window\.visualViewport\?\.addEventListener\("resize", scheduleResize/);
   assert.match(field, /host\.clientWidth/);
   assert.match(field, /host\.clientHeight/);
+  assert.match(field, /window\.addEventListener\("pointermove", schedulePointer/);
+  assert.match(field, /window\.requestAnimationFrame\(\(\) =>/);
+  assert.match(field, /window\.cancelAnimationFrame\(pointerMoveFrame\)/);
+  assert.match(field, /const pointerWidth = lastViewportWidth \|\| Math\.max\(host\.clientWidth, 1\)/);
+  assert.match(field, /const pointerHeight = lastViewportHeight \|\| Math\.max\(host\.clientHeight, 1\)/);
   assert.match(field, /bloomPass\.enabled = renderProfile\.bloomEnabled/);
   assert.doesNotMatch(field, /halo\.visible\s*=/);
   assert.doesNotMatch(field, /echoFuture\.visible\s*=/);
