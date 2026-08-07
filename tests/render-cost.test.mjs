@@ -16,7 +16,9 @@ test("the scene preserves its original bloom without engine-specific branches", 
   assert.match(rig, /InstancedMesh/);
   assert.match(rig, /DynamicDrawUsage/);
   assert.match(world, /InstancedBufferGeometry/);
+  assert.match(world, /const shardVertices = new THREE\.Float32BufferAttribute/);
   assert.doesNotMatch(world, /setMatrixAt/);
+  assert.match(field, /timeUniform\.value - previousRigUpdate >= 1 \/ 60/);
   assert.doesNotMatch(field, /forceSinglePass = true/);
   assert.doesNotMatch(field, /HIGH_REFRESH_THRESHOLD/);
   assert.doesNotMatch(shader, /uGlowStrength/);

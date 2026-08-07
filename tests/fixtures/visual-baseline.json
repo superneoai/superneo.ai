@@ -1,5 +1,6 @@
 {
   "authorityCommit": "84b94ea",
+  "performanceAuthorityCommit": "3cb90e1",
   "browsers": {
     "chromium": {
       "desktop": {
@@ -117,48 +118,48 @@
           "tipPeak": 189.079
         },
         "performance": {
-          "frames": 429,
-          "fps": 119.167,
+          "frames": 370,
+          "fps": 102.778,
           "p50Gap": 8,
-          "p95Gap": 11,
-          "maxGap": 18,
-          "p95Render": 2,
-          "maxRender": 4,
-          "over25": 0,
+          "p95Gap": 17,
+          "maxGap": 43,
+          "p95Render": 1,
+          "maxRender": 5,
+          "over25": 18,
           "over50": 0,
           "samples": [
             {
-              "fps": 120,
-              "frames": 432,
-              "maxGap": 12,
-              "maxRender": 3,
-              "over25": 0,
+              "fps": 103.056,
+              "frames": 371,
+              "maxGap": 31,
+              "maxRender": 2,
+              "over25": 6,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
+              "p95Gap": 17,
               "p95Render": 1
             },
             {
-              "fps": 118.056,
-              "frames": 425,
-              "maxGap": 18,
-              "maxRender": 4,
-              "over25": 0,
+              "fps": 102.5,
+              "frames": 369,
+              "maxGap": 43,
+              "maxRender": 5,
+              "over25": 6,
               "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 11,
-              "p95Render": 2
+              "p50Gap": 9,
+              "p95Gap": 17,
+              "p95Render": 1
             },
             {
-              "fps": 119.167,
-              "frames": 429,
-              "maxGap": 17,
-              "maxRender": 3,
-              "over25": 0,
+              "fps": 102.778,
+              "frames": 370,
+              "maxGap": 32,
+              "maxRender": 4,
+              "over25": 6,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
-              "p95Render": 2
+              "p95Gap": 17,
+              "p95Render": 1
             }
           ]
         }

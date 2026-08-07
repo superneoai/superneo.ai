@@ -2,36 +2,39 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("layered LATENT shells share one ambient morph phase", async () => {
-  const shader = await readFile(
-    new URL("../src/latentShader.ts", import.meta.url),
+test("the assembled rig uses one continuous canonical pose", async () => {
+  const rig = await readFile(
+    new URL("../src/neoformRig.ts", import.meta.url),
     "utf8",
   );
-  const morphFunction = shader.match(
-    /vec3 morphPosition\(\) \{([\s\S]*?)vec3 current/,
-  );
 
-  assert.ok(morphFunction, "expected the morphPosition shader function");
-  assert.doesNotMatch(
-    morphFunction[1],
-    /sin\([^)]*uMorphBias/,
-    "per-shell morph bias must not shift the ambient animation phase and make LATENT layers fight",
-  );
+  assert.match(rig, /sampleBiped\(input, scratch\.biped/);
+  assert.match(rig, /sampleQuadruped\(input, scratch\.quadruped/);
+  assert.match(rig, /const formBlend = smoothstep\(0, 1, input\.formBlend\)/);
+  assert.match(rig, /formBlend <= 0\.002/);
+  assert.match(rig, /formBlend >= 0\.998/);
+  assert.match(rig, /scratch\.biped\[index\],[\s\S]*scratch\.quadruped\[index\]/);
 });
 
-test("ambient morph layers converge at settled topology endpoints", async () => {
-  const shader = await readFile(
-    new URL("../src/latentShader.ts", import.meta.url),
+test("reduced motion freezes locomotion, echoes, and swarm orbit", async () => {
+  const rig = await readFile(
+    new URL("../src/neoformRig.ts", import.meta.url),
     "utf8",
   );
-  const morphFunction = shader.match(
-    /vec3 morphPosition\(\) \{([\s\S]*?)vec3 current/,
+  const world = await readFile(
+    new URL("../src/neoformWorld.ts", import.meta.url),
+    "utf8",
+  );
+  const field = await readFile(
+    new URL("../src/LatentField.tsx", import.meta.url),
+    "utf8",
   );
 
-  assert.ok(morphFunction, "expected the morphPosition shader function");
-  assert.match(morphFunction[1], /float basePhase = uStagePhase/);
-  assert.match(morphFunction[1], /float transitionEnvelope = transitionWave \* transitionWave/);
-  assert.match(morphFunction[1], /\* 4\.0 \* transitionEnvelope/);
+  assert.match(rig, /input\.reducedMotion \? 0\.8 : input\.time/);
+  assert.match(rig, /input\.reducedMotion \? 0 : input\.leap/);
+  assert.match(rig, /predictionsVisible = input\.predictionStrength > 0\.02 && !input\.reducedMotion/);
+  assert.match(world, /activeTime = uTime \* \(1\.0 - uReducedMotion\)/);
+  assert.match(field, /motionIsReduced\(\) && sceneReady && !needsRender/);
 });
 
 test("the isometric chase framing cannot turn the actor edge-on", async () => {

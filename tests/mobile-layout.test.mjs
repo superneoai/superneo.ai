@@ -60,8 +60,10 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(field, /bloomPass\.enabled = renderProfile\.bloomEnabled/);
   assert.match(rig, /createNeoformRig\(compact: boolean\)/);
   assert.match(rig, /new THREE\.InstancedMesh/);
-  assert.match(rig, /past\.group\.visible = input\.predictionStrength/);
-  assert.match(rig, /future\.group\.visible = input\.predictionStrength/);
+  assert.match(rig, /past\.group\.visible = predictionsVisible/);
+  assert.match(rig, /future\.group\.visible = predictionsVisible/);
+  assert.match(rig, /compact \? 4 : 6/);
+  assert.match(rig, /compact[\s\S]*OctahedronGeometry/);
   assert.match(world, /compact \? COMPACT_SWARM_COUNT : DESKTOP_SWARM_COUNT/);
   assert.match(world, /COMPACT_SWARM_COUNT = 260/);
   await access(new URL("../public/latent-field-mobile.jpg", import.meta.url));

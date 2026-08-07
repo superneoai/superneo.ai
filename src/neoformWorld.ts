@@ -45,8 +45,8 @@ export function createBiomeInstances(count: number): BiomeInstance[] {
       Math.cos(groundZ * 2.3 - seed * 3) * 0.035;
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
     const orbitAngle = index * goldenAngle + seed * 0.6;
-    const orbitBand = 0.45 + Math.sqrt((index + 0.5) / count) * 1.18;
-    const swarmY = 0.72 + (hash(index, 4) - 0.5) * 1.42;
+    const orbitBand = 0.64 + Math.sqrt((index + 0.5) / count) * 1.72;
+    const swarmY = 0.72 + (hash(index, 4) - 0.5) * 1.72;
     const terrainScale = 0.055 + hash(index, 5) * 0.055;
     const crystalHeight = 0.16 + hash(index, 6) * 0.36;
     const scale: [number, number, number] = kind < 0.56
@@ -85,6 +85,7 @@ const worldVertexShader = /* glsl */ `
   uniform float uSpeed;
   uniform float uBloom;
   uniform float uReducedMotion;
+  uniform float uCompact;
   uniform vec3 uPointerWorld;
   uniform float uPointerStrength;
   uniform float uSignalProgress[5];
@@ -137,6 +138,7 @@ const worldVertexShader = /* glsl */ `
     swarm.z += sin(activeTime * 0.28 + aSeed * 17.0) * 0.06;
 
     float bloom = smoothstep(0.02, 0.98, uBloom);
+    instanceScale *= mix(1.0, mix(0.36, 0.52, uCompact), bloom);
     vec3 center = mix(ground, swarm, bloom);
     float pulseSignal = 0.0;
     for (int signalIndex = 0; signalIndex < 5; signalIndex++) {
@@ -210,21 +212,30 @@ const worldFragmentShader = /* glsl */ `
     vec3 ice = vec3(0.18, 0.8, 1.0);
     vec3 spectral = mix(violet, electricBlue, smoothstep(0.18, 0.72, vSeed));
     spectral = mix(spectral, ice, smoothstep(0.74, 1.0, vSeed));
-    vec3 color = mix(bone * (0.28 + threshold * 0.24), spectral, 0.48 + vBloom * 0.18);
-    color *= 0.7 + pulse * 0.28;
-    color = mix(color, uSignalColor, vSignal * 0.92);
-    color += uSignalColor * vSignal * 0.28;
-    float coverage = 0.28 + vKind * 0.28 + vBloom * 0.22 + vSignal * 0.34;
+    vec3 color = mix(bone * (0.18 + threshold * 0.16), spectral, 0.62 + vBloom * 0.12);
+    color *= 0.58 + pulse * 0.24;
+    color = mix(color, uSignalColor, vSignal * 0.68);
+    color += uSignalColor * vSignal * 0.16;
+    float coverage = 0.18 + vKind * 0.24 + vBloom * 0.12 + vSignal * 0.42;
     if (coverage < threshold * 0.88) discard;
     float depthFade = 1.0 - smoothstep(4.4, 6.4, vDepth);
-    gl_FragColor = vec4(color, (0.38 + vBloom * 0.3 + vSignal * 0.2) * depthFade);
+    gl_FragColor = vec4(
+      color,
+      (0.075 + vKind * 0.07 + vBloom * 0.055 + vSignal * 0.18) * depthFade
+    );
   }
 `;
 
 export function createNeoformWorld(compact: boolean, signalColor: THREE.Color) {
   const count = compact ? COMPACT_SWARM_COUNT : DESKTOP_SWARM_COUNT;
   const instances = createBiomeInstances(count);
-  const baseGeometry = new THREE.TetrahedronGeometry(1, 0);
+  const baseGeometry = new THREE.BufferGeometry();
+  const shardVertices = new THREE.Float32BufferAttribute([
+    0, 0.78, 0,
+    -0.66, -0.42, 0.24,
+    0.7, -0.38, -0.2,
+  ], 3);
+  baseGeometry.setAttribute("position", shardVertices);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.index = baseGeometry.index;
   Object.entries(baseGeometry.attributes).forEach(([name, attribute]) => {
@@ -259,6 +270,7 @@ export function createNeoformWorld(compact: boolean, signalColor: THREE.Color) {
     uSpeed: { value: 0.5 },
     uBloom: { value: 0 },
     uReducedMotion: { value: 0 },
+    uCompact: { value: compact ? 1 : 0 },
     uPointerWorld: { value: new THREE.Vector3() },
     uPointerStrength: { value: 0 },
     uSignalProgress: { value: signalProgress },
@@ -270,16 +282,16 @@ export function createNeoformWorld(compact: boolean, signalColor: THREE.Color) {
     uniforms,
     vertexShader: worldVertexShader,
     fragmentShader: worldFragmentShader,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
+    transparent: !compact,
+    blending: compact ? THREE.NormalBlending : THREE.AdditiveBlending,
+    depthWrite: compact,
     depthTest: true,
     side: THREE.DoubleSide,
   });
   const shards = new THREE.Mesh(geometry, material);
   shards.frustumCulled = false;
 
-  const groundGeometry = new THREE.PlaneGeometry(5.2, 2.9, compact ? 18 : 30, compact ? 10 : 18);
+  const groundGeometry = new THREE.PlaneGeometry(5.2, 2.9, compact ? 14 : 30, compact ? 8 : 18);
   groundGeometry.rotateX(-Math.PI / 2);
   const groundMaterial = new THREE.MeshBasicMaterial({
     color: 0x7b67ff,

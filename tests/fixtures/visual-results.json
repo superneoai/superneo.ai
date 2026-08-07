@@ -22,54 +22,54 @@
         ],
         "geometry": {
           "super": {
-            "x": 157.04751586914062,
-            "y": 461.06304931640625,
-            "width": 406.4757995605469,
+            "x": 156.9827117919922,
+            "y": 461.00543212890625,
+            "width": 406.47576904296875,
             "height": 116.7725830078125
           },
           "neo": {
-            "x": 477.1888427734375,
-            "y": 376.2431945800781,
-            "width": 447.06787109375,
+            "x": 477.1239929199219,
+            "y": 376.1855773925781,
+            "width": 447.0679016113281,
             "height": 286.1189880371094
           },
           "word": {
-            "x": 157.04751586914062,
-            "y": 451.8883972167969,
-            "width": 666.704345703125,
+            "x": 156.9827117919922,
+            "y": 451.8307800292969,
+            "width": 666.7042846679688,
             "height": 125.94723510742188
           },
           "core": {
-            "x": 572.8613671875,
-            "y": 467.4436220169067,
-            "width": 255.722822265625,
+            "x": 572.7965238647461,
+            "y": 467.3860048294067,
+            "width": 255.7228397216797,
             "height": 104.16519408226013
           }
         },
         "pulse": {
-          "outsideGreen": 0.00474,
-          "routeCoverage": 0.595,
-          "tipPeak": 179.246
+          "outsideGreen": 0.00049,
+          "routeCoverage": 0.517,
+          "tipPeak": 200.311
         },
         "performance": {
           "frames": 432,
           "fps": 120,
           "p50Gap": 8.3,
-          "p95Gap": 9.9,
-          "maxGap": 11.5,
-          "p95Render": 0.5,
-          "maxRender": 1,
+          "p95Gap": 9,
+          "maxGap": 22.1,
+          "p95Render": 0.3,
+          "maxRender": 0.7,
           "over25": 0,
           "over50": 0,
           "samples": [
             {
-              "frames": 432,
-              "fps": 120,
+              "frames": 430,
+              "fps": 119.444,
               "p50Gap": 8.3,
-              "p95Gap": 10,
-              "maxGap": 11.5,
-              "p95Render": 0.6,
-              "maxRender": 0.8,
+              "p95Gap": 9,
+              "maxGap": 22.1,
+              "p95Render": 0.4,
+              "maxRender": 0.7,
               "over25": 0,
               "over50": 0
             },
@@ -77,10 +77,10 @@
               "frames": 432,
               "fps": 120,
               "p50Gap": 8.3,
-              "p95Gap": 9.9,
-              "maxGap": 11.1,
-              "p95Render": 0.5,
-              "maxRender": 1,
+              "p95Gap": 8.9,
+              "maxGap": 9.3,
+              "p95Render": 0.3,
+              "maxRender": 0.5,
               "over25": 0,
               "over50": 0
             },
@@ -88,10 +88,10 @@
               "frames": 432,
               "fps": 120,
               "p50Gap": 8.3,
-              "p95Gap": 9.8,
-              "maxGap": 11.4,
-              "p95Render": 0.5,
-              "maxRender": 0.8,
+              "p95Gap": 9,
+              "maxGap": 9.5,
+              "p95Render": 0.3,
+              "maxRender": 0.4,
               "over25": 0,
               "over50": 0
             }
@@ -119,47 +119,58 @@
         ],
         "geometry": {
           "super": {
-            "x": 55.83638381958008,
-            "y": 641.4518432617188,
-            "width": 134.7015838623047,
+            "x": 55.83675765991211,
+            "y": 641.4522094726562,
+            "width": 134.70159912109375,
             "height": 39.14886474609375
           },
           "neo": {
-            "x": 162.26071166992188,
-            "y": 613.9727172851562,
-            "width": 146.39788818359375,
+            "x": 162.26109313964844,
+            "y": 613.9730834960938,
+            "width": 146.3979034423828,
             "height": 93.68927001953125
           },
           "word": {
-            "x": 55.83638381958008,
-            "y": 638.7399291992188,
-            "width": 219.9140167236328,
-            "height": 41.86077880859375
+            "x": 55.83675765991211,
+            "y": 638.740234375,
+            "width": 219.91403198242188,
+            "height": 41.86083984375
           }
         },
         "pulse": {
-          "outsideGreen": 0.00113,
-          "routeCoverage": 0.259,
-          "tipPeak": 95.837
+          "outsideGreen": 0.00089,
+          "routeCoverage": 0.325,
+          "tipPeak": 211.554
         },
         "performance": {
           "frames": 432,
           "fps": 120,
           "p50Gap": 8.3,
-          "p95Gap": 9.9,
-          "maxGap": 11.5,
-          "p95Render": 0.5,
+          "p95Gap": 8.9,
+          "maxGap": 10.3,
+          "p95Render": 0.4,
           "maxRender": 0.9,
           "over25": 0,
           "over50": 0,
           "samples": [
             {
-              "frames": 431,
-              "fps": 119.722,
+              "frames": 432,
+              "fps": 120,
               "p50Gap": 8.3,
-              "p95Gap": 9.8,
-              "maxGap": 11.2,
-              "p95Render": 0.5,
+              "p95Gap": 8.8,
+              "maxGap": 9.3,
+              "p95Render": 0.3,
+              "maxRender": 0.4,
+              "over25": 0,
+              "over50": 0
+            },
+            {
+              "frames": 432,
+              "fps": 120,
+              "p50Gap": 8.3,
+              "p95Gap": 8.9,
+              "maxGap": 10.2,
+              "p95Render": 0.4,
               "maxRender": 0.9,
               "over25": 0,
               "over50": 0
@@ -167,22 +178,11 @@
             {
               "frames": 432,
               "fps": 120,
-              "p50Gap": 8.2,
-              "p95Gap": 10,
-              "maxGap": 11.4,
-              "p95Render": 0.5,
-              "maxRender": 0.7,
-              "over25": 0,
-              "over50": 0
-            },
-            {
-              "frames": 433,
-              "fps": 120.278,
               "p50Gap": 8.3,
-              "p95Gap": 9.9,
-              "maxGap": 11.5,
+              "p95Gap": 8.9,
+              "maxGap": 10.3,
               "p95Render": 0.5,
-              "maxRender": 0.9,
+              "maxRender": 0.6,
               "over25": 0,
               "over50": 0
             }
@@ -237,52 +237,52 @@
           }
         },
         "pulse": {
-          "outsideGreen": 0.01429,
-          "routeCoverage": 0.592,
-          "tipPeak": 191.36
+          "outsideGreen": 0.00038,
+          "routeCoverage": 0.496,
+          "tipPeak": 203.532
         },
         "performance": {
-          "frames": 426,
-          "fps": 118.333,
+          "frames": 369,
+          "fps": 102.5,
           "p50Gap": 8,
-          "p95Gap": 11,
-          "maxGap": 19,
+          "p95Gap": 17,
+          "maxGap": 46,
           "p95Render": 1,
-          "maxRender": 5,
-          "over25": 0,
+          "maxRender": 3,
+          "over25": 24,
           "over50": 0,
           "samples": [
             {
-              "fps": 118.333,
-              "frames": 426,
-              "maxGap": 19,
-              "maxRender": 3,
-              "over25": 0,
+              "fps": 102.5,
+              "frames": 369,
+              "maxGap": 44,
+              "maxRender": 2,
+              "over25": 9,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
-              "p95Render": 2
-            },
-            {
-              "fps": 119.722,
-              "frames": 431,
-              "maxGap": 13,
-              "maxRender": 3,
-              "over25": 0,
-              "over50": 0,
-              "p50Gap": 8,
-              "p95Gap": 10,
+              "p95Gap": 17,
               "p95Render": 1
             },
             {
-              "fps": 118.333,
-              "frames": 426,
-              "maxGap": 17,
-              "maxRender": 5,
-              "over25": 0,
+              "fps": 103.611,
+              "frames": 373,
+              "maxGap": 32,
+              "maxRender": 3,
+              "over25": 4,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
+              "p95Gap": 17,
+              "p95Render": 1
+            },
+            {
+              "fps": 101.944,
+              "frames": 367,
+              "maxGap": 46,
+              "maxRender": 3,
+              "over25": 11,
+              "over50": 0,
+              "p50Gap": 8,
+              "p95Gap": 17,
               "p95Render": 1
             }
           ]
@@ -309,67 +309,67 @@
         ],
         "geometry": {
           "neo": {
-            "height": 93.70001220703124,
+            "height": 93.6999969482422,
             "width": 146.39999389648438,
-            "x": 162.31666564941406,
-            "y": 613.9666748046875
+            "x": 162.28334045410156,
+            "y": 613.9500122070312
           },
           "super": {
-            "height": 39.149993896484375,
+            "height": 39.15000915527344,
             "width": 134.6999969482422,
-            "x": 55.866668701171875,
-            "y": 641.1666870117188
+            "x": 55.850006103515625,
+            "y": 641.1500244140625
           },
           "word": {
             "height": 41.56666564941406,
             "width": 219.9333343505859,
-            "x": 55.866668701171875,
-            "y": 638.75
+            "x": 55.850006103515625,
+            "y": 638.7333374023438
           }
         },
         "pulse": {
-          "outsideGreen": 0.00113,
-          "routeCoverage": 0.259,
-          "tipPeak": 96.552
+          "outsideGreen": 0.00109,
+          "routeCoverage": 0.328,
+          "tipPeak": 211.481
         },
         "performance": {
           "frames": 432,
           "fps": 120,
           "p50Gap": 8,
-          "p95Gap": 11,
+          "p95Gap": 10,
           "maxGap": 14,
           "p95Render": 1,
-          "maxRender": 5,
+          "maxRender": 6,
           "over25": 0,
           "over50": 0,
           "samples": [
             {
-              "fps": 119.722,
-              "frames": 431,
+              "fps": 120,
+              "frames": 432,
               "maxGap": 14,
-              "maxRender": 3,
+              "maxRender": 6,
               "over25": 0,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
+              "p95Gap": 9,
               "p95Render": 1
             },
             {
               "fps": 120,
               "frames": 432,
-              "maxGap": 13,
-              "maxRender": 5,
+              "maxGap": 11,
+              "maxRender": 2,
               "over25": 0,
               "over50": 0,
               "p50Gap": 8,
-              "p95Gap": 11,
-              "p95Render": 2
+              "p95Gap": 10,
+              "p95Render": 1
             },
             {
               "fps": 120,
               "frames": 432,
-              "maxGap": 12,
-              "maxRender": 3,
+              "maxGap": 11,
+              "maxRender": 4,
               "over25": 0,
               "over50": 0,
               "p50Gap": 8,

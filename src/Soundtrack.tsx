@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { SuperneoSoundtrack } from "./soundtrackEngine";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
 import { TIP_SIGNAL_EVENT, type TipArrival } from "./tipSignal";
+import { NEOFORM_STEP_EVENT, type NeoformStepDetail } from "./neoformEvents";
 
 const defaultVolume = 46;
 const deviceVolumeMedia = "(max-width: 720px), (hover: none) and (pointer: coarse)";
@@ -115,6 +116,16 @@ export const SoundtrackController = memo(function SoundtrackController() {
     window.addEventListener(TIP_SIGNAL_EVENT, playTipArrivals);
     return () => window.removeEventListener(TIP_SIGNAL_EVENT, playTipArrivals);
   }, [ensureEngine, supported]);
+
+  useEffect(() => {
+    const playFootstep = (event: Event) => {
+      const detail = (event as CustomEvent<NeoformStepDetail>).detail;
+      engineRef.current?.playFootstep(detail.intensity, detail.pan);
+    };
+
+    window.addEventListener(NEOFORM_STEP_EVENT, playFootstep);
+    return () => window.removeEventListener(NEOFORM_STEP_EVENT, playFootstep);
+  }, []);
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;

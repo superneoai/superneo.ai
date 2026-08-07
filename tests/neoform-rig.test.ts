@@ -47,6 +47,17 @@ test("form blending is continuous and deterministic", () => {
   assert.ok(maximumDelta < 0.08, `joint snap was ${maximumDelta.toFixed(3)}`);
 });
 
+test("settled forms bypass the unused pose branch", () => {
+  const rig = sampleNeoformPose({ time: 2.4, formBlend: 1, speed: 1.4, leap: 0 });
+  const nearlySettled = sampleNeoformPose({
+    time: 2.4,
+    formBlend: 0.9999,
+    speed: 1.4,
+    leap: 0,
+  });
+  assert.deepEqual(nearlySettled, rig);
+});
+
 test("the final leap lifts the body and tucks every foot", () => {
   const grounded = sampleNeoformPose({ time: 1.4, formBlend: 1, speed: 1.4, leap: 0 });
   const airborne = sampleNeoformPose({ time: 1.4, formBlend: 1, speed: 1.4, leap: 1 });

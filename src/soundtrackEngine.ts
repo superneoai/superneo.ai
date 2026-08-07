@@ -197,6 +197,20 @@ export class SuperneoSoundtrack {
     this.reverbGain.gain.setTargetAtTime(0.17 + this.stage * 0.025, this.context.currentTime, 0.5);
   }
 
+  playFootstep(intensity: number, pan: number) {
+    if (!this.playing || this.context.state !== "running") return;
+    const safeIntensity = Math.min(1, Math.max(0.25, intensity));
+    const safePan = Math.min(0.8, Math.max(-0.8, pan));
+    const now = this.context.currentTime;
+    this.scheduleTone(62 + this.stage * 7, now, 0.16, {
+      type: "sine",
+      level: 0.0065 * safeIntensity,
+      attack: 0.008,
+      pan: safePan,
+    });
+    this.scheduleNoise(now, 0.0045 * safeIntensity, 760 + this.stage * 180);
+  }
+
   dispose() {
     this.pause();
     if (this.suspendTimer !== null) window.clearTimeout(this.suspendTimer);

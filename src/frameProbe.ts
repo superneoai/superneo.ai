@@ -25,13 +25,27 @@ export function createFrameProbe() {
 
   const delay = Math.max(300, Number(params.get("perfDelay")) || 1200);
   const duration = Math.max(1200, Number(params.get("perfDuration")) || 3600);
-  const startsAt = performance.now() + delay;
+  const manualStart = params.get("perfManual") === "1";
+  let startsAt = manualStart ? Number.POSITIVE_INFINITY : performance.now() + delay;
   const gaps: number[] = [];
   const renders: number[] = [];
   let previousFrame = 0;
   let reported = false;
 
   delete document.documentElement.dataset.frameReport;
+
+  const start = () => {
+    startsAt = performance.now();
+    gaps.length = 0;
+    renders.length = 0;
+    previousFrame = 0;
+    reported = false;
+    delete document.documentElement.dataset.frameReport;
+  };
+  const probeWindow = window as Window & {
+    __superneoStartFrameProbe?: () => void;
+  };
+  if (manualStart) probeWindow.__superneoStartFrameProbe = start;
 
   return {
     sample(now: number, renderDuration: number) {
@@ -54,6 +68,12 @@ export function createFrameProbe() {
         over50: gaps.filter((gap) => gap > 50).length,
       };
       document.documentElement.dataset.frameReport = JSON.stringify(report);
+    },
+    start,
+    dispose() {
+      if (probeWindow.__superneoStartFrameProbe === start) {
+        delete probeWindow.__superneoStartFrameProbe;
+      }
     },
   };
 }

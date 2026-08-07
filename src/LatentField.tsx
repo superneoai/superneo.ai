@@ -15,6 +15,7 @@ import {
 } from "./latentShader";
 import { createNeoformRig } from "./neoformRig";
 import { createNeoformWorld } from "./neoformWorld";
+import { NEOFORM_STEP_EVENT } from "./neoformEvents";
 import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { createFrameProbe } from "./frameProbe";
@@ -260,8 +261,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let previousPointerTime = performance.now();
     let previousFrame = performance.now();
     let previousTelemetry = 0;
+    let previousRigUpdate = Number.NEGATIVE_INFINITY;
     let motionAccumulator = 0;
     let currentStage = 0;
+    const plantedFeet = [false, false, false, false];
     let discovered = false;
     let resizeTimer: number | null = null;
     let pointerMoveFrame: number | null = null;
@@ -458,7 +461,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
 
     const renderFrame = (time: number) => {
       if (disposed || document.hidden) return;
-      if (motionIsReduced() && !needsRender) return;
+      if (motionIsReduced() && sceneReady && !needsRender) return;
 
       const timestamp = time * 1000;
       const delta = Math.min((timestamp - previousFrame) / 1000, 0.05);
@@ -507,24 +510,53 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         THREE.MathUtils.smoothstep(semanticPhase, 0.2, 2.7),
       );
       const predictionStrength = THREE.MathUtils.smoothstep(semanticPhase, 0.55, 1.05) *
-        (1 - THREE.MathUtils.smoothstep(semanticPhase, 2.25, 2.82));
+        (1 - THREE.MathUtils.smoothstep(semanticPhase, 1.95, 2.42));
       const finaleStrength = THREE.MathUtils.smoothstep(semanticPhase, 2.62, 3);
       const leap = finaleStrength * Math.pow(
         Math.max(Math.sin(timeUniform.value * 1.32 - 0.8), 0),
         5,
       );
-      neoform.update({
-        time: timeUniform.value,
-        formBlend,
-        speed: runSpeed,
-        leap,
-        pointerX: pointerWorld.value.x,
-        pointerY: pointerWorld.value.y,
-        pointerStrength: pointerStrength.value,
-        predictionStrength,
-        signalProgress: signalProgressValues,
-        reducedMotion: motionIsReduced() || Boolean(qa?.freezeScene),
-      });
+      const rigAdvanced = motionIsReduced() || Boolean(qa?.freezeScene) ||
+        timeUniform.value - previousRigUpdate >= 1 / 60;
+      if (rigAdvanced) {
+        previousRigUpdate = timeUniform.value;
+        neoform.update({
+          time: timeUniform.value,
+          formBlend,
+          speed: runSpeed,
+          leap,
+          assembly: THREE.MathUtils.lerp(
+            0.62,
+            1,
+            THREE.MathUtils.smoothstep(semanticPhase, 0, 0.72),
+          ),
+          pointerX: pointerWorld.value.x,
+          pointerY: pointerWorld.value.y,
+          pointerStrength: pointerStrength.value,
+          predictionStrength,
+          signalProgress: signalProgressValues,
+          signalVariation: signalVariationValues,
+          reducedMotion: motionIsReduced() || Boolean(qa?.freezeScene),
+        });
+      }
+      if (rigAdvanced && !motionIsReduced() && !qa?.freezeScene) {
+        for (let footIndex = 0; footIndex < 4; footIndex += 1) {
+          const foot = neoform.tipPositions[footIndex];
+          const planted = foot.y < 0.072;
+          if (planted && !plantedFeet[footIndex]) {
+            window.dispatchEvent(new CustomEvent(NEOFORM_STEP_EVENT, {
+              detail: {
+                intensity: THREE.MathUtils.clamp(runSpeed / 1.5, 0.38, 1),
+                pan: THREE.MathUtils.clamp(foot.z * 1.8, -0.72, 0.72),
+              },
+            }));
+          }
+          plantedFeet[footIndex] = planted;
+        }
+      }
+      objectGroup.scale.setScalar(
+        renderProfile.objectScale * THREE.MathUtils.lerp(1, 0.88, finaleStrength),
+      );
       neoformWorld.update({
         time: timeUniform.value,
         phase: semanticPhase,
@@ -669,6 +701,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       asciiPass.dispose();
       outputPass.dispose();
       composer.dispose();
+      frameProbe?.dispose();
       neoform.dispose();
       neoformWorld.dispose();
       backgroundGeometry.dispose();

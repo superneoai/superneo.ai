@@ -144,3 +144,32 @@ test("tip arrivals schedule subtle tones at their visual arrival times", async (
     globalThis.window = originalWindow;
   }
 });
+
+test("foot contacts stay silent until playback and then add one restrained impact", async () => {
+  const originalWindow = globalThis.window;
+  globalThis.window = {
+    AudioContext: FakeAudioContext,
+    setInterval: () => 1,
+    clearInterval: () => {},
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+  } as unknown as Window & typeof globalThis;
+
+  try {
+    FakeAudioContext.interruptFirstResume = false;
+    const soundtrack = new SuperneoSoundtrack();
+    soundtrack.playFootstep(1, -0.4);
+    assert.equal(FakeAudioContext.latest.oscillators.length, 0);
+
+    await soundtrack.play();
+    const scheduledByMusic = FakeAudioContext.latest.oscillators.length;
+    soundtrack.setStage(2);
+    soundtrack.playFootstep(0.8, 0.35);
+
+    assert.equal(FakeAudioContext.latest.oscillators.length, scheduledByMusic + 1);
+    assert.equal(FakeAudioContext.latest.oscillators.at(-1)?.frequency.value, 76);
+    soundtrack.dispose();
+  } finally {
+    globalThis.window = originalWindow;
+  }
+});
