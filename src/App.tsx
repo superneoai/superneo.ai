@@ -28,8 +28,14 @@ const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
 const desktopArtworkUrl = new URL("latent-field.avif", document.baseURI).href;
 const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
-const MIN_SCENE_LOADING_MS = 680;
-const SCENE_LOADING_STEP_MS = 160;
+const MIN_SCENE_LOADING_MS = 1_400;
+const SCENE_LOADING_STEP_MS = 350;
+const bootPhases = [
+  { label: "RUNTIME", activity: "INIT" },
+  { label: "FIELD", activity: "DECODE" },
+  { label: "SIGNAL", activity: "SYNC" },
+  { label: "SCENE", activity: "LINK" },
+] as const;
 
 function ScenePoster({ loadStep }: { loadStep: number }) {
   return (
@@ -44,10 +50,35 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
       />
       <div className="scene-loader">
         <span className="scene-loader-label">
-          <span>LOADING</span>
-          <output>STEP {loadStep}/4</output>
+          <span>SYSTEM BOOT</span>
+          <output>{String(loadStep).padStart(2, "0")}/04</output>
         </span>
-        <span className="scene-loader-track" />
+        <span className="scene-loader-log">
+          {bootPhases.map((phase, index) => {
+            const step = index + 1;
+            const state = step < loadStep
+              ? "complete"
+              : step === loadStep ? "active" : "pending";
+
+            return (
+              <span className="scene-loader-step" data-state={state} key={phase.label}>
+                <i>{String(step).padStart(2, "0")}</i>
+                <span>{phase.label}</span>
+                <output>{state === "complete" ? "OK" : state === "active" ? phase.activity : "WAIT"}</output>
+              </span>
+            );
+          })}
+        </span>
+        <span className="scene-loader-track">
+          {bootPhases.map((phase, index) => {
+            const step = index + 1;
+            const state = step < loadStep
+              ? "complete"
+              : step === loadStep ? "active" : "pending";
+
+            return <i data-state={state} key={phase.label} />;
+          })}
+        </span>
       </div>
     </div>
   );

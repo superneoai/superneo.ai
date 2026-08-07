@@ -37,11 +37,16 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(app, /signal-artwork-fallback--desktop/);
   assert.match(app, /signal-artwork-fallback--mobile/);
   assert.match(app, /className="scene-loader"/);
-  assert.match(app, /<output>STEP \{loadStep\}\/4<\/output>/);
-  assert.match(app, /const MIN_SCENE_LOADING_MS = 680/);
-  assert.match(app, /const SCENE_LOADING_STEP_MS = 160/);
+  assert.match(app, /SYSTEM BOOT/);
+  assert.match(app, /RUNTIME/);
+  assert.match(app, /FIELD/);
+  assert.match(app, /SIGNAL/);
+  assert.match(app, /SCENE/);
+  assert.match(app, /const MIN_SCENE_LOADING_MS = 1_400/);
+  assert.match(app, /const SCENE_LOADING_STEP_MS = 350/);
   assert.match(app, /Math\.max\(0, MIN_SCENE_LOADING_MS - elapsed\)/);
   assert.match(app, /\[2, 3, 4\]\.map/);
+  assert.match(app, /state === "complete" \? "OK" : state === "active" \? phase\.activity : "WAIT"/);
   assert.match(app, /className="scene-loader-track"/);
   assert.match(
     baseStyles,
@@ -78,7 +83,9 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     /\.signal-poster::before\s*\{[\s\S]*?var\(--ink\) 72%/,
   );
   assert.match(styles, /\.signal-poster::after\s*\{[\s\S]*?scene-loader-scan/);
-  assert.match(styles, /\.scene-loader-track::after\s*\{[\s\S]*?scene-loader-progress/);
+  assert.match(styles, /\.scene-loader-step\[data-state="active"\]/);
+  assert.match(styles, /\.scene-loader-track > i\[data-state="active"\]/);
+  assert.doesNotMatch(styles, /@keyframes scene-loader-progress/);
   assert.doesNotMatch(styles, /@keyframes scene-loader-code/);
   assert.match(field, /sceneRevealStartedAt/);
   assert.match(field, /validFrameCount\s*>=\s*2/);

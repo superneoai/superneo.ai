@@ -120,8 +120,8 @@ a {
   left: 50%;
   z-index: 3;
   display: grid;
-  gap: 0.62rem;
-  width: min(13rem, 58vw);
+  gap: 0.72rem;
+  width: min(17rem, 70vw);
   color: color-mix(in oklch, var(--bone) 72%, transparent);
   font-size: 0.52rem;
   line-height: 1;
@@ -141,36 +141,67 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.scene-loader-track {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 0.18rem;
-  overflow: hidden;
-  background: repeating-linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--bone) 18%, transparent) 0,
-    color-mix(in oklch, var(--bone) 18%, transparent) calc(8.333% - 0.14rem),
-    transparent calc(8.333% - 0.14rem),
-    transparent 8.333%
-  );
+.scene-loader-log {
+  display: grid;
+  gap: 0.34rem;
+  padding: 0.58rem 0;
+  border-top: 1px solid color-mix(in oklch, var(--bone) 10%, transparent);
+  border-bottom: 1px solid color-mix(in oklch, var(--bone) 10%, transparent);
 }
 
-.scene-loader-track::after {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 33.333%;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--signal) 0,
-    var(--signal) calc(25% - 0.14rem),
-    transparent calc(25% - 0.14rem),
-    transparent 25%
-  );
+.scene-loader-step {
+  display: grid;
+  grid-template-columns: 2.8ch 1fr auto;
+  gap: 0.8rem;
+  opacity: 0.22;
+  transition: opacity 180ms ease;
+}
+
+.scene-loader-step i {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.scene-loader-step output {
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.scene-loader-step[data-state="complete"] {
+  opacity: 0.62;
+}
+
+.scene-loader-step[data-state="active"] {
+  opacity: 1;
+}
+
+.scene-loader-step[data-state="active"] output {
+  color: var(--signal);
+  animation: scene-loader-active 700ms ease-in-out infinite alternate;
+}
+
+.scene-loader-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.16rem;
+  width: 100%;
+}
+
+.scene-loader-track > i {
+  height: 0.18rem;
+  background: color-mix(in oklch, var(--bone) 15%, transparent);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.scene-loader-track > i[data-state="complete"] {
+  background: color-mix(in oklch, var(--signal) 58%, transparent);
+}
+
+.scene-loader-track > i[data-state="active"] {
+  background: var(--signal);
   box-shadow: 0 0 0.7rem color-mix(in oklch, var(--signal) 30%, transparent);
-  content: "";
-  transform: translateX(-110%);
-  animation: scene-loader-progress 1.25s steps(8, end) infinite;
+  animation: scene-loader-active 700ms ease-in-out infinite alternate;
 }
 
 .experience[data-scene-ready="true"] .signal-stage {
@@ -1257,12 +1288,6 @@ a {
   }
 }
 
-@keyframes scene-loader-progress {
-  to {
-    transform: translateX(410%);
-  }
-}
-
 @keyframes scene-loader-scan {
   0%,
   18% {
@@ -1272,6 +1297,12 @@ a {
   82%,
   100% {
     transform: translateY(100%);
+  }
+}
+
+@keyframes scene-loader-active {
+  to {
+    opacity: 0.54;
   }
 }
 
@@ -1670,7 +1701,8 @@ a {
   }
 
   .signal-poster::after,
-  .scene-loader-track::after {
+  .scene-loader-step[data-state="active"] output,
+  .scene-loader-track > i[data-state="active"] {
     animation: none;
   }
 
