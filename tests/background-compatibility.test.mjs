@@ -42,10 +42,14 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(app, /FIELD/);
   assert.match(app, /SIGNAL/);
   assert.match(app, /SCENE/);
-  assert.match(app, /const MIN_SCENE_LOADING_MS = 1_400/);
-  assert.match(app, /const SCENE_LOADING_STEP_MS = 350/);
+  assert.match(app, /const SCENE_LOADING_STEP_MS = 300/);
+  assert.match(app, /const INITIALIZING_LINGER_BASE_MS = 550/);
+  assert.match(app, /const INITIALIZING_LINGER_JITTER_MS = 350/);
+  assert.match(app, /Math\.floor\(Math\.random\(\) \* INITIALIZING_LINGER_JITTER_MS\)/);
   assert.match(app, /Math\.max\(0, MIN_SCENE_LOADING_MS - elapsed\)/);
-  assert.match(app, /\[2, 3, 4\]\.map/);
+  assert.match(app, /\[2, 3, 4, 5\]\.map/);
+  assert.match(app, /className="scene-loader-final" data-visible=\{finalizing\}/);
+  assert.match(app, />INITIALIZING<\/span>/);
   assert.match(app, /state === "complete" \? "OK" : state === "active" \? phase\.activity : "WAIT"/);
   assert.match(app, /className="scene-loader-track"/);
   assert.match(

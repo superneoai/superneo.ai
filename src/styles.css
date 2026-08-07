@@ -204,6 +204,40 @@ a {
   animation: scene-loader-active 700ms ease-in-out infinite alternate;
 }
 
+.scene-loader-final {
+  display: grid;
+  grid-template-columns: 1.6ch 1fr auto;
+  gap: 0.8rem;
+  min-height: 1em;
+  color: color-mix(in oklch, var(--bone) 82%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.2rem);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 0s linear 180ms;
+}
+
+.scene-loader-final[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.scene-loader-final i {
+  color: var(--signal);
+  font-style: normal;
+}
+
+.scene-loader-final output {
+  color: var(--signal);
+  font: inherit;
+  letter-spacing: 0.12em;
+  animation: scene-loader-active 700ms ease-in-out infinite alternate;
+}
+
 .experience[data-scene-ready="true"] .signal-stage {
   opacity: 1;
   visibility: visible;
@@ -1702,7 +1736,8 @@ a {
 
   .signal-poster::after,
   .scene-loader-step[data-state="active"] output,
-  .scene-loader-track > i[data-state="active"] {
+  .scene-loader-track > i[data-state="active"],
+  .scene-loader-final output {
     animation: none;
   }
 

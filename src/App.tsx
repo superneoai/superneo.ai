@@ -28,8 +28,14 @@ const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
 const desktopArtworkUrl = new URL("latent-field.avif", document.baseURI).href;
 const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
-const MIN_SCENE_LOADING_MS = 1_400;
-const SCENE_LOADING_STEP_MS = 350;
+const SCENE_LOADING_STEP_MS = 300;
+const INITIALIZING_LINGER_BASE_MS = 550;
+const INITIALIZING_LINGER_JITTER_MS = 350;
+const MIN_SCENE_LOADING_MS = (
+  SCENE_LOADING_STEP_MS * 4
+  + INITIALIZING_LINGER_BASE_MS
+  + Math.floor(Math.random() * INITIALIZING_LINGER_JITTER_MS)
+);
 const bootPhases = [
   { label: "RUNTIME", activity: "INIT" },
   { label: "FIELD", activity: "DECODE" },
@@ -38,6 +44,8 @@ const bootPhases = [
 ] as const;
 
 function ScenePoster({ loadStep }: { loadStep: number }) {
+  const finalizing = loadStep > bootPhases.length;
+
   return (
     <div className="signal-poster" aria-hidden="true">
       <div
@@ -51,7 +59,7 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
       <div className="scene-loader">
         <span className="scene-loader-label">
           <span>SYSTEM BOOT</span>
-          <output>{String(loadStep).padStart(2, "0")}/04</output>
+          <output>{String(Math.min(loadStep, bootPhases.length)).padStart(2, "0")}/04</output>
         </span>
         <span className="scene-loader-log">
           {bootPhases.map((phase, index) => {
@@ -78,6 +86,11 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
 
             return <i data-state={state} key={phase.label} />;
           })}
+        </span>
+        <span className="scene-loader-final" data-visible={finalizing}>
+          <i>&gt;</i>
+          <span>INITIALIZING</span>
+          <output>...</output>
         </span>
       </div>
     </div>
@@ -402,14 +415,14 @@ export function App() {
     const elapsed = performance.now() - loadingStartedAtRef.current;
     const remaining = Math.max(0, MIN_SCENE_LOADING_MS - elapsed);
     sceneReadyTimerRef.current = window.setTimeout(() => {
-      setLoadStep(4);
+      setLoadStep(bootPhases.length + 1);
       setSceneReady(true);
       sceneReadyTimerRef.current = null;
     }, remaining);
   }, []);
 
   useEffect(() => {
-    const stepTimers = [2, 3, 4].map((step) => window.setTimeout(
+    const stepTimers = [2, 3, 4, 5].map((step) => window.setTimeout(
       () => setLoadStep(step),
       SCENE_LOADING_STEP_MS * (step - 1),
     ));
