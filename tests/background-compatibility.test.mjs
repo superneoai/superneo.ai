@@ -65,6 +65,14 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     /\.signal-artwork-fallback\s*\{[\s\S]*?inset:\s*0;/,
   );
   assert.doesNotMatch(styles, /mobile-background-drift/);
+  assert.match(
+    styles,
+    /\.signal-artwork-fallback\s*\{[\s\S]*?filter:\s*blur\(1\.55rem\) brightness\(0\.42\) saturate\(0\.58\)/,
+  );
+  assert.match(
+    styles,
+    /\.signal-poster::before\s*\{[\s\S]*?var\(--ink\) 72%/,
+  );
   assert.match(styles, /\.signal-poster::after\s*\{[\s\S]*?scene-loader-scan/);
   assert.match(styles, /\.scene-loader-track::after\s*\{[\s\S]*?scene-loader-progress/);
   assert.match(styles, /@keyframes scene-loader-code/);

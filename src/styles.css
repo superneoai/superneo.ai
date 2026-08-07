@@ -91,10 +91,18 @@ a {
   transition: none;
 }
 
-.signal-poster::after {
+.signal-poster::before {
   position: absolute;
   inset: 0;
   z-index: 1;
+  background: color-mix(in oklch, var(--ink) 72%, transparent);
+  content: "";
+}
+
+.signal-poster::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   background: linear-gradient(
     180deg,
     transparent 0%,
@@ -110,7 +118,7 @@ a {
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 2;
+  z-index: 3;
   display: grid;
   gap: 0.62rem;
   width: min(13rem, 58vw);
@@ -194,6 +202,8 @@ a {
   display: none;
   background-position: center;
   background-size: cover;
+  filter: blur(1.55rem) brightness(0.42) saturate(0.58);
+  transform: scale(1.08);
 }
 
 .signal-poster .signal-artwork-fallback--desktop {
