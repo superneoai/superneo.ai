@@ -3,6 +3,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -396,9 +397,9 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
 }
 
 export function App() {
-  const sceneQa = import.meta.env.DEV
+  const sceneQa = useMemo(() => import.meta.env.DEV
     ? parseSceneQa(window.location.search)
-    : null;
+    : null, []);
   const [discovered, setDiscovered] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [loadStep, setLoadStep] = useState(1);

@@ -1,4 +1,5 @@
 import type { TipArrival } from "./tipSignal";
+import type { ShowcaseImpulseDetail } from "./showcaseEvents";
 
 const BPM = 72;
 const STEPS_PER_BEAT = 4;
@@ -197,18 +198,42 @@ export class SuperneoSoundtrack {
     this.reverbGain.gain.setTargetAtTime(0.17 + this.stage * 0.025, this.context.currentTime, 0.5);
   }
 
-  playFootstep(intensity: number, pan: number) {
-    if (!this.playing || this.context.state !== "running") return;
+  async playShowcaseImpulse({ kind, intensity, pan }: ShowcaseImpulseDetail) {
+    if (this.suspendTimer !== null) {
+      window.clearTimeout(this.suspendTimer);
+      this.suspendTimer = null;
+    }
+    await this.context.resume();
+    if (this.context.state !== "running") {
+      throw new Error("Audio context did not enter the running state");
+    }
     const safeIntensity = Math.min(1, Math.max(0.25, intensity));
     const safePan = Math.min(0.8, Math.max(-0.8, pan));
     const now = this.context.currentTime;
-    this.scheduleTone(62 + this.stage * 7, now, 0.16, {
-      type: "sine",
-      level: 0.0065 * safeIntensity,
-      attack: 0.008,
+    const profile = {
+      drive: { frequency: 92, duration: 0.24, cutoff: 880, noise: 0.0034 },
+      clash: { frequency: 184, duration: 0.42, cutoff: 2700, noise: 0.006 },
+      terrain: { frequency: 72, duration: 0.54, cutoff: 620, noise: 0.0042 },
+      orbit: { frequency: 246, duration: 0.82, cutoff: 4200, noise: 0.0026 },
+    }[kind];
+    this.scheduleTone(profile.frequency, now, profile.duration, {
+      type: kind === "clash" ? "triangle" : "sine",
+      level: 0.012 * safeIntensity,
+      attack: kind === "clash" ? 0.012 : 0.045,
       pan: safePan,
     });
-    this.scheduleNoise(now, 0.0045 * safeIntensity, 760 + this.stage * 180);
+    this.scheduleTone(profile.frequency * (kind === "orbit" ? 1.5 : 2), now + 0.035, profile.duration * 0.8, {
+      type: "sine",
+      level: 0.0055 * safeIntensity,
+      attack: 0.065,
+      pan: -safePan * 0.45,
+    });
+    this.scheduleNoise(now, profile.noise * safeIntensity, profile.cutoff);
+    if (!this.playing) {
+      this.suspendTimer = window.setTimeout(() => {
+        if (!this.playing) void this.context.suspend();
+      }, (profile.duration + 0.3) * 1000);
+    }
   }
 
   dispose() {

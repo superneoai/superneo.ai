@@ -15,6 +15,8 @@ test("development scene QA controls accept only bounded known states", () => {
       freezeScene: true,
       reducedMotion: true,
       objectMask: true,
+      showcaseAct: null,
+      showcaseTransition: null,
     },
   );
   assert.deepEqual(
@@ -26,6 +28,8 @@ test("development scene QA controls accept only bounded known states", () => {
       freezeScene: false,
       reducedMotion: false,
       objectMask: false,
+      showcaseAct: null,
+      showcaseTransition: null,
     },
   );
   assert.deepEqual(parseSceneQa("?sceneDelay=-20"), {
@@ -35,7 +39,24 @@ test("development scene QA controls accept only bounded known states", () => {
     freezeScene: false,
     reducedMotion: false,
     objectMask: false,
+    showcaseAct: null,
+    showcaseTransition: null,
   });
+});
+
+test("development QA can lock showcase acts and transition checkpoints", () => {
+  assert.deepEqual(parseSceneQa("?qaAct=island&qaTransition=.75"), {
+    neoState: null,
+    sceneFault: null,
+    sceneDelay: 0,
+    freezeScene: false,
+    reducedMotion: false,
+    objectMask: false,
+    showcaseAct: 2,
+    showcaseTransition: 0.75,
+  });
+  assert.equal(parseSceneQa("?qaAct=unknown&qaTransition=4").showcaseAct, null);
+  assert.equal(parseSceneQa("?qaAct=unknown&qaTransition=4").showcaseTransition, 1);
 });
 
 test("production passes no query-controlled QA configuration to the scene", async () => {
@@ -43,6 +64,6 @@ test("production passes no query-controlled QA configuration to the scene", asyn
 
   assert.match(
     app,
-    /const sceneQa = import\.meta\.env\.DEV\s*\? parseSceneQa\(window\.location\.search\)\s*:\s*null;/,
+    /const sceneQa = useMemo\(\(\) => import\.meta\.env\.DEV\s*\? parseSceneQa\(window\.location\.search\)\s*:\s*null, \[\]\);/,
   );
 });
