@@ -38,8 +38,8 @@ function samplePath(
     return target.set(
       centered * (upperWing ? 3.04 : 2.84),
       upperWing
-        ? 0.035 + wing * 0.36 - edgeDrop * 0.09
-        : -0.08 - wing * 0.34 + edgeDrop * 0.06,
+        ? 0.025 + wing * 0.25 - edgeDrop * 0.09
+        : -0.05 - wing * 0.25 + edgeDrop * 0.06,
       upperWing
         ? wing * 0.19 + Math.sin(u * Math.PI * 2) * 0.035
         : -0.055 + wing * 0.11 - Math.sin(u * Math.PI * 2) * 0.025,
@@ -64,17 +64,19 @@ function samplePath(
 
   if (strand === 2) {
     return target.set(
-      Math.sin(u * Math.PI * 3) * 0.13,
-      0.78 - u * 1.56,
-      Math.sin(u * Math.PI) * 0.29,
+      centered * 3.6,
+      Math.sin(u * Math.PI * 2) * 0.095,
+      0.08 + Math.sin(u * Math.PI) * 0.12,
     );
   }
-  const gatewayArc = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.62);
   const upperGate = strand === 0;
+  const gatewayAngle = upperGate
+    ? Math.PI - u * Math.PI
+    : Math.PI + u * Math.PI;
   return target.set(
-    centered * 3.08,
-    (upperGate ? 1 : -1) * gatewayArc * 0.56,
-    (upperGate ? 0.15 : -0.08) + gatewayArc * 0.1,
+    Math.cos(gatewayAngle) * 0.9,
+    Math.sin(gatewayAngle) * 0.82,
+    (upperGate ? 0.13 : -0.045) + Math.cos(gatewayAngle) * 0.045,
   );
 }
 
@@ -109,9 +111,9 @@ export function createMorphGeometry(compact: boolean) {
   );
   const stateSettings = [
     { braid: 0.062, width: 0.11, twists: 1.3, fold: 0.072 },
-    { braid: 0.028, width: 0.24, twists: 0.08, fold: 0.035 },
-    { braid: 0.032, width: 0.17, twists: 0.12, fold: 0.046 },
-    { braid: 0.025, width: 0.2, twists: 0.1, fold: 0.042 },
+    { braid: 0.022, width: 0.45, twists: 0.055, fold: 0.032 },
+    { braid: 0.032, width: 0.23, twists: 0.12, fold: 0.046 },
+    { braid: 0.02, width: 0.22, twists: 0.08, fold: 0.036 },
   ];
   const point = new THREE.Vector3();
   const previous = new THREE.Vector3();
@@ -168,7 +170,7 @@ export function createMorphGeometry(compact: boolean) {
             .addScaledVector(depth, Math.sin(twist + strandOffset * 0.07))
             .normalize();
           const spineWidth = strand === 2 && state > 0
-            ? state === 1 ? 0.54 : 0.46
+            ? state === 1 ? 0.38 : state === 2 ? 0.82 : 0.3
             : 1;
           const width = settings.width * spineWidth * taper *
             (0.94 + Math.sin(u * Math.PI * 7 + strandPhase) * 0.06);

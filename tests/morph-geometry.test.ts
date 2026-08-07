@@ -53,6 +53,27 @@ function routeEndpoint(
   return { x: point.x / count, y: point.y / count };
 }
 
+function routeCrossSection(
+  target: BufferAttribute,
+  along: BufferAttribute,
+  strands: BufferAttribute,
+  strand: number,
+  position: number,
+) {
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let index = 0; index < target.count; index += 1) {
+    if (
+      Math.abs(strands.getX(index) - strand) < 0.001 &&
+      Math.abs(along.getX(index) - position) < 0.001
+    ) {
+      minY = Math.min(minY, target.getY(index));
+      maxY = Math.max(maxY, target.getY(index));
+    }
+  }
+  return { minY, maxY };
+}
+
 test("morph targets have genuinely different silhouettes", () => {
   const geometry = createMorphGeometry(true);
   const targets = [
@@ -88,6 +109,37 @@ test("the manta keeps a recognizable wing span and nose-tail axis", () => {
   assert.ok(mantaBounds.maxX - mantaBounds.minX > 3);
   assert.ok(Math.abs(nose.x) < 0.1 && nose.y > 0.48);
   assert.ok(Math.abs(tail.x) < 0.1 && tail.y < -0.95);
+  geometry.dispose();
+});
+
+test("the manta wing ribbons join into one continuous membrane", () => {
+  const geometry = createMorphGeometry(true);
+  const manta = geometry.getAttribute("aTarget1") as BufferAttribute;
+  const along = geometry.getAttribute("aAlong") as BufferAttribute;
+  const strands = geometry.getAttribute("aStrand") as BufferAttribute;
+  const upperWing = routeCrossSection(manta, along, strands, 0, 0.5);
+  const lowerWing = routeCrossSection(manta, along, strands, 0.5, 0.5);
+  const overlap = Math.min(upperWing.maxY, lowerWing.maxY) -
+    Math.max(upperWing.minY, lowerWing.minY);
+
+  assert.ok(overlap > 0.12, `expected a joined wing membrane; overlap was ${overlap.toFixed(3)}`);
+  geometry.dispose();
+});
+
+test("the final state forms a portal ring with a horizon", () => {
+  const geometry = createMorphGeometry(true);
+  const gateway = geometry.getAttribute("aTarget3") as BufferAttribute;
+  const along = geometry.getAttribute("aAlong") as BufferAttribute;
+  const strands = geometry.getAttribute("aStrand") as BufferAttribute;
+  const upperRing = routeEndpoint(gateway, along, strands, 0, 0.5);
+  const lowerRing = routeEndpoint(gateway, along, strands, 0.5, 0.5);
+  const leftHorizon = routeEndpoint(gateway, along, strands, 1, 0);
+  const rightHorizon = routeEndpoint(gateway, along, strands, 1, 1);
+
+  assert.ok(Math.abs(upperRing.x) < 0.1 && upperRing.y > 0.78);
+  assert.ok(Math.abs(lowerRing.x) < 0.1 && lowerRing.y < -0.78);
+  assert.ok(leftHorizon.x < -1.75 && Math.abs(leftHorizon.y) < 0.15);
+  assert.ok(rightHorizon.x > 1.75 && Math.abs(rightHorizon.y) < 0.15);
   geometry.dispose();
 });
 

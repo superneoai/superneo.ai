@@ -161,7 +161,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(field, /signalVariationValues\[availableSignal\] = variation/);
   assert.match(field, /signalProgressValues\[signalIndex\] \+ delta \* SIGNAL_PROGRESS_PER_SECOND/);
   assert.match(field, /motionAccumulator/);
-  assert.match(field, /ambientTurn = time \* 0\.045/);
+  assert.match(field, /ambientTurn = Math\.sin\(time \* 0\.11\) \* 0\.26/);
+  assert.doesNotMatch(field, /ambientTurn = time \* 0\.045/);
   assert.match(field, /objectGroup\.rotation\.z/);
   assert.match(field, /superneo:motion/);
   assert.match(app, /syncMotion/);

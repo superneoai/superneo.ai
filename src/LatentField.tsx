@@ -645,7 +645,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         const inferenceWeight = weight(1);
         const emergenceWeight = weight(2);
         const openWeight = weight(3);
-        const ambientTurn = time * 0.045;
+        const ambientTurn = Math.sin(time * 0.11) * 0.26;
         objectGroup.rotation.x =
           Math.sin(time * 0.1) * 0.045 +
           latentWeight * Math.sin(time * 0.17) * 0.012 +
