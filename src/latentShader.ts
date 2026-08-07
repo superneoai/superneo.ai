@@ -155,7 +155,7 @@ const morphVertexChunk = /* glsl */ `
     float emergenceMotion = stageInfluence(semanticPhase, 2.0);
     float openMotion = stageInfluence(semanticPhase, 3.0);
 
-    // LATENT: contained energy refracts through a faceted crystalline core.
+    // LATENT: three interlocked reactor loops breathe around one energy knot.
     float latentBreath = sin(uTime * 0.58 + aAlong * 2.4 + aStrand) *
       (0.012 + aSeed * 0.006);
     current.xy *= 1.0 + latentMotion * latentBreath;
@@ -174,7 +174,7 @@ const morphVertexChunk = /* glsl */ `
     current.x += emergenceMotion * growthWave * 0.006;
     current.y += emergenceMotion * apertureDirection * growthWave * 0.018;
 
-    // OPEN: the concentric hex gate and its energy slit remain in flux.
+    // OPEN: three expanding strands form a deep, continuously moving warp tunnel.
     float openAngle = openMotion * (
       sin(uTime * 0.24 + aSeed * 2.0) +
       cos(uTime * 0.13 + aStrand * 4.0)

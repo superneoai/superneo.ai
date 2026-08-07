@@ -7,12 +7,6 @@ function setVector(target: Float32Array, index: number, vector: THREE.Vector3) {
   target[offset + 2] = vector.z;
 }
 
-function polygonRadius(angle: number, sides: number) {
-  const segment = (Math.PI * 2) / sides;
-  const localAngle = ((angle + segment / 2) % segment + segment) % segment - segment / 2;
-  return Math.cos(Math.PI / sides) / Math.cos(localAngle);
-}
-
 function samplePath(
   state: number,
   u: number,
@@ -22,20 +16,14 @@ function samplePath(
   const centered = u - 0.5;
   const angle = u * Math.PI * 2;
   if (state === 0) {
-    if (strand < 2) {
-      const coreAngle = angle + (strand === 0 ? 0 : Math.PI / 4);
-      const radius = polygonRadius(coreAngle, 4);
-      const scale = strand === 0 ? 1 : 0.69;
-      return target.set(
-        Math.cos(coreAngle) * radius * 0.72 * scale,
-        Math.sin(coreAngle) * radius * 1.02 * scale,
-        (strand === 0 ? 0.13 : -0.13) + Math.sin(coreAngle * 2) * 0.055,
-      );
-    }
+    const reactorPhase = strand * Math.PI * 2 / 3;
+    const reactorAngle = angle + reactorPhase * 0.16;
+    const reactorRadius = 0.59 +
+      Math.cos(reactorAngle * 3 + reactorPhase) * 0.22;
     return target.set(
-      Math.sin(angle * 2) * 0.09,
-      1.08 - u * 2.16,
-      0.24 + Math.sin(angle) * 0.12,
+      Math.cos(reactorAngle) * reactorRadius,
+      Math.sin(reactorAngle) * reactorRadius * 1.06,
+      Math.sin(reactorAngle * 3 + reactorPhase) * 0.24 + (strand - 1) * 0.045,
     );
   }
   if (state === 1) {
@@ -72,19 +60,14 @@ function samplePath(
     );
   }
 
-  if (strand < 2) {
-    const gateAngle = angle + Math.PI / 6;
-    const gateRadius = polygonRadius(gateAngle, 6) * (strand === 0 ? 1 : 0.71);
-    return target.set(
-      Math.cos(gateAngle) * gateRadius,
-      Math.sin(gateAngle) * gateRadius,
-      (strand === 0 ? 0.1 : 0.18) + Math.sin(gateAngle * 3) * 0.04,
-    );
-  }
+  const tunnelPhase = strand * Math.PI * 2 / 3;
+  const tunnelAngle = u * Math.PI * 5 + tunnelPhase;
+  const tunnelRadius = 0.18 + Math.pow(u, 0.72) * 1.2 +
+    Math.sin(tunnelAngle * 2 + tunnelPhase) * 0.045;
   return target.set(
-    centered * 4,
-    Math.sin(angle) * 0.055,
-    0.24 + Math.sin(u * Math.PI) * 0.08,
+    Math.cos(tunnelAngle) * tunnelRadius,
+    Math.sin(tunnelAngle) * tunnelRadius * 0.58,
+    0.68 - u * 1.36 + Math.cos(tunnelAngle * 2) * 0.055,
   );
 }
 
@@ -105,10 +88,10 @@ export function createMorphGeometry(compact: boolean) {
   const strandIds = new Float32Array(count);
   const indices: number[] = [];
   const stateSettings = [
-    { braid: 0.012, width: 0.13, twists: 0.02, fold: 0.02 },
+    { braid: 0.014, width: 0.14, twists: 0.12, fold: 0.024 },
     { braid: 0.014, width: 0.18, twists: 0.5, fold: 0.025 },
     { braid: 0.012, width: 0.13, twists: 0.04, fold: 0.02 },
-    { braid: 0.008, width: 0.13, twists: 0.015, fold: 0.018 },
+    { braid: 0.012, width: 0.115, twists: 0.32, fold: 0.018 },
   ];
   const point = new THREE.Vector3();
   const previous = new THREE.Vector3();
@@ -164,17 +147,11 @@ export function createMorphGeometry(compact: boolean) {
             .addScaledVector(depth, Math.sin(twist + strandOffset * 0.07))
             .normalize();
           let strandWidth = 1;
-          if (state === 0 && strand === 2) strandWidth = 0.42;
           if (state === 1 && strand > 0) strandWidth = 0.76;
-          if (state === 3 && strand === 1) strandWidth = 0.7;
-          if (state === 3 && strand === 2) strandWidth = 0.38;
           let widthProfile = taper;
-          if (state === 0 && strand < 2) widthProfile = 0.9;
+          if (state === 0) widthProfile = 0.9;
           if (state === 1 || state === 2) widthProfile = 0.9;
-          if (state === 3 && strand < 2) widthProfile = 0.9;
-          if (state === 3 && strand === 2) {
-            widthProfile = 0.25 + Math.sin(u * Math.PI) * 0.75;
-          }
+          if (state === 3) widthProfile = 0.32 + u * 0.68;
           const width = settings.width * strandWidth * widthProfile *
             (0.94 + Math.sin(u * Math.PI * 7 + strandPhase) * 0.06);
           result.addScaledVector(ribbonDirection, across * width);

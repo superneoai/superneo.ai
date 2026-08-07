@@ -63,36 +63,34 @@ test("morph targets have genuinely different silhouettes", () => {
   ] as BufferAttribute[];
   const aspects = targets.map(aspectRatio);
   assert.ok(
-    Math.max(...aspects) - Math.min(...aspects) > 0.75,
+    Math.max(...aspects) - Math.min(...aspects) > 0.7,
     `expected major silhouette change; aspect ratios were ${aspects.map((value) => value.toFixed(2)).join(", ")}`,
   );
-  assert.ok(aspects[0] < 0.9, `latent state should read as an upright energy core; got ${aspects[0].toFixed(2)}`);
+  assert.ok(aspects[0] > 0.85 && aspects[0] < 1.15, `latent state should read as a compact reactor knot; got ${aspects[0].toFixed(2)}`);
   assert.ok(aspects[1] > 1.3, `inference should unfold into a Mobius field; got ${aspects[1].toFixed(2)}`);
   assert.ok(
     aspects[2] > 0.95 && aspects[2] < 1.25,
     `emergence should contract into a gyroscopic cage; got ${aspects[2].toFixed(2)}`,
   );
-  assert.ok(aspects[3] > 1.8, `open state should expand into a hex gate; got ${aspects[3].toFixed(2)}`);
+  assert.ok(aspects[3] > 1.55, `open state should expand into a warp tunnel; got ${aspects[3].toFixed(2)}`);
   geometry.dispose();
 });
 
-test("the first state is a nested faceted energy core", () => {
+test("the first state is a closed trinary reactor knot", () => {
   const geometry = createMorphGeometry(true);
-  const core = geometry.getAttribute("position") as BufferAttribute;
+  const reactor = geometry.getAttribute("position") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const outerStart = routeEndpoint(core, along, strands, 0, 0);
-  const outerEnd = routeEndpoint(core, along, strands, 0, 1);
-  const innerStart = routeEndpoint(core, along, strands, 0.5, 0);
-  const innerEnd = routeEndpoint(core, along, strands, 0.5, 1);
-  const axisTop = routeEndpoint(core, along, strands, 1, 0);
-  const axisBottom = routeEndpoint(core, along, strands, 1, 1);
 
-  assert.ok(Math.abs(outerStart.x - outerEnd.x) < 0.02);
-  assert.ok(Math.abs(outerStart.y - outerEnd.y) < 0.02);
-  assert.ok(Math.abs(innerStart.x - innerEnd.x) < 0.02);
-  assert.ok(Math.abs(innerStart.y - innerEnd.y) < 0.02);
-  assert.ok(axisTop.y > 1 && axisBottom.y < -1);
+  for (const strand of [0, 0.5, 1]) {
+    const start = routeEndpoint(reactor, along, strands, strand, 0);
+    const end = routeEndpoint(reactor, along, strands, strand, 1);
+    assert.ok(Math.abs(start.x - end.x) < 0.02);
+    assert.ok(Math.abs(start.y - end.y) < 0.02);
+  }
+  const reactorBounds = bounds(reactor);
+  assert.ok(reactorBounds.maxX > 0.75 && reactorBounds.minX < -0.75);
+  assert.ok(reactorBounds.maxY > 0.75 && reactorBounds.minY < -0.75);
   geometry.dispose();
 });
 
@@ -131,23 +129,18 @@ test("the third state is a closed three-axis gyroscopic cage", () => {
   geometry.dispose();
 });
 
-test("the final state is a concentric hex gate with an energy slit", () => {
+test("the final state is an expanding three-strand warp tunnel", () => {
   const geometry = createMorphGeometry(true);
-  const gate = geometry.getAttribute("aTarget3") as BufferAttribute;
+  const tunnel = geometry.getAttribute("aTarget3") as BufferAttribute;
   const along = geometry.getAttribute("aAlong") as BufferAttribute;
   const strands = geometry.getAttribute("aStrand") as BufferAttribute;
-  const outerStart = routeEndpoint(gate, along, strands, 0, 0);
-  const outerEnd = routeEndpoint(gate, along, strands, 0, 1);
-  const innerStart = routeEndpoint(gate, along, strands, 0.5, 0);
-  const innerEnd = routeEndpoint(gate, along, strands, 0.5, 1);
-  const slitLeft = routeEndpoint(gate, along, strands, 1, 0);
-  const slitRight = routeEndpoint(gate, along, strands, 1, 1);
 
-  assert.ok(Math.abs(outerStart.x - outerEnd.x) < 0.02);
-  assert.ok(Math.abs(outerStart.y - outerEnd.y) < 0.02);
-  assert.ok(Math.abs(innerStart.x - innerEnd.x) < 0.02);
-  assert.ok(Math.abs(innerStart.y - innerEnd.y) < 0.02);
-  assert.ok(slitLeft.x < -1.95 && slitRight.x > 1.95);
+  for (const strand of [0, 0.5, 1]) {
+    const inner = routeEndpoint(tunnel, along, strands, strand, 0);
+    const outer = routeEndpoint(tunnel, along, strands, strand, 1);
+    assert.ok(Math.hypot(inner.x, inner.y) < 0.25);
+    assert.ok(Math.hypot(outer.x, outer.y) > 0.85);
+  }
   geometry.dispose();
 });
 
