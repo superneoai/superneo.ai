@@ -7,6 +7,21 @@ function setVector(target: Float32Array, index: number, vector: THREE.Vector3) {
   target[offset + 2] = vector.z;
 }
 
+function setQuadratic(
+  target: THREE.Vector3,
+  t: number,
+  from: [number, number, number],
+  control: [number, number, number],
+  to: [number, number, number],
+) {
+  const inverse = 1 - t;
+  return target.set(
+    inverse * inverse * from[0] + 2 * inverse * t * control[0] + t * t * to[0],
+    inverse * inverse * from[1] + 2 * inverse * t * control[1] + t * t * to[1],
+    inverse * inverse * from[2] + 2 * inverse * t * control[2] + t * t * to[2],
+  );
+}
+
 function samplePath(
   state: number,
   u: number,
@@ -15,15 +30,31 @@ function samplePath(
   target: THREE.Vector3,
 ) {
   const centered = u - 0.5;
-  const strandOffset = strand - 1;
   if (state === 0) {
-    const strandPhase = strand * Math.PI * 2 / 3;
-    const angle = centered * Math.PI * 1.5 + strandPhase;
-    const radius = 0.29 + Math.sin(u * Math.PI) * 0.15;
+    if (strand === 0) {
+      const seedAngle = u * Math.PI * 2;
+      const seedWidth = 0.48 - Math.cos(seedAngle) * 0.055;
+      return target.set(
+        Math.sin(seedAngle) * seedWidth,
+        -0.3 + Math.cos(seedAngle) * 0.57,
+        Math.sin(seedAngle * 2) * 0.035,
+      );
+    }
+    if (strand === 1) {
+      return target.set(
+        Math.sin(u * Math.PI) * 0.075,
+        -0.02 + u * 1.03,
+        0.075 + Math.sin(u * Math.PI) * 0.045,
+      );
+    }
+    const leafAngle = Math.PI + u * Math.PI * 2;
+    const leafX = Math.cos(leafAngle) * 0.34;
+    const leafY = Math.sin(leafAngle) * 0.145;
+    const leafRotation = 0.43;
     return target.set(
-      Math.cos(angle) * radius * 0.82,
-      Math.sin(angle) * radius * 1.16,
-      strandOffset * 0.11 + Math.cos(angle * 2 + strandPhase) * 0.075,
+      0.34 + leafX * Math.cos(leafRotation) - leafY * Math.sin(leafRotation),
+      0.87 + leafX * Math.sin(leafRotation) + leafY * Math.cos(leafRotation),
+      0.105 + Math.sin(leafAngle) * 0.035,
     );
   }
   if (state === 1) {
@@ -32,51 +63,56 @@ function samplePath(
       target.x += Math.sin(u * Math.PI * 2) * 0.035;
       return target;
     }
-    const wing = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.68);
-    const edgeDrop = Math.pow(Math.abs(centered) * 2, 1.6);
-    const upperWing = strand === 0;
-    return target.set(
-      centered * (upperWing ? 3.04 : 2.84),
-      upperWing
-        ? 0.025 + wing * 0.25 - edgeDrop * 0.09
-        : -0.05 - wing * 0.25 + edgeDrop * 0.06,
-      upperWing
-        ? wing * 0.19 + Math.sin(u * Math.PI * 2) * 0.035
-        : -0.055 + wing * 0.11 - Math.sin(u * Math.PI * 2) * 0.025,
+    const side = strand === 0 ? -1 : 1;
+    if (u <= 0.5) {
+      return setQuadratic(
+        target,
+        u * 2,
+        [0, 0.52, 0.12],
+        [side * 0.78, 0.58, 0.18],
+        [side * 1.58, -0.02, 0.02],
+      );
+    }
+    return setQuadratic(
+      target,
+      (u - 0.5) * 2,
+      [side * 1.58, -0.02, 0.02],
+      [side * 0.92, -0.38, 0.12],
+      [0, -0.43, 0.1],
     );
   }
   if (state === 2) {
     if (strand === 2) {
+      const irisAngle = u * Math.PI * 2;
       return target.set(
-        Math.sin(u * Math.PI * 2) * 0.17,
-        0.84 - u * 1.68,
-        Math.sin(u * Math.PI) * 0.24,
+        Math.cos(irisAngle) * 0.38,
+        Math.sin(irisAngle) * 0.38,
+        0.16 + Math.sin(irisAngle) * 0.025,
       );
     }
-    const aperture = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.72);
+    const aperture = Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.68);
     const upperLid = strand === 0;
     return target.set(
-      centered * 1.86,
-      (upperLid ? 1 : -1) * aperture * 0.64,
-      (upperLid ? 0.13 : -0.045) + aperture * (upperLid ? 0.1 : 0.07),
+      centered * 2.05,
+      (upperLid ? 1 : -1) * aperture * 0.59,
+      0.04 + aperture * (upperLid ? 0.085 : 0.045),
     );
   }
 
-  if (strand === 2) {
+  const orbitAngle = u * Math.PI * 2;
+  if (strand === 0) {
     return target.set(
-      centered * 3.6,
-      Math.sin(u * Math.PI * 2) * 0.095,
-      0.08 + Math.sin(u * Math.PI) * 0.12,
+      Math.cos(orbitAngle) * 0.62,
+      Math.sin(orbitAngle) * 0.62,
+      0.08 + Math.sin(orbitAngle) * 0.035,
     );
   }
-  const upperGate = strand === 0;
-  const gatewayAngle = upperGate
-    ? Math.PI - u * Math.PI
-    : Math.PI + u * Math.PI;
+  const ringRadius = strand === 1 ? 1.58 : 1.34;
+  const ringHeight = strand === 1 ? 0.3 : 0.21;
   return target.set(
-    Math.cos(gatewayAngle) * 0.9,
-    Math.sin(gatewayAngle) * 0.82,
-    (upperGate ? 0.13 : -0.045) + Math.cos(gatewayAngle) * 0.045,
+    Math.cos(orbitAngle) * ringRadius,
+    Math.sin(orbitAngle) * ringHeight,
+    0.05 + Math.sin(orbitAngle) * (strand === 1 ? 0.24 : 0.18),
   );
 }
 
@@ -110,10 +146,10 @@ export function createMorphGeometry(compact: boolean) {
     0.42,
   );
   const stateSettings = [
-    { braid: 0.062, width: 0.11, twists: 1.3, fold: 0.072 },
-    { braid: 0.022, width: 0.45, twists: 0.055, fold: 0.032 },
-    { braid: 0.032, width: 0.23, twists: 0.12, fold: 0.046 },
-    { braid: 0.02, width: 0.22, twists: 0.08, fold: 0.036 },
+    { braid: 0.012, width: 0.14, twists: 0.015, fold: 0.022 },
+    { braid: 0.014, width: 0.34, twists: 0.025, fold: 0.028 },
+    { braid: 0.012, width: 0.18, twists: 0.02, fold: 0.025 },
+    { braid: 0.01, width: 0.15, twists: 0.015, fold: 0.02 },
   ];
   const point = new THREE.Vector3();
   const previous = new THREE.Vector3();
@@ -149,8 +185,7 @@ export function createMorphGeometry(compact: boolean) {
           if (side.lengthSq() < 0.001) side.set(1, 0, 0);
           depth.crossVectors(tangent, side).normalize();
 
-          const twist = u * Math.PI * 2 * settings.twists +
-            (state === 0 ? strandPhase : 0);
+          const twist = u * Math.PI * 2 * settings.twists;
           const twistCos = Math.cos(twist);
           const twistSin = Math.sin(twist);
           let braidProfile = 0.62 + Math.sin(Math.PI * u) * 0.38;
@@ -169,10 +204,23 @@ export function createMorphGeometry(compact: boolean) {
             .multiplyScalar(Math.cos(twist + strandOffset * 0.07))
             .addScaledVector(depth, Math.sin(twist + strandOffset * 0.07))
             .normalize();
-          const spineWidth = strand === 2 && state > 0
-            ? state === 1 ? 0.38 : state === 2 ? 0.82 : 0.3
-            : 1;
-          const width = settings.width * spineWidth * taper *
+          let strandWidth = 1;
+          if (state === 0 && strand === 1) strandWidth = 0.38;
+          if (state === 0 && strand === 2) strandWidth = 0.58;
+          if (state === 1 && strand === 2) strandWidth = 0.42;
+          if (state === 2 && strand === 2) strandWidth = 0.72;
+          if (state === 3 && strand > 0) strandWidth = 0.52;
+          let widthProfile = taper;
+          if (state === 0 && strand !== 1) widthProfile = 0.88;
+          if (state === 0 && strand === 1) {
+            widthProfile = 0.45 + Math.sin(u * Math.PI) * 0.55;
+          }
+          if (state === 1 && strand < 2) {
+            widthProfile = 0.12 + Math.pow(Math.max(Math.sin(u * Math.PI), 0), 0.45) * 0.88;
+          }
+          if (state === 2 && strand === 2) widthProfile = 0.9;
+          if (state === 3) widthProfile = 0.9;
+          const width = settings.width * strandWidth * widthProfile *
             (0.94 + Math.sin(u * Math.PI * 7 + strandPhase) * 0.06);
           result.addScaledVector(ribbonDirection, across * width);
           setVector(positions[state], index, result);

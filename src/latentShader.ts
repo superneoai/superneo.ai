@@ -155,18 +155,18 @@ const morphVertexChunk = /* glsl */ `
     float emergenceMotion = stageInfluence(semanticPhase, 2.0);
     float openMotion = stageInfluence(semanticPhase, 3.0);
 
-    // LATENT: contained pressure, breathing toward and away from the core.
+    // LATENT: the seed and new leaf breathe without losing their silhouette.
     float latentBreath = sin(uTime * 0.58 + aAlong * 2.4 + aStrand) *
       (0.012 + aSeed * 0.006);
     current.xy *= 1.0 + latentMotion * latentBreath;
     current.z += latentMotion * cos(uTime * 0.41 + aAlong * 5.0) * 0.009;
 
-    // INFERENCE: a directional signal travels along the routed form.
+    // INFERENCE: a directional signal ripples through the manta's wings.
     float routeWave = sin(aAlong * 22.0 - uTime * 1.45 + aStrand * 2.2);
     current.x += inferenceMotion * routeWave * 0.008;
     current.z += inferenceMotion * routeWave * 0.024 * uDisplacementScale;
 
-    // EMERGENCE: the opposing lids breathe around the opening iris.
+    // EMERGENCE: the opposing lids breathe around the visible iris.
     float apertureDirection = aStrand < 0.25
       ? 1.0
       : aStrand < 0.75 ? -1.0 : 0.0;
@@ -174,7 +174,7 @@ const morphVertexChunk = /* glsl */ `
     current.x += emergenceMotion * growthWave * 0.006;
     current.y += emergenceMotion * apertureDirection * growthWave * 0.018;
 
-    // OPEN: layers counter-move without closing into a fixed silhouette.
+    // OPEN: Saturn and its rings counter-move like a living orbit diagram.
     float openAngle = openMotion * (
       sin(uTime * 0.24 + aSeed * 2.0) +
       cos(uTime * 0.13 + aStrand * 4.0)
