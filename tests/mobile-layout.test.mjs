@@ -11,6 +11,15 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   const profile = await readFile(new URL("../src/renderProfile.ts", import.meta.url), "utf8");
 
   assert.match(html, /viewport-fit=cover/);
+  assert.match(
+    html,
+    /href="\.\/latent-field\.avif"[^>]*media="\(min-width: 721px\)"/,
+  );
+  assert.match(
+    html,
+    /href="\.\/latent-field-mobile\.jpg"[^>]*media="\(max-width: 720px\)"/,
+  );
+  assert.doesNotMatch(html, /href="\.\/neo-sign\.png/);
   assert.match(styles, /@media \(max-width: 480px\)/);
   assert.match(styles, /@media \(max-width: 420px\) and \(orientation: portrait\)/);
   assert.match(styles, /@media \(max-width: 350px\)/);
@@ -30,6 +39,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.doesNotMatch(profile, /bloomEnabled: !phone/);
   assert.match(app, /lazy\(\(\) =>/);
   assert.match(app, /import\("\.\/LatentField"\)/);
+  assert.match(app, /desktopArtworkUrl = new URL\("latent-field\.avif"/);
   assert.match(app, /<Suspense fallback=\{null\}>/);
   assert.match(field, /createMorphGeometry\(renderProfile\.compact\)/);
   assert.doesNotMatch(field, /window\.visualViewport\?\.addEventListener\("resize", scheduleResize/);
