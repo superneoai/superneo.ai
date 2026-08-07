@@ -28,8 +28,10 @@ const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
 const desktopArtworkUrl = new URL("latent-field.jpg", document.baseURI).href;
 const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
+const MIN_SCENE_LOADING_MS = 680;
+const SCENE_LOADING_STEP_MS = 160;
 
-function ScenePoster() {
+function ScenePoster({ loadStep }: { loadStep: number }) {
   return (
     <div className="signal-poster" aria-hidden="true">
       <div
@@ -41,7 +43,10 @@ function ScenePoster() {
         style={{ backgroundImage: `url(${mobileArtworkUrl})` }}
       />
       <div className="scene-loader">
-        <span className="scene-loader-label">LOADING</span>
+        <span className="scene-loader-label">
+          <span>LOADING</span>
+          <output>STEP {loadStep}/4</output>
+        </span>
         <span className="scene-loader-track" />
       </div>
     </div>
@@ -348,14 +353,47 @@ export function App() {
     : null;
   const [discovered, setDiscovered] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
+  const [loadStep, setLoadStep] = useState(1);
+  const loadingStartedAtRef = useRef(performance.now());
+  const sceneReadyTimerRef = useRef<number | null>(null);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
   const handleSceneStateChange = useCallback((ready: boolean) => {
-    setSceneReady(ready);
+    if (sceneReadyTimerRef.current !== null) {
+      window.clearTimeout(sceneReadyTimerRef.current);
+      sceneReadyTimerRef.current = null;
+    }
+
+    if (!ready) {
+      setSceneReady(false);
+      return;
+    }
+
+    const elapsed = performance.now() - loadingStartedAtRef.current;
+    const remaining = Math.max(0, MIN_SCENE_LOADING_MS - elapsed);
+    sceneReadyTimerRef.current = window.setTimeout(() => {
+      setLoadStep(4);
+      setSceneReady(true);
+      sceneReadyTimerRef.current = null;
+    }, remaining);
+  }, []);
+
+  useEffect(() => {
+    const stepTimers = [2, 3, 4].map((step) => window.setTimeout(
+      () => setLoadStep(step),
+      SCENE_LOADING_STEP_MS * (step - 1),
+    ));
+
+    return () => {
+      stepTimers.forEach(window.clearTimeout);
+      if (sceneReadyTimerRef.current !== null) {
+        window.clearTimeout(sceneReadyTimerRef.current);
+      }
+    };
   }, []);
 
   return (
     <main className="experience" data-scene-ready={sceneReady}>
-      <ScenePoster />
+      <ScenePoster loadStep={loadStep} />
       <Suspense fallback={null}>
         <LatentField
           onDiscover={handleDiscover}

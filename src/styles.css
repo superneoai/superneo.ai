@@ -135,10 +135,10 @@ a {
   justify-content: space-between;
 }
 
-.scene-loader-label::after {
+.scene-loader-label output {
   color: var(--signal);
-  content: "01";
-  animation: scene-loader-code 800ms steps(2, end) infinite;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
 .scene-loader-track {
@@ -1275,18 +1275,6 @@ a {
   }
 }
 
-@keyframes scene-loader-code {
-  0%,
-  48% {
-    opacity: 1;
-  }
-
-  49%,
-  100% {
-    opacity: 0.28;
-  }
-}
-
 @media (max-width: 720px) {
   .signal-poster .signal-artwork-fallback--desktop {
     display: none;
@@ -1682,7 +1670,6 @@ a {
   }
 
   .signal-poster::after,
-  .scene-loader-label::after,
   .scene-loader-track::after {
     animation: none;
   }
