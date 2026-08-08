@@ -361,6 +361,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let targetPointerMotion = 0;
     let targetPress = 0;
     let targetVelocity = 0;
+    let targetScrollLift = 0;
+    let scrollLift = 0;
     let previousPointerTime = performance.now();
     let previousFrame = performance.now();
     let previousTelemetry = 0;
@@ -585,7 +587,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         invalidateOnRefresh: true,
         fastScrollEnd: 2800,
         onUpdate: (self) => {
-          targetVelocity = Math.min(Math.abs(self.getVelocity()) / 2300, 1);
+          const scrollEnergy = Math.min(Math.abs(self.getVelocity()) / 2300, 1);
+          targetVelocity = scrollEnergy;
+          targetScrollLift = coarsePointer.matches && !motionIsReduced()
+            ? self.direction * scrollEnergy * 0.16
+            : 0;
           if (self.progress > 0.006) discover();
         },
       },
@@ -618,8 +624,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       pointerMotion.value += (targetPointerMotion - pointerMotion.value) * 0.18;
       press.value += (targetPress - press.value) * 0.16;
       velocity.value += (targetVelocity - velocity.value) * 0.15;
+      scrollLift += (targetScrollLift - scrollLift) * 0.2;
       targetPointerMotion *= 0.86;
       targetVelocity *= 0.88;
+      targetScrollLift *= 0.82;
+      objectGroup.position.y = scrollLift;
       let signalEnergy = 0;
       for (let signalIndex = 0; signalIndex < MAX_ACTIVE_SIGNALS; signalIndex += 1) {
         const progress = Math.min(

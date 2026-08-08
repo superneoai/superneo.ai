@@ -310,6 +310,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
   useEffect(() => {
     const syncStage = (event: Event) => {
       const { stage, previous } = (event as CustomEvent<StageChangeDetail>).detail;
+      const direction = stage > previous ? "forward" : "backward";
       if (stackRef.current) {
         stackRef.current.dataset.direction = stage > previous ? "forward" : "backward";
       }
@@ -318,6 +319,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
 
       headingRefs.current.forEach((heading, index) => {
         if (!heading) return;
+        heading.removeAttribute("data-exiting");
         heading.dataset.state = index === stage
           ? "active"
           : index < stage ? "complete" : "pending";
@@ -325,6 +327,11 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
         if (index === stage) heading.setAttribute("aria-current", "step");
         else heading.removeAttribute("aria-current");
       });
+      const previousHeading = headingRefs.current[previous];
+      if (previousHeading) {
+        void previousHeading.offsetWidth;
+        previousHeading.dataset.exiting = direction;
+      }
     };
 
     let disposed = false;
@@ -377,7 +384,9 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             aria-label={item.title}
             aria-current={index === 0 ? "step" : undefined}
           >
-            <span className="stage-outline" aria-hidden="true">{item.title}</span>
+            <span className="stage-outline" aria-hidden="true">
+              <StageWord title={item.title} forcedNeoState={forcedNeoState} />
+            </span>
             <span className="stage-trail stage-trail--near" aria-hidden="true">
               <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>

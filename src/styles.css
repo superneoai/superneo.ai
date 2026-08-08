@@ -1363,6 +1363,30 @@ a {
   }
 }
 
+@keyframes stage-exit-up {
+  from {
+    opacity: 0.9;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(0, -0.24em, 0) scale(0.99);
+  }
+}
+
+@keyframes stage-exit-down {
+  from {
+    opacity: 0.9;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(0, 0.24em, 0) scale(0.99);
+  }
+}
+
 @keyframes neo-state-full {
   0%,
   6.4%,
@@ -1669,6 +1693,39 @@ a {
 
   .stage-panel {
     bottom: 9rem;
+  }
+
+  .stage-stack {
+    --trail-near-x: 0em;
+    --trail-near-y: 0.2em;
+    --trail-far-x: 0em;
+    --trail-far-y: 0.38em;
+    --word-settle-x: 0em;
+    --word-settle-y: 0.15em;
+  }
+
+  .stage-stack[data-direction="backward"] {
+    --trail-near-x: 0em;
+    --trail-near-y: -0.2em;
+    --trail-far-x: 0em;
+    --trail-far-y: -0.38em;
+    --word-settle-x: 0em;
+    --word-settle-y: -0.15em;
+  }
+
+  .stage-stack h2[data-exiting] .stage-outline {
+    position: absolute;
+    top: 0.08em;
+    left: 0.035em;
+    z-index: 6;
+    display: block;
+    color: var(--bone);
+    pointer-events: none;
+    animation: stage-exit-up 380ms cubic-bezier(0.22, 0.72, 0.2, 1) both;
+  }
+
+  .stage-stack h2[data-exiting="backward"] .stage-outline {
+    animation-name: stage-exit-down;
   }
 
   .stage-stack h2 {
