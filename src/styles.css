@@ -357,6 +357,23 @@ a {
   letter-spacing: -0.052em;
 }
 
+.brand-tm {
+  font-family: "Geist Variable", Geist, sans-serif;
+  font-style: normal;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+}
+
+.brand-tm--domain {
+  display: inline-block;
+  margin-left: 0.16em;
+  color: color-mix(in oklch, var(--bone) 64%, transparent);
+  font-size: 0.58em;
+  transform: translateY(-0.52em);
+}
+
 .header-instruments {
   display: block;
 }
@@ -926,9 +943,20 @@ a {
 }
 
 .superneo-word {
+  position: relative;
   display: inline-flex;
   align-items: baseline;
+  padding-right: 0.25em;
   transform: translateY(-0.065em);
+}
+
+.brand-tm--stage {
+  position: absolute;
+  top: -0.08em;
+  right: 0;
+  color: var(--signal);
+  font-size: 0.19em;
+  text-shadow: 0 0 0.5em color-mix(in oklch, var(--signal) 42%, transparent);
 }
 
 .stage-stack .neo-accent {

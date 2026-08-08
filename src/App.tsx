@@ -157,6 +157,7 @@ function StageWord({
           style={stateStyle("fault-low")}
         />
       </span>
+      <span className="brand-tm brand-tm--stage" aria-hidden="true">™</span>
     </span>
   );
 }
@@ -381,7 +382,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             data-state={index === 0 ? "active" : "pending"}
             data-depth={index}
             data-order={index}
-            aria-label={item.title}
+            aria-label={item.title === "SUPERNEO" ? "SUPERNEO, trademark" : item.title}
             aria-current={index === 0 ? "step" : undefined}
           >
             <span className="stage-outline" aria-hidden="true">
@@ -461,7 +462,10 @@ export function App() {
       <div className="technical-frame" aria-hidden="true" />
 
       <header className="site-header">
-        <h1>superneo.ai</h1>
+        <h1 aria-label="superneo.ai, trademark">
+          <span>superneo.ai</span>
+          <span className="brand-tm brand-tm--domain" aria-hidden="true">™</span>
+        </h1>
         <div className="header-instruments">
           <ProcessTrace />
         </div>

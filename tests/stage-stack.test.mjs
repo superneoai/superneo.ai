@@ -58,7 +58,7 @@ test("stage headings leave a visible compositor-only text trail", async () => {
 
   assert.match(app, /stackRef\.current\.dataset\.direction = stage > previous/);
   assert.match(app, /window\.addEventListener\(STAGE_CHANGE_EVENT, syncStage\)/);
-  assert.match(app, /aria-label=\{item\.title\}/);
+  assert.match(app, /aria-label=\{item\.title === "SUPERNEO"/);
   assert.match(app, /className="stage-trail stage-trail--near"/);
   assert.match(app, /className="stage-trail stage-trail--far"/);
   assert.match(
