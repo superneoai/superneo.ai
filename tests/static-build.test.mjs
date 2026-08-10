@@ -41,8 +41,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /Signals converge on a path\./);
   assert.match(app, /New structure appears between them\./);
   assert.match(app, /The structure remains open\./);
-  assert.match(app, /<h1 aria-label="superneo\.ai, trademark">/);
-  assert.match(app, /brand-tm brand-tm--domain/);
+  assert.match(app, /<h1 aria-label="superneo\.ai">superneo\.ai<\/h1>/);
+  assert.doesNotMatch(app, /brand-tm brand-tm--domain/);
   assert.match(app, /className="neo-source"[^>]*>NEO<\/span>/);
   assert.match(app, /neo-sign neo-sign--full/);
   assert.match(app, /src=\{neoSignFullUrl\}/);

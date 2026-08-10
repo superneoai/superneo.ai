@@ -366,14 +366,6 @@ a {
   -webkit-text-stroke: 0;
 }
 
-.brand-tm--domain {
-  display: inline-block;
-  margin-left: 0.16em;
-  color: color-mix(in oklch, var(--bone) 64%, transparent);
-  font-size: 0.58em;
-  transform: translateY(-0.52em);
-}
-
 .header-instruments {
   display: block;
 }

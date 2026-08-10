@@ -112,9 +112,11 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
 function StageWord({
   title,
   forcedNeoState,
+  showTrademark = false,
 }: {
   title: string;
   forcedNeoState: NeoQaState | null;
+  showTrademark?: boolean;
 }) {
   if (title !== "SUPERNEO") return <>{title}</>;
 
@@ -165,7 +167,9 @@ function StageWord({
           style={stateStyle("fault-low")}
         />
       </span>
-      <span className="brand-tm brand-tm--stage" aria-hidden="true">™</span>
+      {showTrademark ? (
+        <span className="brand-tm brand-tm--stage" aria-hidden="true">™</span>
+      ) : null}
     </span>
   );
 }
@@ -390,7 +394,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             data-state={index === 0 ? "active" : "pending"}
             data-depth={index}
             data-order={index}
-            aria-label={item.title === "SUPERNEO" ? "SUPERNEO, trademark" : item.title}
+            aria-label={item.title}
             aria-current={index === 0 ? "step" : undefined}
           >
             <span className="stage-outline" aria-hidden="true">
@@ -403,7 +407,11 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
               <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>
             <span className="stage-word" aria-hidden="true">
-              <StageWord title={item.title} forcedNeoState={forcedNeoState} />
+              <StageWord
+                title={item.title}
+                forcedNeoState={forcedNeoState}
+                showTrademark
+              />
             </span>
           </h2>
         ))}
@@ -493,10 +501,7 @@ export function App() {
       <div className="technical-frame" aria-hidden="true" />
 
       <header className="site-header">
-        <h1 aria-label="superneo.ai, trademark">
-          <span>superneo.ai</span>
-          <span className="brand-tm brand-tm--domain" aria-hidden="true">™</span>
-        </h1>
+        <h1 aria-label="superneo.ai">superneo.ai</h1>
         <div className="header-instruments">
           <ProcessTrace />
         </div>
@@ -529,7 +534,7 @@ export function App() {
             href="https://x.com/superneoai"
             target="_blank"
             rel="noreferrer"
-            aria-label="Superneo on X"
+            aria-label="SUPERNEO on X"
             onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "x" })}
           >
             <span className="x-mark" aria-hidden="true">𝕏</span>
@@ -568,7 +573,7 @@ export function App() {
           consent={consent}
           onClose={() => setPrivacyOpen(false)}
           onSave={chooseAnalytics}
-          returnFocusRef={privacyButtonRef}
+          fallbackFocusRef={privacyButtonRef}
         />
       )}
       <p className="visually-hidden" aria-live="polite">{announcement}</p>
