@@ -11,15 +11,18 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test:visual": "node tests/visual/run.mjs",
-    "test": "npm run build && node --experimental-strip-types --test tests/static-build.test.mjs tests/stage-stack.test.mjs tests/neo-raster.test.mjs tests/morph-geometry.test.ts tests/morph-timeline.test.ts tests/render-profile.test.ts tests/scroll-boot.test.mjs tests/final-morph-scroll.test.mjs tests/compact-scroll-response.test.mjs tests/mobile-scroll-direction.test.mjs tests/stage-boundary-response.test.mjs tests/render-cost.test.mjs tests/soundtrack-level.test.mjs tests/soundtrack-playback.test.ts tests/mobile-sound.test.mjs tests/tip-signal.test.ts tests/latent-stability.test.mjs tests/spectral-color.test.mjs tests/background-motion.test.mjs tests/background-compatibility.test.mjs tests/scene-qa.test.ts tests/viewport-stability.test.mjs tests/making-line.test.mjs tests/mobile-layout.test.mjs tests/trademark.test.mjs tests/metadata.test.mjs"
+    "test": "npm run build && node --experimental-strip-types --test tests/static-build.test.mjs tests/stage-stack.test.mjs tests/neo-raster.test.mjs tests/morph-geometry.test.ts tests/morph-timeline.test.ts tests/render-profile.test.ts tests/scroll-boot.test.mjs tests/final-morph-scroll.test.mjs tests/compact-scroll-response.test.mjs tests/mobile-scroll-direction.test.mjs tests/stage-boundary-response.test.mjs tests/render-cost.test.mjs tests/soundtrack-level.test.mjs tests/soundtrack-playback.test.ts tests/mobile-sound.test.mjs tests/tip-signal.test.ts tests/latent-stability.test.mjs tests/spectral-color.test.mjs tests/background-motion.test.mjs tests/background-compatibility.test.mjs tests/scene-qa.test.ts tests/viewport-stability.test.mjs tests/making-line.test.mjs tests/mobile-layout.test.mjs tests/trademark.test.mjs tests/metadata.test.mjs tests/analytics-policy.test.ts tests/privacy-controls.test.mjs tests/analytics-consent.browser.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
     "gsap": "3.15.0",
+    "posthog-js": "1.415.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "three": "0.185.1"
+    "three": "0.185.1",
+    "vanilla-cookieconsent": "3.1.0",
+    "web-vitals": "6.1.0"
   },
   "devDependencies": {
     "@types/react": "19.2.14",

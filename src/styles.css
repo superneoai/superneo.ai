@@ -2060,3 +2060,401 @@ a {
     transition: none;
   }
 }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.experience {
+  --consent-stage-bottom: clamp(6.4rem, 11vh, 9rem);
+  --consent-footer-bottom: clamp(1.25rem, 2.3vw, 2.25rem);
+  --consent-offset: 0px;
+}
+
+.experience[data-consent-open="true"] .stage-panel {
+  bottom: calc(var(--consent-stage-bottom) + var(--consent-offset));
+}
+
+.experience[data-consent-open="true"] .site-footer {
+  bottom: calc(var(--consent-footer-bottom) + var(--consent-offset));
+}
+
+.analytics-consent-dock {
+  position: fixed;
+  right: max(clamp(1.25rem, 2.3vw, 2.25rem), env(safe-area-inset-right, 0px));
+  bottom: max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.45rem));
+  left: max(clamp(1.25rem, 2.3vw, 2.25rem), env(safe-area-inset-left, 0px));
+  z-index: 8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  width: min(58rem, calc(100vw - 2.5rem));
+  min-height: 8.4rem;
+  padding: 1.05rem 1.15rem 1rem;
+  margin-inline: auto;
+  border: 1px solid color-mix(in oklch, var(--signal) 54%, var(--bone));
+  color: var(--bone);
+  background: rgba(3, 4, 3, 0.97);
+  box-shadow:
+    0 1.4rem 4rem rgba(0, 0, 0, 0.5),
+    inset 0 1px color-mix(in oklch, var(--signal) 18%, transparent);
+  animation: consent-dock-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.analytics-consent-copy {
+  min-width: 0;
+  max-width: 38rem;
+}
+
+.analytics-consent-copy > p {
+  max-width: 61ch;
+  margin: 0.72rem 0 0;
+  color: color-mix(in oklch, var(--bone) 88%, transparent);
+  font-size: clamp(0.72rem, 0.74vw, 0.82rem);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+}
+
+.analytics-consent-copy .analytics-consent-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: var(--signal);
+  font-size: 0.63rem;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0.13em;
+}
+
+.analytics-consent-eyebrow i {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--signal);
+  box-shadow: 0 0 0.72rem color-mix(in oklch, var(--signal) 48%, transparent);
+}
+
+.analytics-consent-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+  padding-left: 1.25rem;
+}
+
+.analytics-consent-actions button,
+.privacy-preferences footer button {
+  min-height: 2.75rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid color-mix(in oklch, var(--bone) 58%, transparent);
+  border-radius: 0;
+  color: var(--bone);
+  background: transparent;
+  font: 580 0.62rem/1 "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    color 150ms linear,
+    background 150ms linear,
+    border-color 150ms linear;
+}
+
+.analytics-consent-actions button:hover,
+.analytics-consent-actions button:focus-visible,
+.privacy-preferences footer button:hover,
+.privacy-preferences footer button:focus-visible {
+  border-color: var(--signal);
+  color: var(--ink);
+  background: var(--signal);
+}
+
+.analytics-consent-actions button:disabled,
+.privacy-preferences footer button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.analytics-details-button {
+  min-height: 2.75rem;
+  padding: 0.85rem 0.1rem 0.6rem;
+  border: 0;
+  color: var(--bone);
+  background: transparent;
+  font: 560 0.58rem/1 "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-underline-offset: 0.32rem;
+  cursor: pointer;
+}
+
+.analytics-consent-dock button:focus-visible,
+.privacy-preferences button:focus-visible,
+.privacy-preferences a:focus-visible,
+.privacy-link:focus-visible,
+.privacy-toggle input:focus-visible + span {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.privacy-link {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.privacy-preferences {
+  width: min(42rem, calc(100vw - 2rem));
+  max-height: min(42rem, calc(100dvh - 2rem));
+  padding: 0;
+  overflow: auto;
+  border: 1px solid color-mix(in oklch, var(--signal) 58%, var(--bone));
+  border-radius: 0;
+  color: var(--bone);
+  background: #050605;
+  box-shadow: 0 2rem 7rem rgba(0, 0, 0, 0.72);
+  font-family: "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+}
+
+.privacy-preferences::backdrop {
+  background: rgba(2, 3, 2, 0.76);
+}
+
+.privacy-preferences > header,
+.privacy-preferences > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.privacy-preferences > header {
+  border-bottom: 1px solid var(--line);
+}
+
+.privacy-preferences > header p {
+  margin: 0 0 0.45rem;
+  color: var(--signal);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+}
+
+.privacy-preferences h2,
+.privacy-preferences h3 {
+  margin: 0;
+  font-family: "Geist Variable", Geist, sans-serif;
+}
+
+.privacy-preferences h2 {
+  font-size: clamp(1.15rem, 2.3vw, 1.55rem);
+  font-weight: 540;
+  letter-spacing: -0.045em;
+}
+
+.privacy-close {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--line);
+  color: var(--bone);
+  background: transparent;
+  font: 300 1.3rem/1 "Geist Mono Variable", monospace;
+  cursor: pointer;
+}
+
+.privacy-preference-list section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.2rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.privacy-preference-list h3 {
+  font-size: 0.92rem;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+}
+
+.privacy-preference-list p {
+  max-width: 55ch;
+  margin: 0.55rem 0 0;
+  color: color-mix(in oklch, var(--bone) 80%, transparent);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.privacy-preference-list .privacy-gpc {
+  color: var(--signal);
+}
+
+.privacy-state {
+  color: var(--signal);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+}
+
+.privacy-toggle {
+  display: grid;
+  grid-template-columns: 2.8rem auto;
+  align-items: center;
+  min-width: 5.1rem;
+  min-height: 2.75rem;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.privacy-toggle input {
+  position: absolute;
+  opacity: 0;
+}
+
+.privacy-toggle > span {
+  position: relative;
+  width: 2.8rem;
+  height: 1.45rem;
+  border: 1px solid color-mix(in oklch, var(--bone) 56%, transparent);
+  background: transparent;
+}
+
+.privacy-toggle > span::after {
+  position: absolute;
+  top: 0.23rem;
+  left: 0.24rem;
+  width: 0.88rem;
+  height: 0.88rem;
+  background: var(--bone);
+  content: "";
+  transition: transform 160ms ease, background 160ms linear;
+}
+
+.privacy-toggle input:checked + span {
+  border-color: var(--signal);
+}
+
+.privacy-toggle input:checked + span::after {
+  background: var(--signal);
+  transform: translateX(1.38rem);
+}
+
+.privacy-toggle input:disabled + span {
+  opacity: 0.55;
+}
+
+.privacy-toggle b {
+  color: var(--bone);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+}
+
+.privacy-preferences > footer a {
+  min-height: 2.75rem;
+  padding: 0.9rem 0;
+  color: var(--bone);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-underline-offset: 0.3rem;
+}
+
+@keyframes consent-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .experience {
+    --consent-stage-bottom: 9rem;
+    --consent-footer-bottom: max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem));
+  }
+
+  .analytics-consent-dock {
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.65rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem));
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    width: auto;
+    min-height: 0;
+    gap: 0.75rem;
+    padding: 0.95rem;
+  }
+
+  .analytics-consent-copy > p {
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .analytics-details-button {
+    padding-bottom: 0.45rem;
+  }
+
+  .analytics-consent-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .experience {
+    --consent-stage-bottom: 8.4rem;
+  }
+
+  .privacy-preferences > header,
+  .privacy-preferences > footer,
+  .privacy-preference-list section {
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+  }
+
+  .privacy-preference-list section {
+    gap: 0.8rem;
+  }
+
+  .privacy-preferences > footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .experience {
+    --consent-stage-bottom: 7.7rem;
+  }
+}
+
+@media (max-height: 560px) and (max-width: 900px) {
+  .experience {
+    --consent-stage-bottom: max(4.4rem, calc(env(safe-area-inset-bottom, 0px) + 3.8rem));
+  }
+
+  .analytics-consent-dock {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analytics-consent-dock {
+    animation: none;
+  }
+
+  .privacy-toggle > span::after {
+    transition: none;
+  }
+}

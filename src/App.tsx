@@ -5,7 +5,15 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
+import { AnalyticsRuntime } from "./analytics/AnalyticsRuntime";
+import { dispatchAnalyticsEvent } from "./analytics/events";
+import {
+  ConsentDock,
+  PrivacyPreferences,
+  useAnalyticsConsent,
+} from "./privacy/AnalyticsConsent";
 import { SoundtrackController } from "./Soundtrack";
 import { toStageProgress } from "./morphTimeline";
 import { parseSceneQa, type NeoQaState } from "./sceneQa";
@@ -412,6 +420,11 @@ export function App() {
   const [discovered, setDiscovered] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [loadStep, setLoadStep] = useState(1);
+  const [consentFallbackReady, setConsentFallbackReady] = useState(false);
+  const [consentOffset, setConsentOffset] = useState<number>(0);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const privacyButtonRef = useRef<HTMLButtonElement>(null);
+  const { consent, chooseAnalytics, announcement } = useAnalyticsConsent();
   const loadingStartedAtRef = useRef(performance.now());
   const sceneReadyTimerRef = useRef<number | null>(null);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
@@ -449,8 +462,26 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!consent.available || sceneReady) return;
+    const fallbackTimer = window.setTimeout(() => setConsentFallbackReady(true), 2600);
+    return () => window.clearTimeout(fallbackTimer);
+  }, [consent.available, sceneReady]);
+
+  const consentVisible = consent.status === "pending" && (
+    sceneReady || consentFallbackReady
+  );
+  const experienceStyle = {
+    "--consent-offset": `${consentOffset}px`,
+  } as CSSProperties;
+
   return (
-    <main className="experience" data-scene-ready={sceneReady}>
+    <main
+      className="experience"
+      data-scene-ready={sceneReady}
+      data-consent-open={consentVisible}
+      style={experienceStyle}
+    >
       <ScenePoster loadStep={loadStep} />
       <Suspense fallback={null}>
         <LatentField
@@ -499,15 +530,49 @@ export function App() {
             target="_blank"
             rel="noreferrer"
             aria-label="Superneo on X"
+            onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "x" })}
           >
             <span className="x-mark" aria-hidden="true">𝕏</span>
             <span>@superneoai</span>
           </a>
-          <a className="contact-link" href="mailto:hello@superneo.ai">
+          <a
+            className="contact-link"
+            href="mailto:hello@superneo.ai"
+            onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "email" })}
+          >
             hello@superneo.ai
           </a>
+          {consent.available && consent.status !== "loading" && (
+            <button
+              className="contact-link privacy-link"
+              ref={privacyButtonRef}
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setPrivacyOpen(true)}
+            >
+              PRIVACY
+            </button>
+          )}
         </div>
       </footer>
+
+      <ConsentDock
+        visible={consentVisible}
+        onChoice={chooseAnalytics}
+        onDetails={() => setPrivacyOpen(true)}
+        onHeightChange={setConsentOffset}
+      />
+      {consent.available && (
+        <PrivacyPreferences
+          open={privacyOpen}
+          consent={consent}
+          onClose={() => setPrivacyOpen(false)}
+          onSave={chooseAnalytics}
+          returnFocusRef={privacyButtonRef}
+        />
+      )}
+      <p className="visually-hidden" aria-live="polite">{announcement}</p>
+      <AnalyticsRuntime consentStatus={consent.status} sceneReady={sceneReady} />
 
       <div className="scroll-runway" aria-hidden="true" />
     </main>

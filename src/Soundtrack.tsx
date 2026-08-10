@@ -1,4 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { dispatchAnalyticsEvent } from "./analytics/events";
+import { volumeBucket } from "./analytics/policy";
 import { SuperneoSoundtrack } from "./soundtrackEngine";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
 import { TIP_SIGNAL_EVENT, type TipArrival } from "./tipSignal";
@@ -10,6 +12,7 @@ export const SoundtrackController = memo(function SoundtrackController() {
   const engineRef = useRef<SuperneoSoundtrack | null>(null);
   const stageRef = useRef(0);
   const volumeRef = useRef(defaultVolume);
+  const reportedVolumeRef = useRef(volumeBucket(defaultVolume));
   const startingRef = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -36,6 +39,7 @@ export const SoundtrackController = memo(function SoundtrackController() {
       const engine = ensureEngine();
       await engine.play();
       setPlaying(true);
+      dispatchAnalyticsEvent("audio_toggled", { state: "playing" });
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     } catch {
       setPlaying(false);
@@ -48,6 +52,7 @@ export const SoundtrackController = memo(function SoundtrackController() {
   const pause = useCallback(() => {
     engineRef.current?.pause();
     setPlaying(false);
+    dispatchAnalyticsEvent("audio_toggled", { state: "paused" });
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
   }, []);
 
@@ -66,6 +71,13 @@ export const SoundtrackController = memo(function SoundtrackController() {
     } catch {
       // Playback still works when storage is unavailable in private contexts.
     }
+  };
+
+  const reportVolume = () => {
+    const bucket = volumeBucket(volumeRef.current);
+    if (bucket === reportedVolumeRef.current) return;
+    reportedVolumeRef.current = bucket;
+    dispatchAnalyticsEvent("volume_changed", { bucket });
   };
 
   useEffect(() => {
@@ -177,6 +189,9 @@ export const SoundtrackController = memo(function SoundtrackController() {
             step="1"
             value={volume}
             onChange={(event) => setVolume(Number(event.currentTarget.value))}
+            onPointerUp={reportVolume}
+            onKeyUp={reportVolume}
+            onBlur={reportVolume}
             aria-label="Soundtrack volume"
             aria-valuetext={`${volume} percent`}
           />
