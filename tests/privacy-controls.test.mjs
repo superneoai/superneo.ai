@@ -9,6 +9,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
 
   assert.match(app, /data-consent-open=\{consentVisible\}/);
+  assert.match(app, /consent\.status === "pending" \|\| analyticsConsentPreviewMode/);
   assert.match(app, />\s*PRIVACY\s*<\/button>/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);

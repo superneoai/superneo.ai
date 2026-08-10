@@ -9,6 +9,7 @@ import {
 } from "react";
 import { AnalyticsRuntime } from "./analytics/AnalyticsRuntime";
 import { dispatchAnalyticsEvent } from "./analytics/events";
+import { analyticsConsentPreviewMode } from "./analytics/runtimeConfig";
 import {
   ConsentDock,
   PrivacyPreferences,
@@ -476,7 +477,7 @@ export function App() {
     return () => window.clearTimeout(fallbackTimer);
   }, [consent.available, sceneReady]);
 
-  const consentVisible = consent.status === "pending" && (
+  const consentVisible = (consent.status === "pending" || analyticsConsentPreviewMode) && (
     sceneReady || consentFallbackReady
   );
   const experienceStyle = {

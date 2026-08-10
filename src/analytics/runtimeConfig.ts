@@ -7,6 +7,8 @@ export const posthogHost = (
   import.meta.env.VITE_POSTHOG_HOST ?? "https://us.i.posthog.com"
 ).replace(/\/$/, "");
 export const analyticsQaMode = import.meta.env.DEV && query.get("analyticsQa") === "1";
+export const analyticsConsentPreviewMode = analyticsQaMode
+  && query.get("consentPreview") !== "0";
 
 export const analyticsRuntimeEnabled = isAnalyticsRuntimeAllowed({
   hostname: window.location.hostname,

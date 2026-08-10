@@ -75,7 +75,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   });
 
   try {
-    await page.goto(`${BASE_URL}/?analyticsQa=1`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE_URL}/?analyticsQa=1&consentPreview=0`, { waitUntil: "domcontentloaded" });
     const dock = page.locator(".analytics-consent-dock");
     await dock.waitFor({ state: "visible", timeout: CONSENT_WAIT_MS });
     assert.equal(posthogRequests.length, 0, "PostHog must remain silent before consent");
@@ -141,7 +141,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   }
 });
 
-test("Global Privacy Control is an automatic decline", { timeout: 60_000 }, async () => {
+test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -161,10 +161,14 @@ test("Global Privacy Control is an automatic decline", { timeout: 60_000 }, asyn
   try {
     await page.goto(`${BASE_URL}/?analyticsQa=1`, { waitUntil: "domcontentloaded" });
     await sleep(3_200);
-    assert.equal(await page.locator(".analytics-consent-dock").count(), 0);
+    assert.equal(await page.locator(".analytics-consent-dock").isVisible(), true,
+      "the development-only QA preview should remain visible under GPC");
     assert.equal(requests.length, 0);
     const consentCookie = (await context.cookies()).find((cookie) => cookie.name === "sn_consent");
     assert.ok(consentCookie, "GPC decline should be remembered");
+    await page.locator(".analytics-consent-actions button").first().click();
+    await sleep(400);
+    assert.equal(requests.length, 0, "the QA preview must not override GPC collection");
   } finally {
     await context.close();
     await browser.close();
