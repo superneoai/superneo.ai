@@ -19,7 +19,7 @@
       * { box-sizing: border-box; }
       body { min-height: 100vh; margin: 0; padding: clamp(1rem, 3vw, 2.5rem); }
       main { width: min(52rem, 100%); margin: 0 auto; }
-      header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #34372f; }
+      header { display: grid; justify-items: start; gap: 0.25rem; border-bottom: 1px solid #34372f; }
       h1, h2 { font-family: system-ui, sans-serif; letter-spacing: -0.04em; }
       h1 { margin: 0 0 1rem; font-size: clamp(2rem, 7vw, 5rem); font-weight: 560; }
       h2 { margin: 2.5rem 0 0.75rem; font-size: 1.1rem; font-weight: 620; }
@@ -30,19 +30,18 @@
       .brand-mark { white-space: nowrap; }
       .brand-mark sup { margin-left: 0.1em; font-size: 0.56em; vertical-align: super; }
       .notice { padding: 1rem; border: 1px solid #627729; }
-      .back { display: inline-flex; min-height: 44px; align-items: center; }
+      .back { display: inline-flex; min-height: 44px; align-items: center; font-size: 0.72rem; letter-spacing: 0.12em; }
       footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #34372f; }
-      @media (max-width: 520px) { header { align-items: flex-start; flex-direction: column; } }
     </style>
   </head>
   <body>
     <main>
       <header>
+        <a class="back" href="../" aria-label="Back to superneo.ai">← BACK</a>
         <div>
           <p class="meta">SYSTEM // PRIVACY</p>
           <h1>Privacy</h1>
         </div>
-        <a class="back" href="../">RETURN TO SUPERNEO</a>
       </header>
 
       <p class="notice">
