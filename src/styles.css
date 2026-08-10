@@ -2066,9 +2066,16 @@ a {
 }
 
 .experience {
+  --consent-motion-duration: 360ms;
+  --consent-motion-ease: cubic-bezier(0.55, 0, 1, 0.45);
   --consent-stage-bottom: clamp(6.4rem, 11vh, 9rem);
   --consent-footer-bottom: clamp(1.25rem, 2.3vw, 2.25rem);
   --consent-offset: 0px;
+}
+
+.experience > .stage-panel,
+.experience > .site-footer {
+  transition: bottom var(--consent-motion-duration) var(--consent-motion-ease);
 }
 
 .experience[data-consent-open="true"] .stage-panel {
@@ -2103,7 +2110,7 @@ a {
 
 .analytics-consent-dock[data-state="closing"] {
   pointer-events: none;
-  animation: consent-dock-out 360ms cubic-bezier(0.55, 0, 1, 0.45) both;
+  animation: consent-dock-out var(--consent-motion-duration) var(--consent-motion-ease) both;
 }
 
 .analytics-consent-copy {
@@ -2463,6 +2470,11 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .analytics-consent-dock {
     animation: none;
+  }
+
+  .experience > .stage-panel,
+  .experience > .site-footer {
+    transition: none;
   }
 
   .privacy-toggle > span::after {

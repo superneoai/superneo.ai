@@ -19,7 +19,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(consent, /globalPrivacyControlEnabled\(\)/);
   assert.match(ui, /role="region"/);
   assert.match(ui, /aria-label="Analytics choices"/);
-  assert.match(ui, /data-state=\{exiting \? "closing" : "open"\}/);
+  assert.match(ui, /data-state=\{!visible \|\| exiting \? "closing" : "open"\}/);
   assert.match(ui, /SUPERNEO uses optional PostHog US analytics/);
   assert.match(ui, /ALLOW ANALYTICS[\s\S]*DECLINE ANALYTICS/);
   assert.match(ui, /dialog\.showModal\(\)/);
@@ -28,6 +28,8 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(styles, /analytics-consent-actions button[\s\S]*min-height: 2\.75rem/);
   assert.match(styles, /analytics-consent-dock[\s\S]*width: min\(50rem,/);
   assert.match(styles, /@keyframes consent-dock-out/);
+  assert.match(styles, /--consent-motion-duration: 360ms/);
+  assert.match(styles, /\.stage-panel,[\s\S]*\.site-footer[\s\S]*transition:\s*bottom var\(--consent-motion-duration\)/);
   assert.match(styles, /privacy-preferences::backdrop/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*analytics-consent-dock/);
 });

@@ -112,7 +112,7 @@ export function ConsentDock({
       ref={dockRef}
       role="region"
       aria-label="Analytics choices"
-      data-state={exiting ? "closing" : "open"}
+      data-state={!visible || exiting ? "closing" : "open"}
     >
       <div className="analytics-consent-copy">
         <p className="analytics-consent-eyebrow"><i aria-hidden="true" /> SYSTEM // OPTIONAL ANALYTICS</p>
