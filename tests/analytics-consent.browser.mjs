@@ -52,6 +52,9 @@ async function stopServer(server) {
 
 test("consent blocks, permits, and withdraws PostHog without affecting the experience", { timeout: 90_000 }, async () => {
   const server = await startServer();
+  const privacyPage = await fetch(`${BASE_URL}/privacy/`).then((response) => response.text());
+  assert.match(privacyPage, /<title>Privacy — superneo\.ai<\/title>/);
+  assert.match(privacyPage, /<h1>Privacy<\/h1>/);
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
