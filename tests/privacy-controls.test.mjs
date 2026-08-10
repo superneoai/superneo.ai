@@ -24,6 +24,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(ui, /document\.activeElement/);
   assert.match(ui, /returnTarget\?\.isConnected/);
   assert.match(styles, /analytics-consent-actions button[\s\S]*min-height: 2\.75rem/);
+  assert.match(styles, /analytics-consent-dock[\s\S]*width: min\(50rem,/);
   assert.match(styles, /privacy-preferences::backdrop/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*analytics-consent-dock/);
 });

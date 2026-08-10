@@ -2088,7 +2088,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  width: min(58rem, calc(100vw - 2.5rem));
+  width: min(50rem, calc(100vw - 2.5rem));
   min-height: 8.4rem;
   padding: 1.05rem 1.15rem 1rem;
   margin-inline: auto;
