@@ -17,8 +17,11 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(consent, /globalPrivacyControlEnabled\(\)/);
   assert.match(ui, /role="region"/);
   assert.match(ui, /aria-label="Analytics choices"/);
-  assert.match(ui, /ALLOW ANALYTICS[\s\S]*DECLINE/);
+  assert.match(ui, /SUPERNEO uses optional PostHog US analytics/);
+  assert.match(ui, /ALLOW ANALYTICS[\s\S]*DECLINE ANALYTICS/);
   assert.match(ui, /dialog\.showModal\(\)/);
+  assert.match(ui, /document\.activeElement/);
+  assert.match(ui, /returnTarget\?\.isConnected/);
   assert.match(styles, /analytics-consent-actions button[\s\S]*min-height: 2\.75rem/);
   assert.match(styles, /privacy-preferences::backdrop/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*analytics-consent-dock/);
@@ -34,6 +37,7 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.doesNotMatch(client, /^import posthog/m);
   assert.match(client, /autocapture: false/);
   assert.match(client, /capture_pageview: false/);
+  assert.match(client, /ip: false/);
   assert.match(client, /disable_session_recording: true/);
   assert.match(client, /person_profiles: "never"/);
   assert.match(client, /advanced_disable_flags: true/);

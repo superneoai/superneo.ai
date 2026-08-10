@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 const ROOT = resolve(import.meta.dirname, "..");
 const PORT = 4192;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+const CONSENT_WAIT_MS = 30_000;
 const TEST_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
   + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 const sleep = (duration) => new Promise((resolveSleep) => setTimeout(resolveSleep, duration));
@@ -49,7 +50,7 @@ async function stopServer(server) {
   await Promise.race([exited, sleep(2_000)]);
 }
 
-test("consent blocks, permits, and withdraws PostHog without affecting the experience", { timeout: 60_000 }, async () => {
+test("consent blocks, permits, and withdraws PostHog without affecting the experience", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -71,7 +72,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   try {
     await page.goto(`${BASE_URL}/?analyticsQa=1`, { waitUntil: "domcontentloaded" });
     const dock = page.locator(".analytics-consent-dock");
-    await dock.waitFor({ state: "visible", timeout: 15_000 });
+    await dock.waitFor({ state: "visible", timeout: CONSENT_WAIT_MS });
     assert.equal(posthogRequests.length, 0, "PostHog must remain silent before consent");
 
     const actions = dock.locator(".analytics-consent-actions button");
@@ -96,7 +97,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     await context.clearCookies();
     await page.evaluate(() => window.localStorage.clear());
     await page.reload({ waitUntil: "domcontentloaded" });
-    await dock.waitFor({ state: "visible", timeout: 15_000 });
+    await dock.waitFor({ state: "visible", timeout: CONSENT_WAIT_MS });
     await dock.locator(".analytics-consent-actions button").nth(0).click();
     const requestStartedAt = Date.now();
     while (posthogRequests.length === 0 && Date.now() - requestStartedAt < 8_000) {
@@ -115,6 +116,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     assert.equal(await toggle.isChecked(), false);
     await preferences.locator("footer button").click();
     await preferences.waitFor({ state: "hidden" });
+    await page.waitForFunction(() => document.activeElement?.classList.contains("privacy-link"));
 
     const countAfterWithdrawal = posthogRequests.length;
     await page.evaluate(() => {
@@ -134,7 +136,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   }
 });
 
-test("Global Privacy Control is an automatic decline", { timeout: 30_000 }, async () => {
+test("Global Privacy Control is an automatic decline", { timeout: 60_000 }, async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({

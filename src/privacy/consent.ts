@@ -110,13 +110,13 @@ export function initializeConsent() {
             title: "Optional analytics",
             description: "Usage and performance analytics require permission.",
             acceptAllBtn: "Allow analytics",
-            acceptNecessaryBtn: "Decline",
+            acceptNecessaryBtn: "Decline analytics",
             showPreferencesBtn: "Privacy details",
           },
           preferencesModal: {
             title: "Privacy preferences",
             acceptAllBtn: "Allow analytics",
-            acceptNecessaryBtn: "Decline",
+            acceptNecessaryBtn: "Decline analytics",
             savePreferencesBtn: "Save preferences",
             closeIconLabel: "Close privacy preferences",
             sections: [

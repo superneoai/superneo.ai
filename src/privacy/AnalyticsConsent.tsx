@@ -90,8 +90,8 @@ export function ConsentDock({
       <div className="analytics-consent-copy">
         <p className="analytics-consent-eyebrow"><i aria-hidden="true" /> SYSTEM // OPTIONAL ANALYTICS</p>
         <p>
-          Usage and performance signals are sent to PostHog US only if you allow them.
-          No ads. No session replay.
+          SUPERNEO uses optional PostHog US analytics to understand site usage and
+          performance. Nothing is sent unless you allow it. No ads. No session replay.
         </p>
         <button className="analytics-details-button" type="button" onClick={onDetails}>
           PRIVACY DETAILS
@@ -102,7 +102,7 @@ export function ConsentDock({
           ALLOW ANALYTICS
         </button>
         <button type="button" disabled={saving} onClick={() => { void choose(false); }}>
-          DECLINE
+          DECLINE ANALYTICS
         </button>
       </div>
     </section>
@@ -114,7 +114,7 @@ type PrivacyPreferencesProps = {
   consent: ConsentSnapshot;
   onClose: () => void;
   onSave: (allowed: boolean) => Promise<void>;
-  returnFocusRef: RefObject<HTMLButtonElement | null>;
+  fallbackFocusRef: RefObject<HTMLButtonElement | null>;
 };
 
 export function PrivacyPreferences({
@@ -122,9 +122,10 @@ export function PrivacyPreferences({
   consent,
   onClose,
   onSave,
-  returnFocusRef,
+  fallbackFocusRef,
 }: PrivacyPreferencesProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const returnFocusElementRef = useRef<HTMLElement | null>(null);
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -135,13 +136,23 @@ export function PrivacyPreferences({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      const activeElement = document.activeElement;
+      returnFocusElementRef.current = activeElement instanceof HTMLElement
+        ? activeElement
+        : null;
+      dialog.showModal();
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
   const close = () => {
     onClose();
-    window.requestAnimationFrame(() => returnFocusRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      const returnTarget = returnFocusElementRef.current;
+      if (returnTarget?.isConnected) returnTarget.focus();
+      else fallbackFocusRef.current?.focus();
+    });
   };
 
   const save = async () => {
