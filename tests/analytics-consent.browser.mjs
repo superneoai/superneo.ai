@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import test from "node:test";
+import { gunzipSync } from "node:zlib";
 import { chromium } from "playwright";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -11,6 +12,20 @@ const CONSENT_WAIT_MS = 30_000;
 const TEST_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
   + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 const sleep = (duration) => new Promise((resolveSleep) => setTimeout(resolveSleep, duration));
+
+function launchConsentBrowser() {
+  return chromium.launch({ headless: true });
+}
+
+function decodePostHogPayload(request) {
+  const body = request.postDataBuffer();
+  if (!body) return null;
+  try {
+    return JSON.parse(gunzipSync(body).toString("utf8"));
+  } catch {
+    return JSON.parse(body.toString("utf8"));
+  }
+}
 
 async function startServer() {
   const child = spawn(
@@ -57,7 +72,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   assert.match(privacyPage, /<h1>Privacy<\/h1>/);
   assert.match(privacyPage, /aria-label="Back to superneo\.ai">[\s\S]*?<svg[\s\S]*?<span>BACK<\/span>/);
   assert.doesNotMatch(privacyPage, /RETURN TO SUPERNEO/);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchConsentBrowser();
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     userAgent: TEST_USER_AGENT,
@@ -70,14 +85,29 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     if (message.type() === "error") browserErrors.push(message.text());
   });
   await page.route("https://us.i.posthog.com/**", async (route) => {
-    posthogRequests.push(route.request().url());
+    posthogRequests.push({
+      url: route.request().url(),
+      payload: decodePostHogPayload(route.request()),
+    });
     await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
   });
 
   try {
-    await page.goto(`${BASE_URL}/?analyticsQa=1&consentPreview=0`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE_URL}/?analyticsQa=1&consentPreview=0&sceneFault=renderer`, {
+      waitUntil: "domcontentloaded",
+    });
     const dock = page.locator(".analytics-consent-dock");
     await dock.waitFor({ state: "visible", timeout: CONSENT_WAIT_MS });
+    await page.waitForFunction(() => {
+      const dockElement = document.querySelector(".analytics-consent-dock");
+      const footerElement = document.querySelector(".site-footer");
+      if (!(dockElement instanceof HTMLElement) || !(footerElement instanceof HTMLElement)) return false;
+      const dockBounds = dockElement.getBoundingClientRect();
+      const footerBounds = footerElement.getBoundingClientRect();
+      return footerBounds.bottom <= dockBounds.top;
+    });
+    assert.equal(await page.locator("#cc-main").isVisible(), false,
+      "CookieConsent must not expose a second consent dialog");
     assert.equal(posthogRequests.length, 0, "PostHog must remain silent before consent");
 
     const actions = dock.locator(".analytics-consent-actions button");
@@ -107,13 +137,37 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     await page.reload({ waitUntil: "domcontentloaded" });
     await dock.waitFor({ state: "visible", timeout: CONSENT_WAIT_MS });
     await dock.locator(".analytics-consent-actions button").nth(0).click();
+    await dock.waitFor({ state: "detached" });
+    await page.evaluate(() => {
+      window.dispatchEvent(new CustomEvent("superneo:analytics", {
+        detail: { name: "audio_toggled", properties: { state: "playing" } },
+      }));
+    });
     const requestStartedAt = Date.now();
     while (posthogRequests.length === 0 && Date.now() - requestStartedAt < 8_000) {
       await sleep(100);
     }
     assert.ok(posthogRequests.length > 0, "acceptance should enable the US ingestion endpoint");
-    assert.ok(posthogRequests.every((url) => url.startsWith("https://us.i.posthog.com/")));
+    assert.ok(posthogRequests.every(({ url }) => url.startsWith("https://us.i.posthog.com/")));
+    const capturedEvents = posthogRequests.flatMap(({ payload }) => payload?.batch ?? []);
+    const audioEvent = capturedEvents.find(({ event }) => event === "audio_toggled");
+    assert.ok(audioEvent, "the explicitly dispatched event should be captured");
+    assert.equal(audioEvent.properties.surface, "landing");
+    assert.equal(audioEvent.properties.environment, "development");
+    [
+      "$current_url",
+      "$initial_current_url",
+      "$session_entry_url",
+      "$session_entry_pathname",
+      "$session_entry_referrer",
+      "$raw_user_agent",
+    ].forEach((property) => {
+      assert.equal(property in audioEvent.properties, false, `${property} must be scrubbed`);
+    });
 
+    await page.locator("main.experience").evaluate((experience) => {
+      experience.setAttribute("data-scene-ready", "true");
+    });
     const privacyButton = page.locator(".privacy-link");
     await privacyButton.click();
     const preferences = page.locator(".privacy-preferences[open]");
@@ -146,7 +200,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
 
 test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, async () => {
   const server = await startServer();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchConsentBrowser();
   const context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
     userAgent: TEST_USER_AGENT,
@@ -162,7 +216,9 @@ test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, asyn
   });
 
   try {
-    await page.goto(`${BASE_URL}/?analyticsQa=1`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE_URL}/?analyticsQa=1&sceneFault=renderer`, {
+      waitUntil: "domcontentloaded",
+    });
     await sleep(3_200);
     const dock = page.locator(".analytics-consent-dock");
     assert.equal(await dock.isVisible(), true,

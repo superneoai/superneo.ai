@@ -9,6 +9,13 @@ export type AnalyticsRuntimePolicy = {
   projectKey: string;
 };
 
+export function analyticsContext(isProduction: boolean) {
+  return {
+    surface: "landing",
+    environment: isProduction ? "production" : "development",
+  } as const;
+}
+
 export function isAnalyticsRuntimeAllowed(policy: AnalyticsRuntimePolicy) {
   if (!policy.projectKey.trim()) return false;
   if (LIVE_ANALYTICS_HOSTS.has(policy.hostname)) return true;

@@ -11,10 +11,12 @@ import {
   posthogHost,
   posthogProjectKey,
 } from "./runtimeConfig";
+import { analyticsContext } from "./policy";
 
 const MAX_PENDING_EVENTS = 20;
 const POSTHOG_STORAGE = /^(?:ph_|__ph)/;
 const approvedEventNames = new Set<string>(APPROVED_ANALYTICS_EVENTS);
+const sharedEventProperties = analyticsContext(import.meta.env.PROD);
 const scrubbedProperties = [
   "$current_url",
   "$pathname",
@@ -24,6 +26,11 @@ const scrubbedProperties = [
   "$initial_pathname",
   "$initial_referrer",
   "$initial_referring_domain",
+  "$session_entry_url",
+  "$session_entry_host",
+  "$session_entry_pathname",
+  "$session_entry_referrer",
+  "$session_entry_referring_domain",
   "$raw_user_agent",
 ];
 
@@ -141,11 +148,14 @@ export function captureAnalyticsEvent(
   properties?: AnalyticsEventProperties,
 ) {
   if (!permitted || !isApprovedAnalyticsEvent(name)) return;
+  const contextualProperties = { ...properties, ...sharedEventProperties };
   if (posthog) {
-    posthog.capture(name, properties);
+    posthog.capture(name, contextualProperties);
     return;
   }
-  if (pending.length < MAX_PENDING_EVENTS) pending.push({ name, properties });
+  if (pending.length < MAX_PENDING_EVENTS) {
+    pending.push({ name, properties: contextualProperties });
+  }
   void startAnalytics();
 }
 

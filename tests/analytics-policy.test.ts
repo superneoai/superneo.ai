@@ -1,12 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  analyticsContext,
   deviceClass,
   isAnalyticsRuntimeAllowed,
   normalizeCampaignValue,
   safeReferrerHost,
   volumeBucket,
 } from "../src/analytics/policy.ts";
+
+test("analytics events carry stable surface and environment dimensions", () => {
+  assert.deepEqual(analyticsContext(false), {
+    surface: "landing",
+    environment: "development",
+  });
+  assert.deepEqual(analyticsContext(true), {
+    surface: "landing",
+    environment: "production",
+  });
+});
 
 test("analytics runs only with a token on the live host or an explicit dev QA route", () => {
   assert.equal(isAnalyticsRuntimeAllowed({

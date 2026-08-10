@@ -36,6 +36,7 @@ let snapshot: ConsentSnapshot = analyticsRuntimeEnabled
   : unavailableSnapshot;
 let initialization: Promise<ConsentSnapshot> | null = null;
 const listeners = new Set<(next: ConsentSnapshot) => void>();
+const consentStateRoot = document.createElement("div");
 
 function readSnapshot(): ConsentSnapshot {
   if (!analyticsRuntimeEnabled) return unavailableSnapshot;
@@ -74,6 +75,7 @@ export function initializeConsent() {
   if (initialization) return initialization;
 
   initialization = CookieConsent.run({
+    root: consentStateRoot,
     mode: "opt-in",
     autoShow: false,
     disablePageInteraction: false,
