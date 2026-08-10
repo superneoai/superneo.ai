@@ -430,10 +430,15 @@ export function App() {
   const [sceneReady, setSceneReady] = useState(false);
   const [loadStep, setLoadStep] = useState(1);
   const [consentFallbackReady, setConsentFallbackReady] = useState(false);
+  const [consentPreviewDismissed, setConsentPreviewDismissed] = useState(false);
   const [consentOffset, setConsentOffset] = useState<number>(0);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const privacyButtonRef = useRef<HTMLButtonElement>(null);
   const { consent, chooseAnalytics, announcement } = useAnalyticsConsent();
+  const handleConsentDockChoice = useCallback(async (allowed: boolean) => {
+    await chooseAnalytics(allowed);
+    if (analyticsConsentPreviewMode) setConsentPreviewDismissed(true);
+  }, [chooseAnalytics]);
   const loadingStartedAtRef = useRef(performance.now());
   const sceneReadyTimerRef = useRef<number | null>(null);
   const handleDiscover = useCallback(() => setDiscovered(true), []);
@@ -477,9 +482,9 @@ export function App() {
     return () => window.clearTimeout(fallbackTimer);
   }, [consent.available, sceneReady]);
 
-  const consentVisible = (consent.status === "pending" || analyticsConsentPreviewMode) && (
-    sceneReady || consentFallbackReady
-  );
+  const consentVisible = !consentPreviewDismissed
+    && (consent.status === "pending" || analyticsConsentPreviewMode)
+    && (sceneReady || consentFallbackReady);
   const experienceStyle = {
     "--consent-offset": `${consentOffset}px`,
   } as CSSProperties;
@@ -564,7 +569,7 @@ export function App() {
 
       <ConsentDock
         visible={consentVisible}
-        onChoice={chooseAnalytics}
+        onChoice={handleConsentDockChoice}
         onDetails={() => setPrivacyOpen(true)}
         onHeightChange={setConsentOffset}
       />

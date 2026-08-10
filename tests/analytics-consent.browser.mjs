@@ -161,12 +161,14 @@ test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, asyn
   try {
     await page.goto(`${BASE_URL}/?analyticsQa=1`, { waitUntil: "domcontentloaded" });
     await sleep(3_200);
-    assert.equal(await page.locator(".analytics-consent-dock").isVisible(), true,
+    const dock = page.locator(".analytics-consent-dock");
+    assert.equal(await dock.isVisible(), true,
       "the development-only QA preview should remain visible under GPC");
     assert.equal(requests.length, 0);
     const consentCookie = (await context.cookies()).find((cookie) => cookie.name === "sn_consent");
     assert.ok(consentCookie, "GPC decline should be remembered");
-    await page.locator(".analytics-consent-actions button").first().click();
+    await dock.locator(".analytics-consent-actions button").first().click();
+    await dock.waitFor({ state: "detached" });
     await sleep(400);
     assert.equal(requests.length, 0, "the QA preview must not override GPC collection");
   } finally {

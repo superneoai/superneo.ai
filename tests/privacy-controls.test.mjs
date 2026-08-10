@@ -10,6 +10,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
 
   assert.match(app, /data-consent-open=\{consentVisible\}/);
   assert.match(app, /consent\.status === "pending" \|\| analyticsConsentPreviewMode/);
+  assert.match(app, /setConsentPreviewDismissed\(true\)/);
   assert.match(app, />\s*PRIVACY\s*<\/button>/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
