@@ -55,7 +55,7 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   const privacyPage = await fetch(`${BASE_URL}/privacy/`).then((response) => response.text());
   assert.match(privacyPage, /<title>Privacy — superneo\.ai<\/title>/);
   assert.match(privacyPage, /<h1>Privacy<\/h1>/);
-  assert.match(privacyPage, /aria-label="Back to superneo\.ai">← BACK<\/a>/);
+  assert.match(privacyPage, /aria-label="Back to superneo\.ai">[\s\S]*?<svg[\s\S]*?<span>BACK<\/span>/);
   assert.doesNotMatch(privacyPage, /RETURN TO SUPERNEO/);
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
