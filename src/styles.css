@@ -2067,7 +2067,7 @@ a {
 
 .experience {
   --consent-motion-duration: 360ms;
-  --consent-motion-ease: cubic-bezier(0.55, 0, 1, 0.45);
+  --consent-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --consent-stage-bottom: clamp(6.4rem, 11vh, 9rem);
   --consent-footer-bottom: clamp(1.25rem, 2.3vw, 2.25rem);
   --consent-offset: 0px;
