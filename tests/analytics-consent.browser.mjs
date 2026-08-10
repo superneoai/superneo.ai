@@ -94,6 +94,9 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     assert.ok(footerBox.y + footerBox.height <= dockBox.y, "the consent dock must not cover the footer");
 
     await actions.nth(1).click();
+    await page.waitForFunction(() => (
+      document.querySelector(".analytics-consent-dock")?.getAttribute("data-state") === "closing"
+    ), undefined, { timeout: 2_000 });
     await dock.waitFor({ state: "detached" });
     await page.reload({ waitUntil: "domcontentloaded" });
     await sleep(900);

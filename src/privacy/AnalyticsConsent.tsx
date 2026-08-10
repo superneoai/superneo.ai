@@ -14,6 +14,8 @@ import {
   type ConsentSnapshot,
 } from "./consent";
 
+const CONSENT_DOCK_EXIT_MS = 360;
+
 export function useAnalyticsConsent() {
   const consent = useSyncExternalStore(
     subscribeToConsent,
@@ -51,10 +53,34 @@ export function ConsentDock({
 }: ConsentDockProps) {
   const dockRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(visible);
+  const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      setExiting(false);
+      return;
+    }
+    if (!mounted) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMounted(false);
+      setExiting(false);
+      return;
+    }
+
+    setExiting(true);
+    const exitTimer = window.setTimeout(() => {
+      setMounted(false);
+      setExiting(false);
+    }, CONSENT_DOCK_EXIT_MS);
+    return () => window.clearTimeout(exitTimer);
+  }, [mounted, visible]);
 
   useEffect(() => {
     const dock = dockRef.current;
-    if (!visible || !dock) {
+    if (!mounted || !dock) {
       onHeightChange(0);
       return;
     }
@@ -67,9 +93,9 @@ export function ConsentDock({
       observer.disconnect();
       onHeightChange(0);
     };
-  }, [onHeightChange, visible]);
+  }, [mounted, onHeightChange]);
 
-  if (!visible) return null;
+  if (!mounted) return null;
 
   const choose = async (allowed: boolean) => {
     setSaving(true);
@@ -86,6 +112,7 @@ export function ConsentDock({
       ref={dockRef}
       role="region"
       aria-label="Analytics choices"
+      data-state={exiting ? "closing" : "open"}
     >
       <div className="analytics-consent-copy">
         <p className="analytics-consent-eyebrow"><i aria-hidden="true" /> SYSTEM // OPTIONAL ANALYTICS</p>
