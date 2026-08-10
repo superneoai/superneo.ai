@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#030403" />
+    <meta name="description" content="Privacy information for superneo.ai." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://superneo.ai/privacy/" />
+    <title>Privacy — superneo.ai</title>
+    <style>
+      :root {
+        color: #e8e5dc;
+        background: #030403;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-synthesis: none;
+      }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; padding: clamp(1rem, 3vw, 2.5rem); }
+      main { width: min(52rem, 100%); margin: 0 auto; }
+      header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #34372f; }
+      h1, h2 { font-family: system-ui, sans-serif; letter-spacing: -0.04em; }
+      h1 { margin: 0 0 1rem; font-size: clamp(2rem, 7vw, 5rem); font-weight: 560; }
+      h2 { margin: 2.5rem 0 0.75rem; font-size: 1.1rem; font-weight: 620; }
+      p, li { color: #cbc9c1; font-size: 0.9rem; line-height: 1.72; }
+      ul { padding-left: 1.25rem; }
+      a { color: #baf628; text-underline-offset: 0.25rem; }
+      .meta { color: #baf628; font-size: 0.68rem; letter-spacing: 0.12em; }
+      .notice { padding: 1rem; border: 1px solid #627729; }
+      .back { display: inline-flex; min-height: 44px; align-items: center; }
+      footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #34372f; }
+      @media (max-width: 520px) { header { align-items: flex-start; flex-direction: column; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="meta">SYSTEM // PRIVACY</p>
+          <h1>Privacy</h1>
+        </div>
+        <a class="back" href="../">RETURN TO SUPERNEO</a>
+      </header>
+
+      <p class="notice">
+        Analytics on superneo.ai are optional. Nothing is sent to PostHog until you choose
+        <strong>Allow analytics</strong>. Declining does not change the experience.
+      </p>
+
+      <h2>Controller</h2>
+      <p>
+        Superneo operates superneo.ai and determines why the information described here is processed.
+        Privacy questions and requests can be sent to
+        <a href="mailto:hello@superneo.ai">hello@superneo.ai</a>.
+      </p>
+
+      <h2>Local and necessary storage</h2>
+      <p>
+        The site may remember your soundtrack volume locally. After you make an analytics choice, it
+        stores an <code>sn_consent</code> record containing the choice, consent revision, a random consent
+        identifier and timestamps. This prevents the site from repeatedly asking. The record expires after
+        180 days unless the policy changes sooner.
+      </p>
+
+      <h2>Optional analytics</h2>
+      <p>If allowed, the site sends a limited event set to PostHog:</p>
+      <ul>
+        <li>page path, referring hostname and intentionally supplied campaign tags;</li>
+        <li>scene readiness and stage-completion milestones;</li>
+        <li>bounded signal interactions, soundtrack state and a bucketed volume value;</li>
+        <li>outbound destination category; and</li>
+        <li>Core Web Vitals and a coarse device class.</li>
+      </ul>
+      <p>
+        Events use a random browser identifier. Superneo does not send names, email addresses, typed text,
+        exact pointer paths or full URLs containing arbitrary query strings. PostHog autocapture, personal
+        profiles, session replay, heatmaps, surveys, advertising and automatic error capture are disabled.
+      </p>
+
+      <h2>Purpose and legal basis</h2>
+      <p>
+        The purpose is to understand whether the experience loads, performs and reaches its stages. The
+        legal basis for optional analytics is consent. You can refuse or withdraw without losing access.
+      </p>
+
+      <h2>Processor, location and transfers</h2>
+      <p>
+        PostHog, Inc. processes optional analytics for Superneo using PostHog Cloud US. Primary cloud
+        storage is in the United States. PostHog's Data Processing Agreement incorporates the EU–US Data
+        Privacy Framework and European Commission Standard Contractual Clauses for covered transfers.
+        PostHog's current subprocessors are listed at
+        <a href="https://posthog.com/subprocessors" rel="noreferrer">posthog.com/subprocessors</a>.
+      </p>
+
+      <h2>Retention and security</h2>
+      <p>
+        The browser analytics identifier is limited to 180 days. Analytics events are retained for no more
+        than 12 months, then deleted or aggregated. IP capture must remain disabled in the PostHog
+        organization and project. Network and storage access are limited to what is necessary to provide
+        the service.
+      </p>
+
+      <h2>Your choices and rights</h2>
+      <p>
+        Use the <strong>PRIVACY</strong> control in the site footer to change or withdraw your analytics
+        choice. Withdrawal stops new collection and removes PostHog browser storage. Global Privacy Control
+        is treated as a decline. Depending on where you live, you may also request access, correction,
+        deletion, restriction or a copy of information associated with your consent or analytics identifier.
+        Contact <a href="mailto:hello@superneo.ai">hello@superneo.ai</a>.
+      </p>
+
+      <h2>No sale or advertising</h2>
+      <p>
+        Superneo does not sell personal information or share it for cross-context behavioral advertising.
+        The analytics described here are not used to build advertising profiles.
+      </p>
+
+      <footer>
+        <p class="meta">EFFECTIVE 2026-08-10 // CONSENT REVISION 01</p>
+      </footer>
+    </main>
+  </body>
+</html>

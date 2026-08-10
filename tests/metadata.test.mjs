@@ -31,5 +31,6 @@ test("sitemap records the latest material page revision", async () => {
   );
 
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/<\/loc>/);
-  assert.match(sitemap, /<lastmod>2026-08-07<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/privacy\/<\/loc>/);
+  assert.match(sitemap, /<lastmod>2026-08-10<\/lastmod>/);
 });

@@ -205,7 +205,8 @@ test("builds a complete GitHub Pages artifact", async () => {
   const sitemap = await readFile(new URL("../dist/sitemap.xml", import.meta.url), "utf8");
   assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/<\/loc>/);
-  assert.match(sitemap, /<lastmod>2026-08-07<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/privacy\/<\/loc>/);
+  assert.match(sitemap, /<lastmod>2026-08-10<\/lastmod>/);
 
   await access(new URL("../dist/.nojekyll", import.meta.url));
   await access(new URL("../dist/og.png", import.meta.url));
@@ -217,6 +218,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   await access(new URL("../dist/neo-sign-fault-low.png", import.meta.url));
   await access(new URL("../dist/robots.txt", import.meta.url));
   await access(new URL("../dist/sitemap.xml", import.meta.url));
+  await access(new URL("../dist/privacy/index.html", import.meta.url));
 });
 
 test("keeps the generated asset paths relative", async () => {
