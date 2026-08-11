@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
@@ -28,8 +26,6 @@ import {
   SIGNAL_PROGRESS_PER_SECOND,
   TIP_SIGNAL_EVENT,
 } from "./tipSignal";
-
-gsap.registerPlugin(ScrollTrigger);
 
 type LatentFieldProps = {
   onDiscover: () => void;
@@ -277,7 +273,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     const artworkPaths = qa?.sceneFault === "texture"
       ? ["qa-missing-texture.jpg"]
       : renderProfile.compact
-        ? ["latent-field-mobile.jpg"]
+        ? ["latent-field-mobile.avif", "latent-field-mobile.jpg"]
         : ["latent-field.avif", "latent-field.jpg"];
     const showArtworkFallback = () => {
       artworkReady = false;
@@ -562,40 +558,44 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       }
     };
 
-    const scrollState = { progress: 0 };
-    const scrollTween = gsap.to(scrollState, {
-      progress: 1,
-      ease: "none",
-      onUpdate: () => {
-        const progress = scrollState.progress;
-        scrollUniform.value = progress;
-        stagePhaseUniform.value = toMorphPhase(progress);
-        const nextStage = toStageIndex(progress);
-        if (nextStage !== currentStage) {
-          const previousStage = currentStage;
-          currentStage = nextStage;
-          dispatchStageChange(nextStage, previousStage);
-        }
-        if (scrollRailFill) scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
-        needsRender = true;
-      },
-      scrollTrigger: {
-        trigger: document.documentElement,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true,
-        invalidateOnRefresh: true,
-        fastScrollEnd: 2800,
-        onUpdate: (self) => {
-          const scrollEnergy = Math.min(Math.abs(self.getVelocity()) / 2300, 1);
-          targetVelocity = scrollEnergy;
-          targetScrollLift = coarsePointer.matches && !motionIsReduced()
-            ? self.direction * scrollEnergy * 0.16
-            : 0;
-          if (self.progress > 0.006) discover();
-        },
-      },
-    });
+    let scrollFrame: number | null = null;
+    let scrollRange = 1;
+    let previousScrollY = window.scrollY;
+    let previousScrollTime = performance.now();
+    const syncScrollProgress = () => {
+      scrollFrame = null;
+      const now = performance.now();
+      const scrollY = window.scrollY;
+      const elapsed = Math.max(now - previousScrollTime, 8);
+      const scrollDelta = scrollY - previousScrollY;
+      const progress = Math.min(1, Math.max(0, scrollY / scrollRange));
+      const scrollEnergy = Math.min(Math.abs(scrollDelta) * 1000 / elapsed / 2300, 1);
+      scrollUniform.value = progress;
+      stagePhaseUniform.value = toMorphPhase(progress);
+      targetVelocity = Math.max(targetVelocity, scrollEnergy);
+      targetScrollLift = coarsePointer.matches && !motionIsReduced()
+        ? Math.sign(scrollDelta) * scrollEnergy * 0.16
+        : 0;
+      const nextStage = toStageIndex(progress);
+      if (nextStage !== currentStage) {
+        const previousStage = currentStage;
+        currentStage = nextStage;
+        dispatchStageChange(nextStage, previousStage);
+      }
+      if (scrollRailFill) scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
+      if (progress > 0.006) discover();
+      previousScrollY = scrollY;
+      previousScrollTime = now;
+      needsRender = true;
+    };
+    const scheduleScrollProgress = () => {
+      if (scrollFrame !== null) return;
+      scrollFrame = window.requestAnimationFrame(syncScrollProgress);
+    };
+    const updateScrollRange = () => {
+      scrollRange = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      scheduleScrollProgress();
+    };
 
     const renderFrame = (time: number) => {
       if (disposed || document.hidden) return;
@@ -728,13 +728,15 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
       needsRender = (sceneReady && sceneReveal.value < 1) || (
         !sceneReady && artworkReady && shaderHealthy &&
-        (readinessStartedAt === 0 ||
+        (validFrameCount < 2 || readinessStartedAt === 0 ||
           performance.now() - readinessStartedAt < (qa?.sceneDelay ?? 0))
       );
     };
 
-    const tick = (time: number) => {
-      renderFrame(time);
+    let animationFrame = 0;
+    const tick = (timestamp: number) => {
+      renderFrame(timestamp / 1000);
+      animationFrame = window.requestAnimationFrame(tick);
     };
 
     const handleVisibility = () => {
@@ -757,7 +759,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     };
 
     resize();
+    updateScrollRange();
     window.addEventListener("resize", scheduleResize, { passive: true });
+    window.addEventListener("resize", updateScrollRange, { passive: true });
+    window.addEventListener("scroll", scheduleScrollProgress, { passive: true });
     window.addEventListener("pointerdown", pressSurface, { passive: true });
     window.addEventListener("pointermove", schedulePointer, { passive: true });
     window.addEventListener("pointerup", releaseSurface, { passive: true });
@@ -771,18 +776,17 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     }
     reducedMotion.addEventListener("change", handleMotionPreference);
     coarsePointer.addEventListener("change", scheduleResize);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
-    ScrollTrigger.refresh();
+    animationFrame = window.requestAnimationFrame(tick);
 
     return () => {
       disposed = true;
-      gsap.ticker.remove(tick);
-      scrollTween.scrollTrigger?.kill();
-      scrollTween.kill();
+      window.cancelAnimationFrame(animationFrame);
+      if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame);
       if (resizeTimer !== null) window.clearTimeout(resizeTimer);
       if (pointerMoveFrame !== null) window.cancelAnimationFrame(pointerMoveFrame);
       window.removeEventListener("resize", scheduleResize);
+      window.removeEventListener("resize", updateScrollRange);
+      window.removeEventListener("scroll", scheduleScrollProgress);
       window.removeEventListener("pointerdown", pressSurface);
       window.removeEventListener("pointermove", schedulePointer);
       window.removeEventListener("pointerup", releaseSurface);

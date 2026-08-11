@@ -21,6 +21,7 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   );
 
   await access(new URL("../public/latent-field.jpg", import.meta.url));
+  await access(new URL("../public/latent-field-mobile.avif", import.meta.url));
   assert.equal(avif.includes(Buffer.from("grid")), false);
   assert.equal(avif.includes(Buffer.from("dimg")), false);
   assert.match(field, /"latent-field\.avif",\s*"latent-field\.jpg"/);
@@ -121,6 +122,11 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(
     field,
     /needsRender\s*=\s*\(sceneReady\s*&&\s*sceneReveal\.value\s*<\s*1\)/,
+  );
+  assert.match(
+    field,
+    /validFrameCount\s*<\s*2\s*\|\|\s*readinessStartedAt\s*===\s*0/,
+    "reduced-motion rendering must continue until both readiness frames complete",
   );
 });
 

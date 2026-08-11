@@ -738,7 +738,7 @@ export const backgroundFragmentShader = /* glsl */ `
     color += bone * edge * (0.08 + uScroll * 0.12);
     float paleStructure = smoothstep(0.16, 0.72, luma) * (0.35 + edge * 0.65);
     color += bone * paleStructure * uCompactLayout * 0.11;
-    color = mix(color, uSignalColor, glyphMask * (0.16 + pointerField * 0.34));
+    color = mix(color, uSignalColor, glyphMask * (0.16 + pointerField * 0.12));
     color += uSignalColor * pointerField * edge * (uPointerMotion + uPress) * 0.12;
 
     float vignette = 1.0 - smoothstep(0.32, 0.96, length((pixelUv - 0.5) * vec2(0.66, 1.0)));

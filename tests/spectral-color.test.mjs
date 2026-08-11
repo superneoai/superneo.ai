@@ -136,9 +136,14 @@ test("pointer activity cannot wash the whole ASCII field green", async () => {
     "utf8",
   );
   const post = shader.slice(shader.indexOf("export const asciiDitherPostFragmentShader"));
+  const background = shader.slice(
+    shader.indexOf("export const backgroundFragmentShader"),
+    shader.indexOf("export const postVertexShader"),
+  );
 
   assert.match(post, /uInteraction \* 0\.06 \+ edge \* 0\.04/);
   assert.doesNotMatch(post, /uInteraction \* 0\.2[\d]/);
+  assert.match(background, /glyphMask \* \(0\.16 \+ pointerField \* 0\.12\)/);
 });
 
 test("the endpoint remains legible after the routed head reaches a tip", async () => {

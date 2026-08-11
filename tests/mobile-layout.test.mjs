@@ -17,7 +17,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   );
   assert.match(
     html,
-    /href="\.\/latent-field-mobile\.jpg"[^>]*media="\(max-width: 720px\)"/,
+    /href="\.\/latent-field-mobile\.avif"[^>]*media="\(max-width: 720px\)"/,
   );
   assert.doesNotMatch(html, /href="\.\/neo-sign\.png/);
   assert.match(styles, /@media \(max-width: 480px\)/);
@@ -70,8 +70,12 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(field, /echoFutureMaterial\.uniforms\.uSurfaceOpacity\.value = 0\.16/);
   assert.match(field, /haloMaterial\.uniforms\.uOpacity\.value = 0\.22/);
   assert.match(field, /particleMaterial\.uniforms\.uPointScale\.value = 1/);
-  await access(new URL("../public/latent-field-mobile.jpg", import.meta.url));
-  assert.match(field, /renderProfile\.compact\s*\? \["latent-field-mobile\.jpg"\]/);
+  await access(new URL("../public/latent-field-mobile.avif", import.meta.url));
+  assert.match(
+    field,
+    /renderProfile\.compact\s*\? \["latent-field-mobile\.avif", "latent-field-mobile\.jpg"\]/,
+  );
+  assert.match(app, /srcSet=\{`\$\{neoSignFullMobileUrl\} 500w, \$\{neoSignFullUrl\} 1000w`\}/);
   assert.match(field, /textureImage\.naturalWidth \|\| textureImage\.width/);
   assert.match(field, /alpha: false/);
   assert.match(field, /renderer\.setClearColor\(0x030403, 1\)/);

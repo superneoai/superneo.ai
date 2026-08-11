@@ -35,8 +35,11 @@ const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
+const neoSignFullMobileUrl = new URL("neo-sign-full-500.png", document.baseURI).href;
+const neoSignMediumMobileUrl = new URL("neo-sign-medium-500.png", document.baseURI).href;
+const neoSignFaultLowMobileUrl = new URL("neo-sign-fault-low-500.png", document.baseURI).href;
 const desktopArtworkUrl = new URL("latent-field.avif", document.baseURI).href;
-const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).href;
+const mobileArtworkUrl = new URL("latent-field-mobile.avif", document.baseURI).href;
 const SCENE_LOADING_STEP_MS = 300;
 const INITIALIZING_LINGER_BASE_MS = 550;
 const INITIALIZING_LINGER_JITTER_MS = 350;
@@ -133,6 +136,8 @@ function StageWord({
         <img
           className="neo-sign neo-sign--full"
           src={neoSignFullUrl}
+          srcSet={`${neoSignFullMobileUrl} 500w, ${neoSignFullUrl} 1000w`}
+          sizes="(max-width: 720px) 500px, 1000px"
           width="1000"
           height="640"
           decoding="async"
@@ -146,6 +151,8 @@ function StageWord({
         <img
           className="neo-sign neo-sign--medium"
           src={neoSignMediumUrl}
+          srcSet={`${neoSignMediumMobileUrl} 500w, ${neoSignMediumUrl} 1000w`}
+          sizes="(max-width: 720px) 500px, 1000px"
           width="1000"
           height="640"
           decoding="async"
@@ -158,6 +165,8 @@ function StageWord({
         <img
           className="neo-sign neo-sign--fault-low"
           src={neoSignFaultLowUrl}
+          srcSet={`${neoSignFaultLowMobileUrl} 500w, ${neoSignFaultLowUrl} 1000w`}
+          sizes="(max-width: 720px) 500px, 1000px"
           width="1000"
           height="640"
           decoding="async"

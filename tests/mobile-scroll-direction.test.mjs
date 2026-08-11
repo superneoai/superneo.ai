@@ -15,7 +15,7 @@ test("mobile stage motion opposes the finger direction", async () => {
 
   assert.match(app, /previousHeading\.dataset\.exiting = direction/);
   assert.doesNotMatch(app, /setExitStage/);
-  assert.match(field, /self\.direction \* scrollEnergy \* 0\.16/);
+  assert.match(field, /Math\.sign\(scrollDelta\) \* scrollEnergy \* 0\.16/);
   assert.match(field, /objectGroup\.position\.y = scrollLift/);
   assert.match(
     styles,

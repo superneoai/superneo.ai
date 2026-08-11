@@ -213,6 +213,10 @@ test("builds a complete GitHub Pages artifact", async () => {
   await access(new URL("../dist/latent-field.avif", import.meta.url));
   await access(new URL("../dist/latent-field.jpg", import.meta.url));
   await access(new URL("../dist/latent-field-mobile.jpg", import.meta.url));
+  await access(new URL("../dist/latent-field-mobile.avif", import.meta.url));
+  await access(new URL("../dist/neo-sign-full-500.png", import.meta.url));
+  await access(new URL("../dist/neo-sign-medium-500.png", import.meta.url));
+  await access(new URL("../dist/neo-sign-fault-low-500.png", import.meta.url));
   await access(new URL("../dist/neo-sign-full.png", import.meta.url));
   await access(new URL("../dist/neo-sign-medium.png", import.meta.url));
   await access(new URL("../dist/neo-sign-fault-low.png", import.meta.url));

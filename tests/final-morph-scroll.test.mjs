@@ -8,6 +8,7 @@ test("the final morph follows scroll without a second smoothing delay", async ()
     "utf8",
   );
 
-  assert.match(field, /scrub: true/);
-  assert.doesNotMatch(field, /scrub:\s*reducedMotion\.matches\s*\?\s*false\s*:\s*[\d.]+/);
+  assert.match(field, /const progress = Math\.min\(1, Math\.max\(0, scrollY \/ scrollRange\)\)/);
+  assert.match(field, /window\.addEventListener\("scroll", scheduleScrollProgress/);
+  assert.doesNotMatch(field, /ScrollTrigger|scrub:/);
 });
