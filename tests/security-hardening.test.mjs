@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const requiredPolicy = [
@@ -45,3 +45,14 @@ for (const path of ["../dist/index.html", "../dist/privacy/index.html"]) {
     ));
   });
 }
+
+test("production bundles exclude development signal controls", async () => {
+  const assetsUrl = new URL("../dist/assets/", import.meta.url);
+  const fieldAsset = (await readdir(assetsUrl)).find(
+    (filename) => filename.startsWith("LatentField-") && filename.endsWith(".js"),
+  );
+  assert.ok(fieldAsset, "expected the lazy scene bundle");
+  const source = await readFile(new URL(fieldAsset, assetsUrl), "utf8");
+
+  assert.doesNotMatch(source, /superneo:qa-signal-progress|qaSignalProgress/);
+});

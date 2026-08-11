@@ -193,7 +193,7 @@ function createRouteMask(buffer) {
       }
     }
   }
-  const dilation = Math.max(8, Math.round(png.width * 0.045));
+  const dilation = Math.max(8, Math.round(png.width * 0.047));
   const mask = new Uint8Array(pixels);
   let count = 0;
   for (let index = 0; index < pixels; index += 1) {
@@ -451,6 +451,22 @@ async function preparePulsePage(session, pageUrl) {
   await session.execute("Math.random = () => 0.5; return true;");
 }
 
+async function setQaSignalProgress(session, progress) {
+  const numericProgress = Number(progress);
+  const expectedProgress = numericProgress.toFixed(3);
+  await session.execute(`
+    window.dispatchEvent(new CustomEvent('superneo:qa-signal-progress', {
+      detail: ${numericProgress},
+    }));
+    return true;
+  `);
+  await waitFor(
+    session,
+    `return document.querySelector('.signal-stage')?.dataset.qaSignalProgress === '${expectedProgress}';`,
+    `signal progress ${expectedProgress}`,
+  );
+}
+
 async function runPulse(session, directory, pageUrl, routeMask = null) {
   await preparePulsePage(session, pageUrl);
   await hideInterface(session);
@@ -467,11 +483,12 @@ async function runPulse(session, directory, pageUrl, routeMask = null) {
     }));
     return true;
   `);
-  await sleep(140);
+  await setQaSignalProgress(session, 0.28);
   await capture(session, directory, "pulse-travel");
   await sleep(760);
+  await setQaSignalProgress(session, 0.83);
   const arrival = await capture(session, directory, "pulse-arrival");
-  await sleep(850);
+  await setQaSignalProgress(session, 1.42);
   await capture(session, directory, "pulse-fade");
   return pulseMetrics(idle, arrival, routeMask);
 }

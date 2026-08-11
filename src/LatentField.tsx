@@ -42,6 +42,7 @@ type LatentFieldProps = {
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
 const SCENE_REVEAL_DURATION = 1_200;
+const QA_SIGNAL_PROGRESS_EVENT = "superneo:qa-signal-progress";
 export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
 
@@ -418,6 +419,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let targetPress = 0;
     let targetVelocity = 0;
     let targetScrollLift = 0;
+    let qaSignalProgress: number | null = null;
     let scrollLift = 0;
     let previousPointerTime = performance.now();
     let previousFrame = performance.now();
@@ -612,6 +614,14 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       needsRender = true;
     };
 
+    const handleQaSignalProgress = (event: Event) => {
+      if (!import.meta.env.DEV || !(event instanceof CustomEvent)) return;
+      const requestedProgress = Number(event.detail);
+      if (!Number.isFinite(requestedProgress)) return;
+      qaSignalProgress = Math.min(SIGNAL_LIFETIME, Math.max(0, requestedProgress));
+      needsRender = true;
+    };
+
     const handlePointerOut = (event: PointerEvent) => {
       if (!event.relatedTarget) {
         targetPointerStrength = 0;
@@ -705,10 +715,13 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       objectGroup.position.y = scrollLift;
       let signalEnergy = 0;
       for (let signalIndex = 0; signalIndex < MAX_ACTIVE_SIGNALS; signalIndex += 1) {
-        const progress = Math.min(
-          SIGNAL_LIFETIME,
-          signalProgressValues[signalIndex] + elapsedDelta * SIGNAL_PROGRESS_PER_SECOND,
-        );
+        const signalIsActive = signalProgressValues[signalIndex] < SIGNAL_LIFETIME;
+        const progress = qaSignalProgress !== null && signalIsActive
+          ? qaSignalProgress
+          : Math.min(
+            SIGNAL_LIFETIME,
+            signalProgressValues[signalIndex] + elapsedDelta * SIGNAL_PROGRESS_PER_SECOND,
+          );
         signalProgressValues[signalIndex] = progress;
         const travelPhase = Math.min(progress, 1);
         signalEnergy = Math.max(
@@ -775,6 +788,9 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       const renderStarted = performance.now();
       try {
         composer.render(renderDelta);
+        if (import.meta.env.DEV && qaSignalProgress !== null) {
+          host.dataset.qaSignalProgress = qaSignalProgress.toFixed(3);
+        }
         if (!sceneReady && artworkReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
@@ -842,6 +858,9 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     window.addEventListener("pointerup", releaseSurface, { passive: true });
     window.addEventListener("pointercancel", releaseSurface, { passive: true });
     window.addEventListener("pointerout", handlePointerOut, { passive: true });
+    if (import.meta.env.DEV) {
+      window.addEventListener(QA_SIGNAL_PROGRESS_EVENT, handleQaSignalProgress);
+    }
     document.addEventListener("visibilitychange", handleVisibility);
     renderer.domElement.addEventListener("webglcontextlost", handleContextLost);
     renderer.domElement.addEventListener("webglcontextrestored", handleContextRestored);
@@ -866,6 +885,9 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       window.removeEventListener("pointerup", releaseSurface);
       window.removeEventListener("pointercancel", releaseSurface);
       window.removeEventListener("pointerout", handlePointerOut);
+      if (import.meta.env.DEV) {
+        window.removeEventListener(QA_SIGNAL_PROGRESS_EVENT, handleQaSignalProgress);
+      }
       document.removeEventListener("visibilitychange", handleVisibility);
       renderer.domElement.removeEventListener("webglcontextlost", handleContextLost);
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);

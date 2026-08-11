@@ -46,3 +46,17 @@ test("production passes no query-controlled QA configuration to the scene", asyn
     /const sceneQa = import\.meta\.env\.DEV\s*\? parseSceneQa\(window\.location\.search\)\s*:\s*null;/,
   );
 });
+
+test("deterministic signal phase controls remain development-only", async () => {
+  const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
+
+  assert.match(field, /const QA_SIGNAL_PROGRESS_EVENT = "superneo:qa-signal-progress";/);
+  assert.match(
+    field,
+    /if \(import\.meta\.env\.DEV\) \{\s*window\.addEventListener\(QA_SIGNAL_PROGRESS_EVENT, handleQaSignalProgress\);\s*\}/,
+  );
+  assert.match(
+    field,
+    /if \(import\.meta\.env\.DEV && qaSignalProgress !== null\)/,
+  );
+});
