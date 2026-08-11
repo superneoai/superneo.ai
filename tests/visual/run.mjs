@@ -394,10 +394,21 @@ async function measureGeometry(session) {
       const bounds = document.querySelector(selector).getBoundingClientRect();
       return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
     };
+    const activeHeading = document.querySelector('h2[data-state="active"]');
+    const headingStyle = getComputedStyle(activeHeading);
     return {
       super: rect('h2[data-state="active"] .stage-word .super-prefix'),
       neo: rect('h2[data-state="active"] .stage-word .neo-sign--full'),
       word: rect('h2[data-state="active"] .stage-word .superneo-word'),
+      environment: {
+        innerWidth,
+        clientWidth: document.documentElement.clientWidth,
+        visualWidth: window.visualViewport?.width ?? null,
+        devicePixelRatio,
+        fontSize: headingStyle.fontSize,
+        transform: headingStyle.transform,
+        panel: rect('.stage-panel'),
+      },
     };
   `);
 }
@@ -409,8 +420,9 @@ function assertDesktopGeometry(geometry) {
     width: geometry.neo.width * 572 / 1000,
     height: geometry.neo.height * 233 / 640,
   };
-  assert.ok(Math.abs(core.x - 573) <= 2, `NEO core x is ${core.x}`);
-  assert.ok(Math.abs(core.y - 467) <= 2, `NEO core y is ${core.y}`);
+  const diagnostics = JSON.stringify(geometry.environment);
+  assert.ok(Math.abs(core.x - 573) <= 2, `NEO core x is ${core.x}; ${diagnostics}`);
+  assert.ok(Math.abs(core.y - 467) <= 2, `NEO core y is ${core.y}; ${diagnostics}`);
   assert.ok(Math.abs(core.width - 256) / 256 <= 0.01, `NEO core width is ${core.width}`);
   assert.ok(Math.abs(core.height - 104) / 104 <= 0.01, `NEO core height is ${core.height}`);
   return core;
