@@ -199,6 +199,14 @@ test("the NEO slot shares SUPER's baseline without browser inline-box inference"
   );
 });
 
+test("visual geometry waits for the compositor wordmark entrance to settle", async () => {
+  const runner = await readFile(new URL("./visual/run.mjs", import.meta.url), "utf8");
+
+  assert.match(runner, /async function waitForWordmarkSettle/);
+  assert.match(runner, /Math\.abs\(matrix\.m41\) < 0\.1/);
+  assert.match(runner, /await waitForWordmarkSettle\(session\);/);
+});
+
 test("every NEO state stores one neon color in a smooth alpha halo", async () => {
   const signal = [0xba, 0xf6, 0x28];
   for (const state of stateNames) {
