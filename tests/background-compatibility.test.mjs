@@ -115,6 +115,13 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.doesNotMatch(styles, /@keyframes scene-loader-code/);
   assert.match(field, /sceneRevealStartedAt/);
   assert.match(field, /validFrameCount\s*>=\s*2/);
+  assert.match(field, /isSoftwareWebGLRenderer\(rendererName\)/);
+  assert.match(field, /host\.dataset\.renderer = "poster"/);
+  assert.match(field, /const syncPosterProgress = \(\) =>/);
+  assert.match(field, /dispatchStageChange\(nextStage, previousStage\)/);
+  assert.match(field, /window\.addEventListener\("scroll", schedulePosterProgress/);
+  assert.match(styles, /signal-stage\[data-renderer="poster"\]/);
+  assert.match(styles, /@keyframes poster-field-drift/);
   assert.match(
     field,
     /uCompactLayout\.value\s*=\s*THREE\.MathUtils\.lerp\(\s*1,[\s\S]*?sceneReveal\.value/,

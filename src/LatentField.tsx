@@ -18,6 +18,7 @@ import {
 import { createMorphGeometry, createPointGeometry } from "./morphGeometry";
 import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
+import { isSoftwareWebGLRenderer } from "./renderCapability";
 import { createFrameProbe } from "./frameProbe";
 import type { SceneQaConfig } from "./sceneQa";
 import { dispatchStageChange } from "./stageSignal";
@@ -89,6 +90,50 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     } catch {
       onSceneStateChange(false);
       return;
+    }
+
+    const debugInfo = renderer.getContext().getExtension("WEBGL_debug_renderer_info");
+    const rendererName = debugInfo
+      ? String(renderer.getContext().getParameter(debugInfo.UNMASKED_RENDERER_WEBGL))
+      : null;
+    if (import.meta.env.PROD && isSoftwareWebGLRenderer(rendererName)) {
+      host.dataset.renderer = "poster";
+      host.dataset.sceneReady = "true";
+      renderer.dispose();
+      onSceneStateChange(true);
+      let fallbackFrame: number | null = null;
+      let fallbackStage = 0;
+      const syncPosterProgress = () => {
+        fallbackFrame = null;
+        const scrollRange = Math.max(
+          document.documentElement.scrollHeight - window.innerHeight,
+          1,
+        );
+        const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
+        const nextStage = toStageIndex(progress);
+        if (nextStage !== fallbackStage) {
+          const previousStage = fallbackStage;
+          fallbackStage = nextStage;
+          dispatchStageChange(nextStage, previousStage);
+        }
+        const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
+        if (scrollRailFill) {
+          scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
+        }
+        if (progress > 0.006) onDiscover();
+      };
+      const schedulePosterProgress = () => {
+        if (fallbackFrame !== null) return;
+        fallbackFrame = window.requestAnimationFrame(syncPosterProgress);
+      };
+      syncPosterProgress();
+      window.addEventListener("scroll", schedulePosterProgress, { passive: true });
+      window.addEventListener("resize", schedulePosterProgress, { passive: true });
+      return () => {
+        if (fallbackFrame !== null) window.cancelAnimationFrame(fallbackFrame);
+        window.removeEventListener("scroll", schedulePosterProgress);
+        window.removeEventListener("resize", schedulePosterProgress);
+      };
     }
 
     renderer.setClearColor(0x030403, 1);

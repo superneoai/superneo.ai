@@ -266,6 +266,36 @@ a {
     visibility 0s linear 950ms;
 }
 
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"]) .signal-stage {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"]) .signal-poster {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 700ms ease;
+}
+
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"])
+  .signal-poster::before {
+  background: color-mix(in oklch, var(--ink) 18%, transparent);
+}
+
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"])
+  .signal-poster::after,
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"])
+  .scene-loader {
+  display: none;
+}
+
+.experience[data-scene-ready="true"]:has(.signal-stage[data-renderer="poster"])
+  .signal-artwork-fallback {
+  filter: brightness(0.72) saturate(0.72);
+  transform: scale(1.03);
+  animation: poster-field-drift 14s ease-in-out infinite alternate;
+}
+
 .experience:not([data-scene-ready="true"]) > :is(
   .technical-frame,
   .site-header,
@@ -1588,6 +1618,16 @@ a {
   }
 }
 
+@keyframes poster-field-drift {
+  from {
+    transform: scale(1.03) translate3d(-0.35%, -0.25%, 0);
+  }
+
+  to {
+    transform: scale(1.06) translate3d(0.35%, 0.25%, 0);
+  }
+}
+
 @keyframes scene-loader-dot {
   0%,
   24%,
@@ -2139,6 +2179,7 @@ a {
   }
 
   .signal-poster::after,
+  .signal-artwork-fallback,
   .scene-loader-step[data-state="active"] output,
   .scene-loader-track > i[data-state="active"],
   .scene-loader-final output span {
