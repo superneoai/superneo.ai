@@ -16,7 +16,7 @@ import {
   surfaceVertexShader,
 } from "./latentShader";
 import { createMorphGeometry, createPointGeometry } from "./morphGeometry";
-import { toMorphPhase, toStageIndex } from "./morphTimeline";
+import { toMorphPhase } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { isSoftwareWebGLRenderer } from "./renderCapability";
 import { createFrameProbe } from "./frameProbe";
@@ -26,7 +26,10 @@ import {
   frameAdjustedRetention,
 } from "./motionTiming";
 import type { SceneQaConfig } from "./sceneQa";
-import { dispatchStageChange } from "./stageSignal";
+import {
+  createSceneProgressController,
+  type SceneProgressSnapshot,
+} from "./sceneProgress";
 import {
   createTipArrivals,
   SIGNAL_PROGRESS_PER_SECOND,
@@ -60,6 +63,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let artworkReady = false;
     let sceneReady = false;
     let shaderHealthy = true;
+    let posterFallbackActive = false;
     let readinessStartedAt = 0;
     let sceneRevealStartedAt = 0;
     let validFrameCount = 0;
@@ -78,6 +82,25 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       host.dataset.sceneReady = String(ready);
       onSceneStateChange(ready);
     };
+    let applySceneProgress: ((snapshot: SceneProgressSnapshot) => void) | null = null;
+    let progressController: ReturnType<typeof createSceneProgressController> | null = null;
+    const startProgressController = () => {
+      if (progressController) return progressController;
+      progressController = createSceneProgressController({
+        onDiscover,
+        onProgress: (snapshot) => applySceneProgress?.(snapshot),
+      });
+      return progressController;
+    };
+    const activatePosterFallback = () => {
+      if (disposed || posterFallbackActive) return;
+      posterFallbackActive = true;
+      applySceneProgress = null;
+      host.dataset.renderer = "poster";
+      needsRender = false;
+      reportSceneState(true);
+      startProgressController().sync();
+    };
     let renderProfile = createRenderProfile(
       Math.max(host.clientWidth, 1),
       Math.max(host.clientHeight, 1),
@@ -94,8 +117,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         powerPreference: "high-performance",
       });
     } catch {
-      onSceneStateChange(false);
-      return;
+      activatePosterFallback();
+      return () => {
+        disposed = true;
+        progressController?.dispose();
+      };
     }
 
     const debugInfo = renderer.getContext().getExtension("WEBGL_debug_renderer_info");
@@ -104,42 +130,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       : null;
     const softwareRenderer = isSoftwareWebGLRenderer(rendererName);
     if (import.meta.env.PROD && softwareRenderer) {
-      host.dataset.renderer = "poster";
-      host.dataset.sceneReady = "true";
       renderer.dispose();
-      onSceneStateChange(true);
-      let fallbackFrame: number | null = null;
-      let fallbackStage = 0;
-      const syncPosterProgress = () => {
-        fallbackFrame = null;
-        const scrollRange = Math.max(
-          document.documentElement.scrollHeight - window.innerHeight,
-          1,
-        );
-        const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
-        const nextStage = toStageIndex(progress);
-        if (nextStage !== fallbackStage) {
-          const previousStage = fallbackStage;
-          fallbackStage = nextStage;
-          dispatchStageChange(nextStage, previousStage);
-        }
-        const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
-        if (scrollRailFill) {
-          scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
-        }
-        if (progress > 0.006) onDiscover();
-      };
-      const schedulePosterProgress = () => {
-        if (fallbackFrame !== null) return;
-        fallbackFrame = window.requestAnimationFrame(syncPosterProgress);
-      };
-      syncPosterProgress();
-      window.addEventListener("scroll", schedulePosterProgress, { passive: true });
-      window.addEventListener("resize", schedulePosterProgress, { passive: true });
+      activatePosterFallback();
       return () => {
-        if (fallbackFrame !== null) window.cancelAnimationFrame(fallbackFrame);
-        window.removeEventListener("scroll", schedulePosterProgress);
-        window.removeEventListener("resize", schedulePosterProgress);
+        disposed = true;
+        progressController?.dispose();
       };
     }
     if (softwareRenderer) {
@@ -160,7 +155,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     host.appendChild(renderer.domElement);
     renderer.debug.onShaderError = (gl, program, vertexShader, fragmentShader) => {
       shaderHealthy = false;
-      reportSceneState(false);
+      activatePosterFallback();
       console.error("SUPERNEO shader compilation failed", {
         program: gl.getProgramInfoLog(program),
         vertex: gl.getShaderInfoLog(vertexShader),
@@ -341,8 +336,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       background.visible = false;
       renderer.setClearColor(0x030403, 1);
       host.classList.add("has-background-fallback");
-      reportSceneState(false);
-      needsRender = true;
+      activatePosterFallback();
     };
     const loadArtwork = (candidateIndex: number) => {
       const artworkPath = artworkPaths[candidateIndex];
@@ -425,8 +419,6 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let previousFrame = performance.now();
     let previousTelemetry = 0;
     let motionAccumulator = 0;
-    let currentStage = 0;
-    let discovered = false;
     let resizeTimer: number | null = null;
     let pointerMoveFrame: number | null = null;
     let pendingPointerX = 0;
@@ -435,13 +427,6 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let lastViewportHeight = 0;
     let lastPixelRatio = 0;
     const frameProbe = createFrameProbe();
-    const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
-
-    const discover = () => {
-      if (discovered) return;
-      discovered = true;
-      onDiscover();
-    };
 
     const resize = () => {
       const width = Math.max(Math.round(host.clientWidth), 1);
@@ -569,7 +554,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       targetPointerStrength = 1;
       targetPointerMotion = Math.max(targetPointerMotion, speed);
       needsRender = true;
-      discover();
+      onDiscover();
     };
 
     const setPointer = (event: PointerEvent) => {
@@ -629,47 +614,18 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       }
     };
 
-    let scrollFrame: number | null = null;
-    let scrollRange = 1;
-    let previousScrollY = window.scrollY;
-    let previousScrollTime = performance.now();
-    const syncScrollProgress = () => {
-      scrollFrame = null;
-      const now = performance.now();
-      const scrollY = window.scrollY;
-      const elapsed = Math.max(now - previousScrollTime, 8);
-      const scrollDelta = scrollY - previousScrollY;
-      const progress = Math.min(1, Math.max(0, scrollY / scrollRange));
-      const scrollEnergy = Math.min(Math.abs(scrollDelta) * 1000 / elapsed / 2300, 1);
+    applySceneProgress = ({ progress, scrollDelta, scrollEnergy }) => {
       scrollUniform.value = progress;
       stagePhaseUniform.value = toMorphPhase(progress);
       targetVelocity = Math.max(targetVelocity, scrollEnergy);
       targetScrollLift = coarsePointer.matches && !motionIsReduced()
         ? Math.sign(scrollDelta) * scrollEnergy * 0.16
         : 0;
-      const nextStage = toStageIndex(progress);
-      if (nextStage !== currentStage) {
-        const previousStage = currentStage;
-        currentStage = nextStage;
-        dispatchStageChange(nextStage, previousStage);
-      }
-      if (scrollRailFill) scrollRailFill.style.transform = `scaleY(${progress.toFixed(4)})`;
-      if (progress > 0.006) discover();
-      previousScrollY = scrollY;
-      previousScrollTime = now;
       needsRender = true;
-    };
-    const scheduleScrollProgress = () => {
-      if (scrollFrame !== null) return;
-      scrollFrame = window.requestAnimationFrame(syncScrollProgress);
-    };
-    const updateScrollRange = () => {
-      scrollRange = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-      scheduleScrollProgress();
     };
 
     const renderFrame = (time: number) => {
-      if (disposed || document.hidden) return;
+      if (disposed || posterFallbackActive || document.hidden) return;
       if (motionIsReduced() && !needsRender) return;
 
       const timestamp = time * 1000;
@@ -810,8 +766,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           }
         }
       } catch {
-        reportSceneState(false);
-        needsRender = false;
+        activatePosterFallback();
         return;
       }
       const renderEnded = performance.now();
@@ -826,7 +781,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let animationFrame = 0;
     const tick = (timestamp: number) => {
       renderFrame(timestamp / 1000);
-      animationFrame = window.requestAnimationFrame(tick);
+      if (!posterFallbackActive) animationFrame = window.requestAnimationFrame(tick);
     };
 
     const handleVisibility = () => {
@@ -840,19 +795,16 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
 
     const handleContextLost = (event: Event) => {
       event.preventDefault();
-      reportSceneState(false);
+      activatePosterFallback();
     };
 
     const handleContextRestored = () => {
-      reportSceneState(false);
-      needsRender = true;
+      activatePosterFallback();
     };
 
     resize();
-    updateScrollRange();
+    startProgressController();
     window.addEventListener("resize", scheduleResize, { passive: true });
-    window.addEventListener("resize", updateScrollRange, { passive: true });
-    window.addEventListener("scroll", scheduleScrollProgress, { passive: true });
     window.addEventListener("pointerdown", pressSurface, { passive: true });
     window.addEventListener("pointermove", schedulePointer, { passive: true });
     window.addEventListener("pointerup", releaseSurface, { passive: true });
@@ -874,12 +826,9 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     return () => {
       disposed = true;
       window.cancelAnimationFrame(animationFrame);
-      if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame);
       if (resizeTimer !== null) window.clearTimeout(resizeTimer);
       if (pointerMoveFrame !== null) window.cancelAnimationFrame(pointerMoveFrame);
       window.removeEventListener("resize", scheduleResize);
-      window.removeEventListener("resize", updateScrollRange);
-      window.removeEventListener("scroll", scheduleScrollProgress);
       window.removeEventListener("pointerdown", pressSurface);
       window.removeEventListener("pointermove", schedulePointer);
       window.removeEventListener("pointerup", releaseSurface);
@@ -893,7 +842,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       reducedMotion.removeEventListener("change", handleMotionPreference);
       coarsePointer.removeEventListener("change", scheduleResize);
-      scrollRailFill?.style.removeProperty("transform");
+      progressController?.dispose();
       renderPass.dispose();
       bloomPass.dispose();
       asciiPass.dispose();

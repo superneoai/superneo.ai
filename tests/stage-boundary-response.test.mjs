@@ -31,9 +31,9 @@ test("stage boundaries respond immediately without a synthetic visual tail", asy
 
 test("stage copy bypasses React reconciliation on the critical scroll frame", async () => {
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
-  const field = await readFile(new URL("../src/LatentField.tsx", import.meta.url), "utf8");
+  const progress = await readFile(new URL("../src/sceneProgress.ts", import.meta.url), "utf8");
 
-  assert.match(field, /dispatchStageChange\(nextStage, previousStage\)/);
+  assert.match(progress, /dispatchStageChange\(nextStage, previousStage\)/);
   assert.match(app, /window\.addEventListener\(STAGE_CHANGE_EVENT, syncStage\)/);
   assert.match(app, /heading\.dataset\.state = index === stage/);
   assert.match(app, /heading\.dataset\.depth = String\(index - stage\)/);

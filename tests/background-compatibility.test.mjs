@@ -7,6 +7,10 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     new URL("../src/LatentField.tsx", import.meta.url),
     "utf8",
   );
+  const progress = await readFile(
+    new URL("../src/sceneProgress.ts", import.meta.url),
+    "utf8",
+  );
   const app = await readFile(
     new URL("../src/App.tsx", import.meta.url),
     "utf8",
@@ -117,9 +121,11 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(field, /validFrameCount\s*>=\s*2/);
   assert.match(field, /isSoftwareWebGLRenderer\(rendererName\)/);
   assert.match(field, /host\.dataset\.renderer = "poster"/);
-  assert.match(field, /const syncPosterProgress = \(\) =>/);
-  assert.match(field, /dispatchStageChange\(nextStage, previousStage\)/);
-  assert.match(field, /window\.addEventListener\("scroll", schedulePosterProgress/);
+  assert.match(field, /createSceneProgressController/);
+  assert.doesNotMatch(field, /syncPosterProgress|schedulePosterProgress/);
+  assert.match(progress, /dispatchStageChange\(nextStage, previousStage\)/);
+  assert.match(progress, /window\.addEventListener\("scroll", schedule/);
+  assert.match(progress, /scrollRailFill\.style\.transform/);
   assert.match(styles, /signal-stage\[data-renderer="poster"\]/);
   assert.match(styles, /@keyframes poster-field-drift/);
   assert.match(
