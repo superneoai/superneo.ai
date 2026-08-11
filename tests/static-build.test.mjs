@@ -160,7 +160,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(field, /new Float32Array\(MAX_ACTIVE_SIGNALS\)/);
   assert.match(field, /signalProgressValues\.findIndex/);
   assert.match(field, /signalVariationValues\[availableSignal\] = variation/);
-  assert.match(field, /signalProgressValues\[signalIndex\] \+ delta \* SIGNAL_PROGRESS_PER_SECOND/);
+  assert.match(field, /signalProgressValues\[signalIndex\] \+ elapsedDelta \* SIGNAL_PROGRESS_PER_SECOND/);
   assert.match(field, /motionAccumulator/);
   assert.match(field, /ambientTurn = time \* 0\.045/);
   assert.match(field, /objectGroup\.rotation\.z/);

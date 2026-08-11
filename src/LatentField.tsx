@@ -20,6 +20,11 @@ import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { isSoftwareWebGLRenderer } from "./renderCapability";
 import { createFrameProbe } from "./frameProbe";
+import {
+  boundedFrameDelta,
+  frameAdjustedBlend,
+  frameAdjustedRetention,
+} from "./motionTiming";
 import type { SceneQaConfig } from "./sceneQa";
 import { dispatchStageChange } from "./stageSignal";
 import {
@@ -658,7 +663,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       if (motionIsReduced() && !needsRender) return;
 
       const timestamp = time * 1000;
-      const delta = Math.min((timestamp - previousFrame) / 1000, 0.05);
+      const elapsedDelta = boundedFrameDelta(timestamp, previousFrame);
+      const renderDelta = Math.min(elapsedDelta, 0.05);
       previousFrame = timestamp;
       if (sceneReady && sceneReveal.value < 1) {
         const elapsed = performance.now() - sceneRevealStartedAt;
@@ -672,24 +678,36 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           sceneReveal.value,
         );
       }
-      pointerWorld.value.lerp(targetPointerWorld, 0.14);
-      pointerDelta.value.lerp(targetPointerDelta, 0.18);
-      pointerScreen.value.lerp(targetPointerScreen, 0.14);
-      targetPointerDelta.multiplyScalar(0.8);
-      pointerStrength.value += (targetPointerStrength - pointerStrength.value) * 0.09;
-      pointerMotion.value += (targetPointerMotion - pointerMotion.value) * 0.18;
-      press.value += (targetPress - press.value) * 0.16;
-      velocity.value += (targetVelocity - velocity.value) * 0.15;
-      scrollLift += (targetScrollLift - scrollLift) * 0.2;
-      targetPointerMotion *= 0.86;
-      targetVelocity *= 0.88;
-      targetScrollLift *= 0.82;
+      pointerWorld.value.lerp(
+        targetPointerWorld,
+        frameAdjustedBlend(0.14, elapsedDelta),
+      );
+      pointerDelta.value.lerp(
+        targetPointerDelta,
+        frameAdjustedBlend(0.18, elapsedDelta),
+      );
+      pointerScreen.value.lerp(
+        targetPointerScreen,
+        frameAdjustedBlend(0.14, elapsedDelta),
+      );
+      targetPointerDelta.multiplyScalar(frameAdjustedRetention(0.8, elapsedDelta));
+      pointerStrength.value += (targetPointerStrength - pointerStrength.value) *
+        frameAdjustedBlend(0.09, elapsedDelta);
+      pointerMotion.value += (targetPointerMotion - pointerMotion.value) *
+        frameAdjustedBlend(0.18, elapsedDelta);
+      press.value += (targetPress - press.value) * frameAdjustedBlend(0.16, elapsedDelta);
+      velocity.value += (targetVelocity - velocity.value) *
+        frameAdjustedBlend(0.15, elapsedDelta);
+      scrollLift += (targetScrollLift - scrollLift) * frameAdjustedBlend(0.2, elapsedDelta);
+      targetPointerMotion *= frameAdjustedRetention(0.86, elapsedDelta);
+      targetVelocity *= frameAdjustedRetention(0.88, elapsedDelta);
+      targetScrollLift *= frameAdjustedRetention(0.82, elapsedDelta);
       objectGroup.position.y = scrollLift;
       let signalEnergy = 0;
       for (let signalIndex = 0; signalIndex < MAX_ACTIVE_SIGNALS; signalIndex += 1) {
         const progress = Math.min(
           SIGNAL_LIFETIME,
-          signalProgressValues[signalIndex] + delta * SIGNAL_PROGRESS_PER_SECOND,
+          signalProgressValues[signalIndex] + elapsedDelta * SIGNAL_PROGRESS_PER_SECOND,
         );
         signalProgressValues[signalIndex] = progress;
         const travelPhase = Math.min(progress, 1);
@@ -740,7 +758,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         1,
         ambientEnergy + Math.max(interactionEnergy * 0.74, signalEnergy * 0.52),
       );
-      motionAccumulator += motionEnergy * delta * 18;
+      motionAccumulator += motionEnergy * elapsedDelta * 18;
       if (timestamp - previousTelemetry >= 110) {
         previousTelemetry = timestamp;
         window.dispatchEvent(new CustomEvent("superneo:motion", {
@@ -756,7 +774,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       bloomPass.radius = 0.4 + interactionEnergy * 0.065;
       const renderStarted = performance.now();
       try {
-        composer.render(delta);
+        composer.render(renderDelta);
         if (!sceneReady && artworkReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
