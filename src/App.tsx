@@ -319,6 +319,8 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
   const stackRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef<HTMLParagraphElement>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
+  const accessibleTitleRef = useRef<HTMLHeadingElement>(null);
+  const accessibleStatusRef = useRef<HTMLParagraphElement>(null);
   const headingRefs = useRef<Array<HTMLHeadingElement | null>>([]);
 
   useEffect(() => {
@@ -330,6 +332,13 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
       }
       if (indexRef.current) indexRef.current.textContent = `0${stage + 1} / 04`;
       if (lineRef.current) lineRef.current.textContent = stages[stage].line;
+      if (accessibleTitleRef.current) {
+        accessibleTitleRef.current.textContent = stages[stage].title;
+      }
+      if (accessibleStatusRef.current) {
+        accessibleStatusRef.current.textContent =
+          `Stage ${stage + 1} of ${stages.length}: ${stages[stage].title}. ${stages[stage].line}`;
+      }
 
       headingRefs.current.forEach((heading, index) => {
         if (!heading) return;
@@ -338,8 +347,6 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
           ? "active"
           : index < stage ? "complete" : "pending";
         heading.dataset.depth = String(index - stage);
-        if (index === stage) heading.setAttribute("aria-current", "step");
-        else heading.removeAttribute("aria-current");
       });
       const previousHeading = headingRefs.current[previous];
       if (previousHeading) {
@@ -385,9 +392,26 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
   }, []);
 
   return (
-    <section className="stage-panel" aria-live="polite">
-      <p className="stage-index" ref={indexRef}>01 / 04</p>
-      <div className="stage-stack" data-direction="forward" ref={stackRef}>
+    <section className="stage-panel" aria-labelledby="current-stage-title">
+      <h2 className="visually-hidden" id="current-stage-title" ref={accessibleTitleRef}>
+        {stages[0].title}
+      </h2>
+      <p
+        className="visually-hidden"
+        ref={accessibleStatusRef}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Stage 1 of {stages.length}: {stages[0].title}. {stages[0].line}
+      </p>
+      <p className="stage-index" ref={indexRef} aria-hidden="true">01 / 04</p>
+      <div
+        className="stage-stack"
+        data-direction="forward"
+        ref={stackRef}
+        aria-hidden="true"
+      >
         {stages.map((item, index) => (
           <h2
             key={item.title}
@@ -395,8 +419,6 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             data-state={index === 0 ? "active" : "pending"}
             data-depth={index}
             data-order={index}
-            aria-label={item.title}
-            aria-current={index === 0 ? "step" : undefined}
           >
             <span className="stage-outline" aria-hidden="true">
               <StageWord title={item.title} forcedNeoState={forcedNeoState} />
@@ -417,7 +439,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
           </h2>
         ))}
       </div>
-      <p className="stage-line" ref={lineRef}>{stages[0].line}</p>
+      <p className="stage-line" ref={lineRef} aria-hidden="true">{stages[0].line}</p>
     </section>
   );
 }
@@ -562,7 +584,7 @@ export function App() {
             href="https://x.com/superneoai"
             target="_blank"
             rel="noreferrer"
-            aria-label="SUPERNEO on X"
+            aria-label="@superneoai on X"
             onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "x" })}
           >
             <span className="x-mark" aria-hidden="true">𝕏</span>

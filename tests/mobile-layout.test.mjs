@@ -23,6 +23,7 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(styles, /@media \(max-width: 480px\)/);
   assert.match(styles, /@media \(max-width: 420px\) and \(orientation: portrait\)/);
   assert.match(styles, /@media \(max-width: 350px\)/);
+  assert.match(styles, /@media \(max-width: 350px\) and \(max-height: 620px\)/);
   assert.match(styles, /@media \(max-height: 560px\) and \(max-width: 900px\)/);
   assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)/);
   assert.match(styles, /\.soundtrack-volume\s*\{\s*display: none;/);
@@ -40,6 +41,10 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*?\.stage-panel\s*\{[\s\S]*?bottom:\s*max\(10\.25rem,/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*?\.scroll-cue\s*\{[\s\S]*?bottom:\s*max\(7\.35rem,/);
   assert.match(styles, /@media \(max-height: 560px\) and \(max-width: 900px\)[\s\S]*?writing-mode:\s*horizontal-tb/);
+  assert.match(styles, /--consent-stage-bottom:\s*max\(7\.6rem,/);
+  assert.match(styles, /\.experience\[data-consent-open="true"\] \.stage-stack\s*\{[\s\S]*?height:\s*3\.65rem/);
+  assert.match(styles, /\.experience\[data-consent-open="true"\] \.stage-line\s*\{[\s\S]*?display:\s*none/);
+  assert.match(styles, /\.experience\[data-consent-open="true"\] :is\(\.bit-loader, \.process-body\)\s*\{[\s\S]*?display:\s*none/);
   assert.match(profile, /PHONE_PIXEL_BUDGET = 420_000/);
   assert.match(profile, /COMPACT_PIXEL_BUDGET = 720_000/);
   assert.match(profile, /PHONE_MAX_DPR = 1/);

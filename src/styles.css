@@ -2605,6 +2605,32 @@ a {
   }
 }
 
+@media (max-width: 350px) and (max-height: 620px) {
+  .experience {
+    --consent-stage-bottom: max(7.6rem, calc(env(safe-area-inset-bottom, 0px) + 7.1rem));
+  }
+
+  .experience[data-consent-open="true"] .stage-panel .stage-index {
+    margin-bottom: 0.4rem;
+  }
+
+  .experience[data-consent-open="true"] :is(.bit-loader, .process-body) {
+    display: none;
+  }
+
+  .experience[data-consent-open="true"] .stage-stack {
+    height: 3.65rem;
+  }
+
+  .experience[data-consent-open="true"] .stage-stack h2 {
+    font-size: 2.2rem;
+  }
+
+  .experience[data-consent-open="true"] .stage-line {
+    display: none;
+  }
+}
+
 @media (max-height: 560px) and (max-width: 900px) {
   .experience {
     --consent-stage-bottom: max(4.4rem, calc(env(safe-area-inset-bottom, 0px) + 3.8rem));

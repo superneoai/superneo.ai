@@ -13,6 +13,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(app, /setConsentPreviewDismissed\(true\)/);
   assert.match(app, /<a[\s\S]*?href="\.\/privacy\/"[\s\S]*?>\s*PRIVACY\s*<\/a>/);
   assert.match(app, /<footer className="site-footer">[\s\S]*?className="contact-link privacy-link footer-privacy"[\s\S]*?<nav className="contact-links" aria-label="Contact">[\s\S]*?x\.com\/superneoai[\s\S]*?mailto:hello@superneo\.ai[\s\S]*?<\/footer>/);
+  assert.match(app, /aria-label="@superneoai on X"/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
   assert.match(consent, /CONSENT_COOKIE_NAME = "sn_consent"/);
