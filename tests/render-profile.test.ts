@@ -37,3 +37,14 @@ test("touch tablets keep the layered scene within the compact pixel budget", () 
   assert.ok(tablet.pixelRatio <= 1);
   assert.ok(renderedPixels <= 720_001);
 });
+
+test("software renderers preserve desktop composition within a CI-safe pixel budget", () => {
+  const softwareDesktop = createRenderProfile(1280, 720, 1, false, true);
+  const renderedPixels = 1280 * 720 * softwareDesktop.pixelRatio ** 2;
+
+  assert.equal(softwareDesktop.compact, false);
+  assert.equal(softwareDesktop.objectScale, 1);
+  assert.equal(softwareDesktop.fov, 32);
+  assert.equal(softwareDesktop.bloomEnabled, true);
+  assert.ok(renderedPixels <= 420_001);
+});

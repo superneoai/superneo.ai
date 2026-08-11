@@ -96,7 +96,8 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     const rendererName = debugInfo
       ? String(renderer.getContext().getParameter(debugInfo.UNMASKED_RENDERER_WEBGL))
       : null;
-    if (import.meta.env.PROD && isSoftwareWebGLRenderer(rendererName)) {
+    const softwareRenderer = isSoftwareWebGLRenderer(rendererName);
+    if (import.meta.env.PROD && softwareRenderer) {
       host.dataset.renderer = "poster";
       host.dataset.sceneReady = "true";
       renderer.dispose();
@@ -134,6 +135,15 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         window.removeEventListener("scroll", schedulePosterProgress);
         window.removeEventListener("resize", schedulePosterProgress);
       };
+    }
+    if (softwareRenderer) {
+      renderProfile = createRenderProfile(
+        Math.max(host.clientWidth, 1),
+        Math.max(host.clientHeight, 1),
+        window.devicePixelRatio || 1,
+        coarsePointer.matches,
+        true,
+      );
     }
 
     renderer.setClearColor(0x030403, 1);
@@ -434,6 +444,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
         height,
         window.devicePixelRatio || 1,
         coarsePointer.matches,
+        softwareRenderer,
       );
       const { pixelRatio } = nextRenderProfile;
       const sizeChanged = width !== lastViewportWidth ||
