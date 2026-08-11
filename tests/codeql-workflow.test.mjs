@@ -9,6 +9,7 @@ test("CodeQL scans JavaScript and TypeScript with pinned actions", async () => {
   );
 
   assert.match(workflow, /pull_request:\s*\n\s+branches: \[main\]/);
+  assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /schedule:\s*\n\s+- cron: "17 4 \* \* 2"/);
   assert.match(workflow, /security-events: write/);
   assert.match(workflow, /languages: javascript-typescript/);
