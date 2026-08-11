@@ -168,6 +168,58 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     await page.locator("main.experience").evaluate((experience) => {
       experience.setAttribute("data-scene-ready", "true");
     });
+    await sleep(700);
+    const mobileFooter = await page.evaluate(() => {
+      const bounds = (selector) => {
+        const element = document.querySelector(selector);
+        if (!(element instanceof HTMLElement)) return null;
+        const rect = element.getBoundingClientRect();
+        return {
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          left: rect.left,
+        };
+      };
+      const contactItems = Array.from(document.querySelectorAll(".contact-links .contact-link"))
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return { top: rect.top, bottom: rect.bottom };
+        });
+      return {
+        footer: bounds(".site-footer"),
+        status: bounds(".status-line"),
+        privacy: bounds(".footer-privacy"),
+        contacts: bounds(".contact-links"),
+        contactItems,
+        contactDirection: getComputedStyle(document.querySelector(".contact-links")).flexDirection,
+      };
+    });
+    assert.ok(mobileFooter.footer && mobileFooter.status && mobileFooter.privacy && mobileFooter.contacts);
+    assert.equal(mobileFooter.contactDirection, "row", "mobile contact links stay on one line");
+    assert.ok(
+      mobileFooter.contactItems.every(({ top }) => Math.abs(top - mobileFooter.contactItems[0].top) < 1),
+      "mobile contact links share one baseline",
+    );
+    assert.ok(
+      Math.abs(mobileFooter.contacts.right - mobileFooter.footer.right) < 1,
+      "mobile contact stays flush right",
+    );
+    assert.ok(
+      Math.abs(mobileFooter.contacts.bottom - mobileFooter.footer.bottom) < 1,
+      "mobile contact occupies the bottom row",
+    );
+    assert.ok(
+      Math.abs(
+        (mobileFooter.status.top + mobileFooter.status.bottom) / 2
+        - (mobileFooter.contacts.top + mobileFooter.contacts.bottom) / 2
+      ) < 1,
+      "mobile status shares the contact baseline",
+    );
+    assert.ok(
+      mobileFooter.privacy.bottom <= mobileFooter.contacts.top + 1,
+      "mobile privacy sits above the contact row",
+    );
     const privacyButton = page.locator(".privacy-link");
     await privacyButton.click();
     const preferences = page.locator(".privacy-preferences[open]");
