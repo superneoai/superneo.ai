@@ -50,7 +50,13 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.doesNotMatch(client, /^import posthog/m);
   assert.match(client, /autocapture: false/);
   assert.match(client, /capture_pageview: false/);
+  assert.match(client, /capture_dead_clicks: false/);
+  assert.match(client, /capture_exceptions: false/);
+  assert.match(client, /capture_heatmaps: false/);
+  assert.match(client, /rageclick: false/);
   assert.match(client, /ip: false/);
+  assert.match(client, /save_campaign_params: false/);
+  assert.match(client, /save_referrer: false/);
   assert.match(client, /disable_session_recording: true/);
   assert.match(client, /person_profiles: "never"/);
   assert.match(client, /advanced_disable_flags: true/);
