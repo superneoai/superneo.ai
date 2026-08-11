@@ -37,6 +37,9 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
   );
   assert.match(styles, /\.making-line\s*\{[^}]*writing-mode: vertical-rl/s);
   assert.match(styles, /\.making-line\s*\{[^}]*transform: translateY\(-50%\) rotate\(180deg\)/s);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*?\.stage-panel\s*\{[\s\S]*?bottom:\s*max\(10\.25rem,/);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*?\.scroll-cue\s*\{[\s\S]*?bottom:\s*max\(7\.35rem,/);
+  assert.match(styles, /@media \(max-height: 560px\) and \(max-width: 900px\)[\s\S]*?writing-mode:\s*horizontal-tb/);
   assert.match(profile, /PHONE_PIXEL_BUDGET = 420_000/);
   assert.match(profile, /COMPACT_PIXEL_BUDGET = 720_000/);
   assert.match(profile, /PHONE_MAX_DPR = 1/);

@@ -54,7 +54,15 @@
         font-synthesis: none;
       }
       * { box-sizing: border-box; }
-      body { min-height: 100vh; margin: 0; padding: clamp(1rem, 3vw, 2.5rem); }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding:
+          max(clamp(1rem, 3vw, 2.5rem), env(safe-area-inset-top, 0px))
+          max(clamp(1rem, 3vw, 2.5rem), env(safe-area-inset-right, 0px))
+          max(clamp(1rem, 3vw, 2.5rem), env(safe-area-inset-bottom, 0px))
+          max(clamp(1rem, 3vw, 2.5rem), env(safe-area-inset-left, 0px));
+      }
       main { width: min(52rem, 100%); margin: 0 auto; }
       header { display: grid; justify-items: start; gap: 0.25rem; border-bottom: 1px solid #34372f; }
       h1, h2 { font-family: system-ui, sans-serif; letter-spacing: -0.04em; }
@@ -71,6 +79,12 @@
       .back svg { width: 1.15rem; height: 1.35rem; overflow: visible; transition: transform 180ms ease; }
       .back:hover svg, .back:focus-visible svg { transform: translateX(-0.2rem); }
       footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #34372f; }
+      @media (max-width: 520px) {
+        h1 { font-size: clamp(2.5rem, 15vw, 4rem); }
+        h2 { margin-top: 2rem; }
+        p, li { font-size: 0.86rem; line-height: 1.65; overflow-wrap: anywhere; }
+        .notice { padding: 0.85rem; }
+      }
     </style>
   </head>
   <body>

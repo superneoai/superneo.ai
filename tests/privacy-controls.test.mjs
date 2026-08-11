@@ -34,6 +34,8 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(styles, /\.stage-panel,[\s\S]*\.site-footer[\s\S]*transition:\s*bottom var\(--consent-motion-duration\)/);
   assert.match(styles, /\.footer-privacy\s*\{[\s\S]*?bottom:\s*0[\s\S]*?left:\s*50%[\s\S]*?transform:\s*translateX\(-50%\)/);
   assert.match(styles, /privacy-preferences::backdrop/);
+  assert.match(styles, /@media \(max-width: 480px\)[\s\S]*?\.privacy-preference-list section\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
+  assert.match(styles, /@media \(max-width: 350px\)[\s\S]*?\.analytics-consent-actions\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*analytics-consent-dock/);
 });
 
