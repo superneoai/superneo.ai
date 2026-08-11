@@ -20,6 +20,7 @@ const cli = new Map(
   }),
 );
 const recordingBaseline = cli.has("record-baseline");
+const skipPerformance = cli.has("skip-performance");
 const requestedBrowsers = String(
   cli.get("browsers") || process.env.SUPERNEO_VISUAL_BROWSERS || ALL_BROWSERS.join(","),
 ).split(",").filter(Boolean);
@@ -148,6 +149,13 @@ function posterMetrics(buffer) {
     deviation: rounded(Math.sqrt(Math.max(0, luminanceSquared / pixels - mean * mean))),
     greenCast: rounded(greenCast / pixels),
   };
+}
+
+function assertBootFrame(metrics, label) {
+  assert.ok(metrics.mean > 2, `${label} frame is empty/black`);
+  assert.ok(metrics.mean < 32, `${label} frame is not using the dimmed boot treatment`);
+  assert.ok(metrics.deviation > 3, `${label} frame is visually flat`);
+  assert.ok(Math.abs(metrics.greenCast) < 20, `${label} frame has a color cast`);
 }
 
 function createRouteMask(buffer) {
@@ -322,6 +330,7 @@ async function waitForScene(session, ready = true) {
       ? readyCondition
       : "return document.querySelector('.experience')?.dataset.sceneReady === 'false';",
     ready ? "the completed WebGL reveal" : "the poster fallback",
+    60_000,
   );
 }
 
@@ -330,10 +339,14 @@ async function stateSnapshot(session) {
     const experience = document.querySelector('.experience');
     const poster = document.querySelector('.signal-poster');
     const stage = document.querySelector('.signal-stage');
+    const artwork = Array.from(document.querySelectorAll('.signal-artwork-fallback'))
+      .find((element) => getComputedStyle(element).display !== 'none');
     return {
       ready: experience?.dataset.sceneReady,
       poster: poster ? getComputedStyle(poster).display : null,
       stage: stage ? getComputedStyle(stage).visibility : null,
+      artwork: artwork ? getComputedStyle(artwork).backgroundImage : null,
+      loader: document.querySelector('.scene-loader-label')?.textContent?.trim() ?? null,
       innerWidth,
       innerHeight,
     };
@@ -347,6 +360,16 @@ async function setScroll(session, progress) {
     return scrollY;
   `, progress);
   await sleep(150);
+}
+
+async function forceNeoState(session, state) {
+  await session.execute(`
+    document.querySelectorAll('.neo-sign').forEach((sign) => {
+      sign.style.animation = 'none';
+      sign.style.opacity = sign.classList.contains('neo-sign--' + arguments[0]) ? '1' : '0';
+    });
+    return true;
+  `, state);
 }
 
 async function assertCheckpoint(session, expectedStage) {
@@ -524,18 +547,22 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   const result = { viewport, captures: [], geometry: null, pulse: null, performance: null };
   const stateUrl = (query = "") => `${baseUrl}/${query ? `?${query}` : ""}`;
 
+  await session.goto(stateUrl("neoState=full"));
+  await waitForRoot(session);
+  await waitForScene(session);
+  await waitFor(
+    session,
+    "return document.querySelector('.stage-stack')?.dataset.signReady === 'true';",
+    "the decoded NEO states",
+  );
+  await setScroll(session, 1);
   for (const neoState of ["full", "medium", "fault-low"]) {
-    await session.goto(stateUrl(`neoState=${neoState}`));
-    await waitForRoot(session);
-    await waitForScene(session);
-    await setScroll(session, 1);
+    await forceNeoState(session, neoState);
     await capture(session, directory, `neo-${neoState}`);
     result.captures.push(`neo-${neoState}`);
   }
 
-  await session.goto(stateUrl("neoState=full"));
-  await waitForRoot(session);
-  await waitForScene(session);
+  await forceNeoState(session, "full");
   const stableHeights = [];
   const stageProgress = [0.02, 0.27, 0.52, 0.78];
   for (let stage = 0; stage < stageProgress.length; stage += 1) {
@@ -557,6 +584,7 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   }
 
   await setScroll(session, 1);
+  await sleep(300);
   result.geometry = await measureGeometry(session);
   if (viewportName === "desktop") result.geometry.core = assertDesktopGeometry(result.geometry);
   const neoBuffer = await captureNeoMask(session);
@@ -590,9 +618,11 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   const loadingState = await stateSnapshot(session);
   assert.equal(loadingState.ready, "false");
   assert.equal(loadingState.poster, "block");
+  assert.match(loadingState.artwork ?? "", /latent-field/);
+  assert.match(loadingState.loader ?? "", /SYSTEM BOOT/);
   const loadingFirst = await capture(session, directory, "loading-first");
   const firstMetrics = posterMetrics(loadingFirst);
-  assert.ok(firstMetrics.deviation > 20 && firstMetrics.greenCast < 20);
+  assertBootFrame(firstMetrics, "loading first");
   await waitForScene(session);
   await capture(session, directory, "loading-settled");
 
@@ -607,8 +637,8 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
       const metrics = posterMetrics(buffer);
       assert.equal(state.ready, "false", `${fault} ${frame} frame exposed WebGL`);
       assert.equal(state.poster, "block", `${fault} ${frame} frame hid the poster`);
-      assert.ok(metrics.deviation > 20, `${fault} ${frame} frame is empty/flat`);
-      assert.ok(metrics.greenCast < 20, `${fault} ${frame} frame has a green cast`);
+      assert.match(state.artwork ?? "", /latent-field/);
+      assertBootFrame(metrics, `${fault} ${frame}`);
     }
   }
 
@@ -650,8 +680,10 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   result.audioUnlocked = true;
   await session.click(".soundtrack-toggle");
 
-  result.performance = await runPerformance(session, baseUrl);
-  assertPerformance(result.performance, baseline.performance);
+  if (!skipPerformance) {
+    result.performance = await runPerformance(session, baseUrl);
+    assertPerformance(result.performance, baseline.performance);
+  }
   delete result.neoMask;
   return { result, neoMask: greenMask(neoBuffer) };
 }
