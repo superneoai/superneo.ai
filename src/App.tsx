@@ -137,7 +137,7 @@ function StageWord({
           className="neo-sign neo-sign--full"
           src={neoSignFullUrl}
           srcSet={`${neoSignFullMobileUrl} 500w, ${neoSignFullUrl} 1000w`}
-          sizes="(max-width: 720px) 500px, 1000px"
+          sizes="(max-width: 720px) 42vw, min(34.5vw, 566px)"
           width="1000"
           height="640"
           decoding="async"
@@ -152,7 +152,7 @@ function StageWord({
           className="neo-sign neo-sign--medium"
           src={neoSignMediumUrl}
           srcSet={`${neoSignMediumMobileUrl} 500w, ${neoSignMediumUrl} 1000w`}
-          sizes="(max-width: 720px) 500px, 1000px"
+          sizes="(max-width: 720px) 42vw, min(34.5vw, 566px)"
           width="1000"
           height="640"
           decoding="async"
@@ -166,7 +166,7 @@ function StageWord({
           className="neo-sign neo-sign--fault-low"
           src={neoSignFaultLowUrl}
           srcSet={`${neoSignFaultLowMobileUrl} 500w, ${neoSignFaultLowUrl} 1000w`}
-          sizes="(max-width: 720px) 500px, 1000px"
+          sizes="(max-width: 720px) 42vw, min(34.5vw, 566px)"
           width="1000"
           height="640"
           decoding="async"

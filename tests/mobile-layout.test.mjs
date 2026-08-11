@@ -76,6 +76,11 @@ test("mobile layout covers narrow, notched, touch, and short screens", async () 
     /renderProfile\.compact\s*\? \["latent-field-mobile\.avif", "latent-field-mobile\.jpg"\]/,
   );
   assert.match(app, /srcSet=\{`\$\{neoSignFullMobileUrl\} 500w, \$\{neoSignFullUrl\} 1000w`\}/);
+  assert.match(
+    app,
+    /sizes="\(max-width: 720px\) 42vw, min\(34\.5vw, 566px\)"/,
+    "the responsive hint must describe the rendered NEO artboard rather than its source width",
+  );
   assert.match(field, /textureImage\.naturalWidth \|\| textureImage\.width/);
   assert.match(field, /alpha: false/);
   assert.match(field, /renderer\.setClearColor\(0x030403, 1\)/);

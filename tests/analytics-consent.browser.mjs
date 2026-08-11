@@ -247,6 +247,13 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
       mobileFooter.privacy.bottom <= mobileFooter.contacts.top + 1,
       "mobile privacy sits above the contact row",
     );
+    const neoSources = await page.locator(".neo-sign").evaluateAll((images) => (
+      images.map((image) => image.currentSrc)
+    ));
+    assert.ok(
+      neoSources.length > 0 && neoSources.every((source) => /neo-sign-.+-500\.png$/.test(source)),
+      `mobile should select the compact NEO rasters: ${neoSources.join(", ")}`,
+    );
     const privacyButton = page.locator(".privacy-link");
     await privacyButton.click();
     const preferences = page.locator(".privacy-preferences[open]");
