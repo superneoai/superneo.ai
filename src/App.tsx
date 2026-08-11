@@ -433,7 +433,7 @@ export function App() {
   const [consentPreviewDismissed, setConsentPreviewDismissed] = useState(false);
   const [consentOffset, setConsentOffset] = useState<number>(0);
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const privacyButtonRef = useRef<HTMLButtonElement>(null);
+  const privacyButtonRef = useRef<HTMLAnchorElement>(null);
   const { consent, chooseAnalytics, announcement } = useAnalyticsConsent();
   const handleConsentDockChoice = useCallback(async (allowed: boolean) => {
     await chooseAnalytics(allowed);
@@ -554,15 +554,25 @@ export function App() {
             hello@superneo.ai
           </a>
           {consent.available && consent.status !== "loading" && (
-            <button
+            <a
               className="contact-link privacy-link"
+              href="./privacy/"
               ref={privacyButtonRef}
-              type="button"
               aria-haspopup="dialog"
-              onClick={() => setPrivacyOpen(true)}
+              onClick={(event) => {
+                if (
+                  event.button !== 0
+                  || event.metaKey
+                  || event.ctrlKey
+                  || event.shiftKey
+                  || event.altKey
+                ) return;
+                event.preventDefault();
+                setPrivacyOpen(true);
+              }}
             >
               PRIVACY
-            </button>
+            </a>
           )}
         </div>
       </footer>

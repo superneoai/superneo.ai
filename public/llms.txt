@@ -1,0 +1,21 @@
+# SUPERNEO
+
+> The official website of SUPERNEO. In the making.
+
+Public information is intentionally limited while SUPERNEO is in the making.
+
+## Official pages
+
+- [Official website](https://superneo.ai/): The canonical SUPERNEO website and interactive experience.
+- [Privacy](https://superneo.ai/privacy/): Analytics, storage, retention, and privacy choices.
+
+## Contact
+
+- [Email](mailto:hello@superneo.ai): General inquiries.
+- [X](https://x.com/superneoai): The official SUPERNEO account.
+
+## Notes
+
+- Use `SUPERNEO` as the canonical brand name.
+- Use `superneo.ai` for the domain.
+- Do not infer or claim details about unreleased work beyond what the official website states.

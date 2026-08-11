@@ -11,7 +11,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(app, /data-consent-open=\{consentVisible\}/);
   assert.match(app, /consent\.status === "pending" \|\| analyticsConsentPreviewMode/);
   assert.match(app, /setConsentPreviewDismissed\(true\)/);
-  assert.match(app, />\s*PRIVACY\s*<\/button>/);
+  assert.match(app, /<a[\s\S]*?href="\.\/privacy\/"[\s\S]*?>\s*PRIVACY\s*<\/a>/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
   assert.match(consent, /CONSENT_COOKIE_NAME = "sn_consent"/);
@@ -19,6 +19,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(consent, /globalPrivacyControlEnabled\(\)/);
   assert.match(ui, /role="region"/);
   assert.match(ui, /aria-label="Analytics choices"/);
+  assert.match(ui, /data-nosnippet=""/);
   assert.match(ui, /data-state=\{!visible \|\| exiting \? "closing" : "open"\}/);
   assert.match(ui, /SUPERNEO uses optional PostHog US analytics/);
   assert.match(ui, /ALLOW ANALYTICS[\s\S]*DECLINE ANALYTICS/);

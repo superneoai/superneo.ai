@@ -206,7 +206,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/privacy\/<\/loc>/);
-  assert.match(sitemap, /<lastmod>2026-08-10<\/lastmod>/);
+  assert.match(sitemap, /<lastmod>2026-08-11<\/lastmod>/);
 
   await access(new URL("../dist/.nojekyll", import.meta.url));
   await access(new URL("../dist/og.png", import.meta.url));

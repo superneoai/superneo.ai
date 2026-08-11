@@ -112,6 +112,7 @@ export function ConsentDock({
       ref={dockRef}
       role="region"
       aria-label="Analytics choices"
+      data-nosnippet=""
       data-state={!visible || exiting ? "closing" : "open"}
     >
       <div className="analytics-consent-copy">
@@ -141,7 +142,7 @@ type PrivacyPreferencesProps = {
   consent: ConsentSnapshot;
   onClose: () => void;
   onSave: (allowed: boolean) => Promise<void>;
-  fallbackFocusRef: RefObject<HTMLButtonElement | null>;
+  fallbackFocusRef: RefObject<HTMLElement | null>;
 };
 
 export function PrivacyPreferences({
