@@ -1,7 +1,7 @@
 import type { PostHog } from "posthog-js";
 import {
-  APPROVED_ANALYTICS_EVENTS,
   isApprovedAnalyticsEvent,
+  sanitizeAnalyticsEventProperties,
   type AnalyticsEventName,
   type AnalyticsEventProperties,
 } from "./events";
@@ -15,24 +15,7 @@ import { analyticsContext } from "./policy";
 
 const MAX_PENDING_EVENTS = 20;
 const POSTHOG_STORAGE = /^(?:ph_|__ph)/;
-const approvedEventNames = new Set<string>(APPROVED_ANALYTICS_EVENTS);
 const sharedEventProperties = analyticsContext(import.meta.env.PROD);
-const scrubbedProperties = [
-  "$current_url",
-  "$pathname",
-  "$referrer",
-  "$referring_domain",
-  "$initial_current_url",
-  "$initial_pathname",
-  "$initial_referrer",
-  "$initial_referring_domain",
-  "$session_entry_url",
-  "$session_entry_host",
-  "$session_entry_pathname",
-  "$session_entry_referrer",
-  "$session_entry_referring_domain",
-  "$raw_user_agent",
-];
 
 type PendingEvent = {
   name: AnalyticsEventName;
@@ -102,7 +85,6 @@ export async function startAnalytics() {
       capture_exceptions: false,
       capture_heatmaps: false,
       rageclick: false,
-      ip: false,
       debug: false,
       save_campaign_params: false,
       save_referrer: false,
@@ -132,10 +114,11 @@ export async function startAnalytics() {
       opt_out_capturing_by_default: true,
       opt_out_persistence_by_default: true,
       before_send: (event) => {
-        if (!event || !approvedEventNames.has(event.event)) return null;
-        const properties = { ...event.properties };
-        scrubbedProperties.forEach((key) => delete properties[key]);
-        return { ...event, properties };
+        if (!event || !isApprovedAnalyticsEvent(event.event)) return null;
+        return {
+          ...event,
+          properties: sanitizeAnalyticsEventProperties(event.event, event.properties),
+        };
       },
     });
     posthog = posthogClient;

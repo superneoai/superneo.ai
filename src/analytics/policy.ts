@@ -7,6 +7,7 @@ export type AnalyticsRuntimePolicy = {
   isDevelopment: boolean;
   qaRequested: boolean;
   projectKey: string;
+  ipDiscardConfirmed: boolean;
 };
 
 export function analyticsContext(isProduction: boolean) {
@@ -17,6 +18,7 @@ export function analyticsContext(isProduction: boolean) {
 }
 
 export function isAnalyticsRuntimeAllowed(policy: AnalyticsRuntimePolicy) {
+  if (!policy.ipDiscardConfirmed) return false;
   if (!policy.projectKey.trim()) return false;
   if (LIVE_ANALYTICS_HOSTS.has(policy.hostname)) return true;
   return policy.isDevelopment && policy.qaRequested;

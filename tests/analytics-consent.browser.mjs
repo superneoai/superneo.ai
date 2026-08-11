@@ -37,6 +37,7 @@ async function startServer() {
         ...process.env,
         VITE_POSTHOG_KEY: "phc_browser_test",
         VITE_POSTHOG_HOST: "https://us.i.posthog.com",
+        VITE_POSTHOG_IP_DISCARD_CONFIRMED: "true",
       },
       stdio: ["ignore", "pipe", "pipe"],
     },
@@ -144,16 +145,22 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
       }));
     });
     const requestStartedAt = Date.now();
-    while (posthogRequests.length === 0 && Date.now() - requestStartedAt < 8_000) {
+    let capturedEvents = [];
+    let audioEvent;
+    while (!audioEvent && Date.now() - requestStartedAt < 8_000) {
+      capturedEvents = posthogRequests.flatMap(({ payload }) => payload?.batch ?? []);
+      audioEvent = capturedEvents.find(({ event }) => event === "audio_toggled");
       await sleep(100);
     }
     assert.ok(posthogRequests.length > 0, "acceptance should enable the US ingestion endpoint");
     assert.ok(posthogRequests.every(({ url }) => url.startsWith("https://us.i.posthog.com/")));
-    const capturedEvents = posthogRequests.flatMap(({ payload }) => payload?.batch ?? []);
-    const audioEvent = capturedEvents.find(({ event }) => event === "audio_toggled");
-    assert.ok(audioEvent, "the explicitly dispatched event should be captured");
+    assert.ok(
+      audioEvent,
+      `the explicitly dispatched event should be captured: ${JSON.stringify(capturedEvents)}`,
+    );
     assert.equal(audioEvent.properties.surface, "landing");
     assert.equal(audioEvent.properties.environment, "development");
+    assert.equal(audioEvent.properties.$geoip_disable, true);
     [
       "$current_url",
       "$initial_current_url",
@@ -163,6 +170,26 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
       "$raw_user_agent",
     ].forEach((property) => {
       assert.equal(property in audioEvent.properties, false, `${property} must be scrubbed`);
+    });
+    const approvedAudioProperties = new Set([
+      "token",
+      "distinct_id",
+      "$device_id",
+      "$lib",
+      "$lib_version",
+      "$insert_id",
+      "$process_person_profile",
+      "$geoip_disable",
+      "surface",
+      "environment",
+      "state",
+    ]);
+    Object.keys(audioEvent.properties).forEach((property) => {
+      assert.equal(
+        approvedAudioProperties.has(property),
+        true,
+        `${property} is not approved for the audio event payload`,
+      );
     });
 
     await page.locator("main.experience").evaluate((experience) => {

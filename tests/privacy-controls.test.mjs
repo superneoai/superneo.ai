@@ -54,7 +54,9 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.match(client, /capture_exceptions: false/);
   assert.match(client, /capture_heatmaps: false/);
   assert.match(client, /rageclick: false/);
-  assert.match(client, /ip: false/);
+  assert.doesNotMatch(client, /\bip: false/);
+  assert.match(events, /\$geoip_disable/);
+  assert.match(client, /sanitizeAnalyticsEventProperties/);
   assert.match(client, /save_campaign_params: false/);
   assert.match(client, /save_referrer: false/);
   assert.match(client, /disable_session_recording: true/);
@@ -64,10 +66,13 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.match(client, /captureEventName: false/);
   assert.match(client, /POSTHOG_STORAGE/);
   assert.match(config, /https:\/\/us\.i\.posthog\.com/);
+  assert.match(config, /VITE_POSTHOG_IP_DISCARD_CONFIRMED/);
+  assert.match(config, /ipDiscardConfirmed: posthogIpDiscardConfirmed/);
   assert.match(events, /APPROVED_ANALYTICS_EVENTS/);
   assert.match(events, /stage_completed/);
   assert.match(events, /web_vital/);
   assert.match(workflow, /POSTHOG_PROJECT_KEY/);
+  assert.match(workflow, /POSTHOG_IP_DISCARD_CONFIRMED/);
   assert.match(workflow, /VITE_POSTHOG_HOST: https:\/\/us\.i\.posthog\.com/);
 });
 

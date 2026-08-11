@@ -9,12 +9,14 @@ export const posthogHost = (
 export const analyticsQaMode = import.meta.env.DEV && query.get("analyticsQa") === "1";
 export const analyticsConsentPreviewMode = analyticsQaMode
   && query.get("consentPreview") !== "0";
+const posthogIpDiscardConfirmed = import.meta.env.VITE_POSTHOG_IP_DISCARD_CONFIRMED === "true";
 
 export const analyticsRuntimeEnabled = isAnalyticsRuntimeAllowed({
   hostname: window.location.hostname,
   isDevelopment: import.meta.env.DEV,
   qaRequested: analyticsQaMode,
   projectKey: posthogProjectKey,
+  ipDiscardConfirmed: posthogIpDiscardConfirmed,
 });
 
 export function globalPrivacyControlEnabled() {
