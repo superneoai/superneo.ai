@@ -12,6 +12,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(app, /consent\.status === "pending" \|\| analyticsConsentPreviewMode/);
   assert.match(app, /setConsentPreviewDismissed\(true\)/);
   assert.match(app, /<a[\s\S]*?href="\.\/privacy\/"[\s\S]*?>\s*PRIVACY\s*<\/a>/);
+  assert.match(app, /<footer className="site-footer">[\s\S]*?className="contact-link privacy-link footer-privacy"[\s\S]*?<nav className="contact-links" aria-label="Contact">[\s\S]*?x\.com\/superneoai[\s\S]*?mailto:hello@superneo\.ai[\s\S]*?<\/footer>/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
   assert.match(consent, /CONSENT_COOKIE_NAME = "sn_consent"/);
@@ -31,6 +32,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(styles, /@keyframes consent-dock-out/);
   assert.match(styles, /--consent-motion-duration: 360ms/);
   assert.match(styles, /\.stage-panel,[\s\S]*\.site-footer[\s\S]*transition:\s*bottom var\(--consent-motion-duration\)/);
+  assert.match(styles, /\.footer-privacy\s*\{[\s\S]*?bottom:\s*0[\s\S]*?left:\s*50%[\s\S]*?transform:\s*translateX\(-50%\)/);
   assert.match(styles, /privacy-preferences::backdrop/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*analytics-consent-dock/);
 });

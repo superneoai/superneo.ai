@@ -534,7 +534,29 @@ export function App() {
           </span>
         </p>
 
-        <div className="footer-links">
+        {consent.available && consent.status !== "loading" && (
+          <a
+            className="contact-link privacy-link footer-privacy"
+            href="./privacy/"
+            ref={privacyButtonRef}
+            aria-haspopup="dialog"
+            onClick={(event) => {
+              if (
+                event.button !== 0
+                || event.metaKey
+                || event.ctrlKey
+                || event.shiftKey
+                || event.altKey
+              ) return;
+              event.preventDefault();
+              setPrivacyOpen(true);
+            }}
+          >
+            PRIVACY
+          </a>
+        )}
+
+        <nav className="contact-links" aria-label="Contact">
           <a
             className="contact-link x-link"
             href="https://x.com/superneoai"
@@ -553,28 +575,7 @@ export function App() {
           >
             hello@superneo.ai
           </a>
-          {consent.available && consent.status !== "loading" && (
-            <a
-              className="contact-link privacy-link"
-              href="./privacy/"
-              ref={privacyButtonRef}
-              aria-haspopup="dialog"
-              onClick={(event) => {
-                if (
-                  event.button !== 0
-                  || event.metaKey
-                  || event.ctrlKey
-                  || event.shiftKey
-                  || event.altKey
-                ) return;
-                event.preventDefault();
-                setPrivacyOpen(true);
-              }}
-            >
-              PRIVACY
-            </a>
-          )}
-        </div>
+        </nav>
       </footer>
 
       <ConsentDock
