@@ -74,5 +74,8 @@ test("the production artifact contains the privacy notice without embedding a to
   assert.match(privacy, /PostHog Cloud US/);
   assert.match(privacy, /no more\s+than 12 months/i);
   assert.match(privacy, /Global Privacy Control/);
+  assert.match(privacy, /lodge a complaint/);
+  assert.match(privacy, /not required by law or contract/);
+  assert.match(privacy, /automated decision-making/);
   await access(new URL("../dist/privacy/index.html", import.meta.url));
 });
