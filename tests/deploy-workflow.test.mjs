@@ -7,6 +7,10 @@ test("production deployment is gated by tests and a Chromium visual pass", async
     new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
     "utf8",
   );
+  const visualRunner = await readFile(
+    new URL("./visual/run.mjs", import.meta.url),
+    "utf8",
+  );
 
   assert.match(workflow, /run: npm test/);
   assert.match(workflow, /pull_request:\s*\n\s+branches: \[main\]/);
@@ -22,4 +26,7 @@ test("production deployment is gated by tests and a Chromium visual pass", async
     workflow,
     /deploy:\s*\n\s+if: github\.event_name != 'pull_request'\s*\n\s+permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/,
   );
+  assert.match(visualRunner, /import \{ tmpdir \} from "node:os"/);
+  assert.match(visualRunner, /resolve\(\s*tmpdir\(\)/);
+  assert.doesNotMatch(visualRunner, /"\/private\/tmp"/);
 });

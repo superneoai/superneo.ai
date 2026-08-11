@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { PNG } from "pngjs";
 import { createViewport } from "./browser.mjs";
@@ -25,7 +26,7 @@ const requestedBrowsers = String(
   cli.get("browsers") || process.env.SUPERNEO_VISUAL_BROWSERS || ALL_BROWSERS.join(","),
 ).split(",").filter(Boolean);
 const outputRoot = resolve(
-  "/private/tmp",
+  tmpdir(),
   recordingBaseline ? "superneo-visual-baseline" : "superneo-visual-current",
 );
 
