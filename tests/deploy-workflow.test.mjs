@@ -9,6 +9,8 @@ test("production deployment is gated by tests and a Chromium visual pass", async
   );
 
   assert.match(workflow, /run: npm test/);
+  assert.match(workflow, /pull_request:\s*\n\s+branches: \[main\]/);
+  assert.match(workflow, /npm ci --ignore-scripts/);
   assert.match(workflow, /playwright install --with-deps chromium/);
   assert.match(
     workflow,
@@ -16,5 +18,8 @@ test("production deployment is gated by tests and a Chromium visual pass", async
   );
   assert.doesNotMatch(workflow, /uses: [^\s]+@v\d+/);
   assert.match(workflow, /permissions:\s*\n\s+contents: read/);
-  assert.match(workflow, /deploy:\s*\n\s+permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/);
+  assert.match(
+    workflow,
+    /deploy:\s*\n\s+if: github\.event_name != 'pull_request'\s*\n\s+permissions:\s*\n\s+pages: write\s*\n\s+id-token: write/,
+  );
 });
