@@ -185,6 +185,18 @@ test("the NEO slot shares SUPER's baseline without browser inline-box inference"
     styles,
     /\.stage-stack \.neo-accent\s*{[^}]*vertical-align:/s,
   );
+  assert.match(
+    styles,
+    /\.stage-stack h2\s*{[^}]*--super-slot:\s*2\.9242em;/s,
+  );
+  assert.match(
+    styles,
+    /\.super-prefix\s*{[^}]*width:\s*var\(--super-slot\);[^}]*flex:\s*0 0 var\(--super-slot\);/s,
+  );
+  assert.match(
+    styles,
+    /@media \(max-width: 720px\)[\s\S]*?\.stage-stack h2\s*{[^}]*--super-slot:\s*2\.9613em;/,
+  );
 });
 
 test("every NEO state stores one neon color in a smooth alpha halo", async () => {

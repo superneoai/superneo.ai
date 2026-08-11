@@ -832,6 +832,7 @@ a {
 }
 
 .stage-stack h2 {
+  --super-slot: 2.9242em;
   --stack-x: 0em;
   --stack-y: 0em;
   position: absolute;
@@ -981,6 +982,12 @@ a {
   align-items: baseline;
   padding-right: 0.25em;
   transform: translateY(-0.065em);
+}
+
+.super-prefix {
+  display: inline-block;
+  width: var(--super-slot);
+  flex: 0 0 var(--super-slot);
 }
 
 .brand-tm--stage {
@@ -1829,6 +1836,7 @@ a {
   }
 
   .stage-stack h2 {
+    --super-slot: 2.9613em;
     max-width: calc(100vw - 2.7rem);
     font-size: clamp(2.65rem, 12.8vw, 5rem);
     line-height: 0.86;
