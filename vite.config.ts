@@ -23,8 +23,19 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    // LatentField is intentionally lazy (currently 193.5 kB gzip); tests enforce
-    // its 750 kB raw budget and retain the ordinary 500 kB budget for every other chunk.
-    chunkSizeWarningLimit: 750,
+    // The scene stays lazy, but its dependencies move only on upgrade while its own
+    // code changes often, so they get separate chunks that survive a scene edit in
+    // returning visitors' caches. Tests own the real limits: a raw and gzip budget
+    // per chunk plus one for the whole scene payload, so splitting cannot hide growth.
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/three/")) return "three";
+          if (id.includes("node_modules/gsap/")) return "gsap";
+          return undefined;
+        },
+      },
+    },
   },
 });
