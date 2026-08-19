@@ -57,6 +57,8 @@ test("answer engines receive a restrained canonical site summary", async () => {
   assert.match(llms, /^> The official website of SUPERNEO\./m);
   assert.match(llms, /\[Official website\]\(https:\/\/superneo\.ai\/\)/);
   assert.match(llms, /\[Privacy\]\(https:\/\/superneo\.ai\/privacy\/\)/);
+  assert.match(llms, /\[Legal\]\(https:\/\/superneo\.ai\/legal\/\)/);
+  assert.match(llms, /SUPERNEO is a brand of ACTUAL LTD\./);
   assert.match(llms, /Do not infer or claim details about unreleased work/);
   assert.doesNotMatch(llms, /game engine|multiplexer/i);
   assert.match(privacy, /property="og:site_name" content="SUPERNEO"/);
@@ -77,5 +79,6 @@ test("sitemap records the latest material page revision", async () => {
   assert.deepEqual(entries, [
     ["https://superneo.ai/", "2026-08-19"],
     ["https://superneo.ai/privacy/", "2026-08-19"],
+    ["https://superneo.ai/legal/", "2026-08-19"],
   ]);
 });

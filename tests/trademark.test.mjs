@@ -9,6 +9,10 @@ test("the canonical brand uses one intentional trademark treatment", async () =>
     new URL("../public/privacy/index.html", import.meta.url),
     "utf8",
   );
+  const legal = await readFile(
+    new URL("../public/legal/index.html", import.meta.url),
+    "utf8",
+  );
   const styles = await readFile(
     new URL("../src/styles.css", import.meta.url),
     "utf8",
@@ -22,9 +26,14 @@ test("the canonical brand uses one intentional trademark treatment", async () =>
   assert.match(app, /aria-label=\{item\.title\}/);
   assert.match(styles, /\.superneo-word\s*{[^}]*padding-right:\s*0\.25em/s);
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*position:\s*absolute/s);
-  assert.match(privacy, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
-  assert.equal((privacy.match(/™/g) ?? []).length, 1);
-  assert.doesNotMatch(`${app}\n${html}\n${privacy}`, /®/);
-  assert.doesNotMatch(`${app}\n${html}\n${privacy}`, /\bSuperneo\b|SuperNeo|Super Neo/);
+  for (const page of [privacy, legal]) {
+    assert.match(page, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
+    assert.equal((page.match(/™/g) ?? []).length, 1);
+  }
+  assert.doesNotMatch(`${app}\n${html}\n${privacy}\n${legal}`, /®/);
+  assert.doesNotMatch(
+    `${app}\n${html}\n${privacy}\n${legal}`,
+    /\bSuperneo\b|SuperNeo|Super Neo/,
+  );
   assert.match(html, /"name": "SUPERNEO"/);
 });

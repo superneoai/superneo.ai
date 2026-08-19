@@ -8,6 +8,7 @@ Public information is intentionally limited while SUPERNEO is in the making.
 
 - [Official website](https://superneo.ai/): The canonical SUPERNEO website and interactive experience.
 - [Privacy](https://superneo.ai/privacy/): Analytics, storage, retention, and privacy choices.
+- [Legal](https://superneo.ai/legal/): Operator, brand, trademark, and copyright information.
 
 ## Contact
 
@@ -16,6 +17,7 @@ Public information is intentionally limited while SUPERNEO is in the making.
 
 ## Notes
 
+- SUPERNEO is a brand of ACTUAL LTD.
 - Use `SUPERNEO` as the canonical brand name.
 - Use `superneo.ai` for the domain.
 - Do not infer or claim details about unreleased work beyond what the official website states.
