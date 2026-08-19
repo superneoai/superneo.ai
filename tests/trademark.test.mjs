@@ -23,6 +23,8 @@ test("the canonical brand uses one intentional trademark treatment", async () =>
   assert.match(styles, /\.superneo-word\s*{[^}]*padding-right:\s*0\.25em/s);
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*position:\s*absolute/s);
   assert.match(privacy, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
+  assert.equal((privacy.match(/™/g) ?? []).length, 1);
+  assert.doesNotMatch(`${app}\n${html}\n${privacy}`, /®/);
   assert.doesNotMatch(`${app}\n${html}\n${privacy}`, /\bSuperneo\b|SuperNeo|Super Neo/);
   assert.match(html, /"name": "SUPERNEO"/);
 });

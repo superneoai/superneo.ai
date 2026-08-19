@@ -16,6 +16,7 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
   assert.match(consent, /CONSENT_COOKIE_NAME = "sn_consent"/);
+  assert.match(consent, /CONSENT_REVISION = 2/);
   assert.match(consent, /expiresAfterDays: 180/);
   assert.match(consent, /globalPrivacyControlEnabled\(\)/);
   assert.match(ui, /role="region"/);
@@ -70,8 +71,12 @@ test("the production artifact contains the privacy notice without embedding a to
 
   assert.doesNotMatch(html, /phc_[a-zA-Z0-9]+/);
   assert.match(privacy, /Analytics on superneo\.ai are optional/);
+  assert.match(privacy, /ACTUAL LTD\. operates superneo\.ai, the website of/);
+  assert.match(privacy, /controller that determines why and how/);
   assert.match(privacy, /PostHog Cloud US/);
   assert.match(privacy, /no more\s+than 12 months/i);
   assert.match(privacy, /Global Privacy Control/);
+  assert.match(privacy, /EFFECTIVE 2026-08-19 \/\/ CONSENT REVISION 02/);
+  assert.doesNotMatch(privacy, /SUPERNEO does not|analytics for SUPERNEO/);
   await access(new URL("../dist/privacy/index.html", import.meta.url));
 });

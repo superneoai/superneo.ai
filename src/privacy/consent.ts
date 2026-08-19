@@ -5,7 +5,7 @@ import {
   globalPrivacyControlEnabled,
 } from "../analytics/runtimeConfig";
 
-export const CONSENT_REVISION = 1;
+export const CONSENT_REVISION = 2;
 export const CONSENT_COOKIE_NAME = "sn_consent";
 
 export type ConsentStatus =
