@@ -192,10 +192,12 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.equal(jsonLd["@context"], "https://schema.org");
   assert.deepEqual(
     jsonLd["@graph"].map((entry) => entry["@type"]),
-    ["WebSite", "Organization", "WebPage", "ImageObject"],
+    ["WebSite", "Organization", "Brand", "WebPage", "ImageObject"],
   );
   assert.equal(jsonLd["@graph"][0].url, "https://superneo.ai/");
+  assert.equal(jsonLd["@graph"][1].name, "ACTUAL LTD.");
   assert.equal(jsonLd["@graph"][1].email, "hello@superneo.ai");
+  assert.equal(jsonLd["@graph"][2].name, "SUPERNEO");
 
   const robots = await readFile(new URL("../dist/robots.txt", import.meta.url), "utf8");
   assert.match(robots, /^User-agent: \*$/m);
@@ -206,7 +208,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/privacy\/<\/loc>/);
-  assert.match(sitemap, /<lastmod>2026-08-11<\/lastmod>/);
+  assert.match(sitemap, /<lastmod>2026-08-19<\/lastmod>/);
 
   await access(new URL("../dist/.nojekyll", import.meta.url));
   await access(new URL("../dist/og.png", import.meta.url));

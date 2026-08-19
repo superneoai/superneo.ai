@@ -11,12 +11,16 @@ test("metadata connects search, social, structured data, and mobile identity", a
   const jsonLd = JSON.parse(jsonLdSource[1]);
   const website = jsonLd["@graph"].find((item) => item["@type"] === "WebSite");
   const organization = jsonLd["@graph"].find((item) => item["@type"] === "Organization");
+  const brand = jsonLd["@graph"].find((item) => item["@type"] === "Brand");
+  const webpage = jsonLd["@graph"].find((item) => item["@type"] === "WebPage");
   const image = jsonLd["@graph"].find((item) => item["@type"] === "ImageObject");
   const socialAlt = "An abstract white and green web on black, titled The New State, with superneo.ai.";
 
   assert.match(html, /name="twitter:site" content="@superneoai"/);
   assert.match(html, /<title>superneo\.ai<\/title>/);
+  assert.match(html, /name="author" content="SUPERNEO"/);
   assert.match(html, /name="description" content="In the making\."/);
+  assert.doesNotMatch((html.match(/<meta\b[^>]*>/g) ?? []).join("\n"), /™|®/);
   assert.match(html, new RegExp(`property="og:image:alt" content="${socialAlt.replaceAll(".", "\\.")}"`));
   assert.match(html, new RegExp(`name="twitter:image:alt" content="${socialAlt.replaceAll(".", "\\.")}"`));
   assert.match(html, /rel="alternate" hreflang="x-default"/);
@@ -24,10 +28,25 @@ test("metadata connects search, social, structured data, and mobile identity", a
   assert.doesNotMatch(html, /rel="(?:shortcut )?icon"|apple-touch-icon|site\.webmanifest/i);
   assert.equal(website.name, "SUPERNEO");
   assert.equal(website.alternateName, "superneo.ai");
-  assert.equal(organization.name, "SUPERNEO");
+  assert.deepEqual(website.publisher, { "@id": "https://superneo.ai/#organization" });
+  assert.equal(organization.name, "ACTUAL LTD.");
+  assert.equal(organization.legalName, "ACTUAL LTD.");
+  assert.equal(organization.url, "https://actual.ltd/");
   assert.equal(organization.contactPoint.email, "hello@superneo.ai");
-  assert.deepEqual(organization.sameAs, ["https://x.com/superneoai"]);
+  assert.deepEqual(organization.brand, { "@id": "https://superneo.ai/#brand" });
+  assert.equal(brand.name, "SUPERNEO");
+  assert.deepEqual(brand.sameAs, ["https://x.com/superneoai"]);
+  assert.deepEqual(webpage.about, { "@id": "https://superneo.ai/#brand" });
+  assert.equal(webpage.dateModified, "2026-08-19");
   assert.equal(image.contentUrl, "https://superneo.ai/og.png");
+  assert.equal(jsonLd["@graph"].some(
+    (item) => item["@type"] === "Organization" && item.name === "SUPERNEO"
+  ), false);
+  for (const entity of [organization, brand]) {
+    assert.equal("logo" in entity, false);
+    assert.equal("trademark" in entity, false);
+  }
+  assert.doesNotMatch(JSON.stringify(jsonLd), /registered|registration|™|®/i);
 });
 
 test("answer engines receive a restrained canonical site summary", async () => {
@@ -51,7 +70,12 @@ test("sitemap records the latest material page revision", async () => {
     "utf8",
   );
 
-  assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/<\/loc>/);
-  assert.match(sitemap, /<loc>https:\/\/superneo\.ai\/privacy\/<\/loc>/);
-  assert.match(sitemap, /<lastmod>2026-08-11<\/lastmod>/);
+  const entries = [...sitemap.matchAll(
+    /<url>\s*<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>\s*<\/url>/g,
+  )].map(([, location, lastModified]) => [location, lastModified]);
+
+  assert.deepEqual(entries, [
+    ["https://superneo.ai/", "2026-08-19"],
+    ["https://superneo.ai/privacy/", "2026-08-19"],
+  ]);
 });
