@@ -42,7 +42,7 @@ test("pull requests produce the required build check without deployment privileg
     /group: pages-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}\n  cancel-in-progress: false/,
   );
   assert.doesNotMatch(workflow, /cancel-in-progress: true/);
-  assert.deepEqual(jobNames, ["build", "security", "deploy"]);
+  assert.deepEqual(jobNames, ["build", "visual", "security", "deploy"]);
   assert.match(codeql, /jobs:\n  analyze:/, "CodeQL must provide the required analyze check");
 
   assert.match(
@@ -69,7 +69,16 @@ test("pull requests produce the required build check without deployment privileg
     build,
     /VITE_POSTHOG_IP_DISCARD_CONFIRMED: \$\{\{ vars\.POSTHOG_IP_DISCARD_CONFIRMED \}\}/,
   );
-  assert.doesNotMatch(workflow, /test:visual/);
+  const visual = jobBlock(workflow, "visual");
+  assert.match(visual, /runs-on: macos-/, "the scene baseline targets macOS");
+  assert.match(
+    visual,
+    /run: npm run test:visual -- --browsers=chromium --skip-performance/,
+    "performance figures belong to the recording machine, not the runner",
+  );
+  assert.match(visual, /^    timeout-minutes: \d+$/m, "a hung scene run must fail");
+  assert.doesNotMatch(visual, /(?:pages|id-token|security-events): write/);
+  assert.doesNotMatch(build, /test:visual/, "the scene runs in its own job");
   assert.doesNotMatch(workflow, /\$\{\{ secrets\./);
   assert.doesNotMatch(build, /(?:contents|pages|id-token|security-events): write/);
 
@@ -86,10 +95,15 @@ test("pull requests produce the required build check without deployment privileg
   assert.match(security, /uses: \.\/\.github\/workflows\/codeql\.yml/);
   assert.match(deploy, new RegExp(`^    if: ${MAIN_ONLY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "m"));
   assert.match(deploy, /permissions:\n      pages: write\n      id-token: write/);
-  assert.match(deploy, /needs: \[build, security\]/);
+  assert.match(deploy, /needs: \[build, visual, security\]/);
 
   const externalUses = [...workflow.matchAll(/uses: ([^\s@]+)@([^\s#]+)/g)];
-  assert.equal(externalUses.length, PINNED_ACTIONS.size);
+  // Actions repeat across jobs, so require every reviewed action to appear and
+  // every appearance to carry its reviewed SHA.
+  assert.deepEqual(
+    [...new Set(externalUses.map(([, action]) => action))].sort(),
+    [...PINNED_ACTIONS.keys()].sort(),
+  );
   for (const [, action, reference] of externalUses) {
     assert.equal(reference, PINNED_ACTIONS.get(action), `${action} must use its reviewed SHA`);
     assert.match(reference, /^[0-9a-f]{40}$/);
