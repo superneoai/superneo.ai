@@ -97,6 +97,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /className="making-line">in the making\.<\/p>/);
   assert.match(styles, /\.making-line/);
   assert.match(app, /className="contact-link x-link"/);
+  assert.match(app, /href="\.\/legal\/">LEGAL<\/a>/);
   assert.match(app, /href="https:\/\/x\.com\/superneoai"/);
   assert.match(app, />@superneoai<\/span>/);
   assert.match(app, /aria-hidden="true">𝕏<\/span>/);

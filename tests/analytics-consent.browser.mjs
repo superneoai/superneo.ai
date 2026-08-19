@@ -68,10 +68,13 @@ async function stopServer(server) {
 test("consent blocks, permits, and withdraws PostHog without affecting the experience", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const privacyPage = await fetch(`${BASE_URL}/privacy/`).then((response) => response.text());
+  const legalPage = await fetch(`${BASE_URL}/legal/index.html`).then((response) => response.text());
   assert.match(privacyPage, /<title>Privacy — superneo\.ai<\/title>/);
   assert.match(privacyPage, /<h1>Privacy<\/h1>/);
   assert.match(privacyPage, /aria-label="Back to superneo\.ai">[\s\S]*?<svg[\s\S]*?<span>BACK<\/span>/);
   assert.doesNotMatch(privacyPage, /RETURN TO SUPERNEO/);
+  assert.match(legalPage, /<title>Legal — superneo\.ai<\/title>/);
+  assert.match(legalPage, /<h1>Legal<\/h1>/);
   const browser = await launchConsentBrowser();
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -186,6 +189,17 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
           const rect = element.getBoundingClientRect();
           return { top: rect.top, bottom: rect.bottom };
         });
+      const siteItems = Array.from(document.querySelectorAll(".footer-privacy .contact-link"))
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            label: element.textContent?.trim(),
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+          };
+        });
       return {
         footer: bounds(".site-footer"),
         status: bounds(".status-line"),
@@ -193,9 +207,28 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
         contacts: bounds(".contact-links"),
         contactItems,
         contactDirection: getComputedStyle(document.querySelector(".contact-links")).flexDirection,
+        siteItems,
+        siteLabel: document.querySelector(".footer-privacy")?.getAttribute("aria-label"),
       };
     });
     assert.ok(mobileFooter.footer && mobileFooter.status && mobileFooter.privacy && mobileFooter.contacts);
+    assert.equal(mobileFooter.siteLabel, "Site information");
+    assert.deepEqual(mobileFooter.siteItems.map(({ label }) => label), ["PRIVACY", "LEGAL"]);
+    assert.ok(
+      mobileFooter.siteItems.every(({ bottom, top }) => bottom - top >= 44),
+      "mobile site-information links retain 44px touch targets",
+    );
+    assert.ok(
+      mobileFooter.siteItems.every(({ top }) => Math.abs(top - mobileFooter.siteItems[0].top) < 1),
+      "PRIVACY and LEGAL share one mobile baseline",
+    );
+    assert.ok(
+      Math.abs(
+        (mobileFooter.privacy.left + mobileFooter.privacy.right) / 2
+        - (mobileFooter.footer.left + mobileFooter.footer.right) / 2
+      ) < 1,
+      "site-information links remain centered in the footer",
+    );
     assert.equal(mobileFooter.contactDirection, "row", "mobile contact links stay on one line");
     assert.ok(
       mobileFooter.contactItems.every(({ top }) => Math.abs(top - mobileFooter.contactItems[0].top) < 1),
@@ -242,6 +275,17 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     assert.equal(posthogRequests.length, countAfterWithdrawal);
     const storageKeys = await page.evaluate(() => Object.keys(window.localStorage));
     assert.equal(storageKeys.some((key) => /^(?:ph_|__ph)/.test(key)), false);
+
+    const legalLink = page.getByRole("link", { name: "LEGAL", exact: true });
+    assert.equal(await legalLink.getAttribute("href"), "./legal/");
+    assert.equal(await legalLink.getAttribute("aria-haspopup"), null);
+    await legalLink.focus();
+    assert.equal(await legalLink.evaluate((link) => document.activeElement === link), true);
+    await Promise.all([
+      page.waitForURL(`${BASE_URL}/legal/`),
+      legalLink.click(),
+    ]);
+    assert.equal(await page.locator(".privacy-preferences[open]").count(), 0);
     assert.deepEqual(browserErrors, []);
   } finally {
     await context.close();

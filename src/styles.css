@@ -1091,6 +1091,8 @@ a {
   position: absolute;
   bottom: 0;
   left: 50%;
+  display: flex;
+  gap: clamp(0.85rem, 1.4vw, 1.4rem);
   transform: translateX(-50%);
 }
 
