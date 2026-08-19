@@ -345,6 +345,24 @@ async function waitForScene(session, ready = true) {
   );
 }
 
+// The final-stage wordmark slides into place, so measuring before it lands
+// reports a position that depends on how fast the machine is.
+async function waitForWordmarkSettle(session) {
+  await waitFor(
+    session,
+    `
+      const wordmark = document.querySelector('h2[data-state="active"] .stage-word');
+      if (!wordmark) return false;
+      const transform = getComputedStyle(wordmark).transform;
+      if (transform === 'none') return true;
+      const matrix = new DOMMatrixReadOnly(transform);
+      return Math.abs(matrix.m41) < 0.1 && Math.abs(matrix.m42) < 0.1;
+    `,
+    "the settled final-stage wordmark",
+    30_000,
+  );
+}
+
 async function stateSnapshot(session) {
   return session.execute(`
     const experience = document.querySelector('.experience');
@@ -577,6 +595,7 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   }
 
   await setScroll(session, 1);
+  await waitForWordmarkSettle(session);
   result.geometry = await measureGeometry(session);
   if (viewportName === "desktop") result.geometry.core = assertDesktopGeometry(result.geometry);
   const neoBuffer = await captureNeoMask(session);
