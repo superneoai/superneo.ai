@@ -23,5 +23,8 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // LatentField is intentionally lazy (currently 193.5 kB gzip); tests enforce
+    // its 750 kB raw budget and retain the ordinary 500 kB budget for every other chunk.
+    chunkSizeWarningLimit: 750,
   },
 });
