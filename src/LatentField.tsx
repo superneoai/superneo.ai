@@ -726,11 +726,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       }
       const renderEnded = performance.now();
       frameProbe?.sample(renderEnded, renderEnded - renderStarted);
-      needsRender = (sceneReady && sceneReveal.value < 1) || (
-        !sceneReady && artworkReady && shaderHealthy &&
-        (readinessStartedAt === 0 ||
-          performance.now() - readinessStartedAt < (qa?.sceneDelay ?? 0))
-      );
+      // Readiness needs several valid frames, so keep asking for them until the
+      // scene reports ready. Reduced motion renders only when this flag is set,
+      // and stopping early there left the poster up permanently.
+      needsRender = (sceneReady && sceneReveal.value < 1) ||
+        (!sceneReady && artworkReady && shaderHealthy);
     };
 
     const tick = (time: number) => {
