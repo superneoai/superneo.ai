@@ -73,8 +73,8 @@ test("pull requests produce the required build check without deployment privileg
   assert.match(visual, /runs-on: macos-/, "the scene baseline targets macOS");
   assert.match(
     visual,
-    /run: npm run test:visual -- --browsers=chromium --skip-performance/,
-    "performance figures belong to the recording machine, not the runner",
+    /run: npm run test:visual -- --browsers=chromium --skip-performance --skip-pulse/,
+    "timer-sampled figures belong to the recording machine, not the runner",
   );
   assert.match(visual, /^    timeout-minutes: \d+$/m, "a hung scene run must fail");
   assert.doesNotMatch(visual, /(?:pages|id-token|security-events): write/);

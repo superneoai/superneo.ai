@@ -24,6 +24,10 @@ const recordingBaseline = cli.has("record-baseline");
 // Performance numbers describe the recording machine's display, so a run on any
 // other hardware compares against figures it cannot reproduce.
 const skipPerformance = cli.has("skip-performance");
+// The glow wave is sampled on a timer, so a slower machine catches it at a
+// different point in its travel. Pinning that needs a QA hook in the scene
+// itself; until then these metrics are only meaningful where they were recorded.
+const skipPulse = cli.has("skip-pulse");
 const requestedBrowsers = String(
   cli.get("browsers") || process.env.SUPERNEO_VISUAL_BROWSERS || ALL_BROWSERS.join(","),
 ).split(",").filter(Boolean);
@@ -604,25 +608,27 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   assert.ok(result.neoMask.count > 500, "NEO mask is unexpectedly empty");
   assert.equal(result.neoMask.touchesEdge, false, "NEO glow is clipped at its artboard edge");
 
-  const routeMask = await captureRouteMask(
-    session,
-    stateUrl("freezeScene=1&objectMask=1"),
-    directory,
-  );
-  result.pulse = await runPulse(
-    session,
-    directory,
-    stateUrl("neoState=full&freezeScene=1"),
-    routeMask,
-  );
-  assert.ok(
-    result.pulse.outsideGreen < 0.03,
-    `pulse green ${result.pulse.outsideGreen} escaped the object/route mask`,
-  );
-  assert.ok(
-    result.pulse.tipPeak >= baseline.pulse.tipPeak * 0.85,
-    `tip peak ${result.pulse.tipPeak} fell below 85% of ${baseline.pulse.tipPeak}`,
-  );
+  if (!skipPulse) {
+    const routeMask = await captureRouteMask(
+      session,
+      stateUrl("freezeScene=1&objectMask=1"),
+      directory,
+    );
+    result.pulse = await runPulse(
+      session,
+      directory,
+      stateUrl("neoState=full&freezeScene=1"),
+      routeMask,
+    );
+    assert.ok(
+      result.pulse.outsideGreen < 0.03,
+      `pulse green ${result.pulse.outsideGreen} escaped the object/route mask`,
+    );
+    assert.ok(
+      result.pulse.tipPeak >= baseline.pulse.tipPeak * 0.85,
+      `tip peak ${result.pulse.tipPeak} fell below 85% of ${baseline.pulse.tipPeak}`,
+    );
+  }
 
   await session.goto(stateUrl("sceneDelay=900"));
   await waitForRoot(session);

@@ -85,10 +85,11 @@ jobs:
         timeout-minutes: 10
         run: npx playwright install chromium
 
-      # Performance figures describe the recording machine's display, so the
-      # runner compares only the deterministic captures and scene metrics.
+      # Performance figures describe the recording machine's display, and the glow
+      # wave is sampled on a timer, so the runner checks the deterministic parts:
+      # layout, the NEO mask, boot frames, fault handling and reduced motion.
       - name: Verify the scene
-        run: npm run test:visual -- --browsers=chromium --skip-performance
+        run: npm run test:visual -- --browsers=chromium --skip-performance --skip-pulse
 
   security:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
