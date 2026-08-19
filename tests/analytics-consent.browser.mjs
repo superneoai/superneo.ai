@@ -215,8 +215,10 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
     assert.equal(mobileFooter.siteLabel, "Site information");
     assert.deepEqual(mobileFooter.siteItems.map(({ label }) => label), ["PRIVACY", "LEGAL"]);
     assert.ok(
-      mobileFooter.siteItems.every(({ bottom, top }) => bottom - top >= 44),
-      "mobile site-information links retain 44px touch targets",
+      mobileFooter.siteItems.every(({ bottom, left, right, top }) => (
+        right - left >= 44 && bottom - top >= 44
+      )),
+      "mobile site-information links retain 44 by 44px touch targets",
     );
     assert.ok(
       mobileFooter.siteItems.every(({ top }) => Math.abs(top - mobileFooter.siteItems[0].top) < 1),

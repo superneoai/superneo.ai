@@ -1844,9 +1844,11 @@ a {
 
   .contact-link {
     display: inline-flex;
+    min-width: 2.75rem;
     min-height: 2.75rem;
     padding: 0.68rem 0;
     align-items: center;
+    justify-content: center;
   }
 
   .scroll-rail {
