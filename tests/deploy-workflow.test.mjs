@@ -50,7 +50,17 @@ test("pull requests produce the required build check without deployment privileg
     /^    permissions:\n      contents: read\n      pages: read\n    runs-on: ubuntu-latest/m,
   );
   assert.match(build, /run: npm ci --ignore-scripts/);
-  assert.match(build, /run: npx playwright install --with-deps chromium/);
+  assert.match(build, /run: npx playwright install chromium/);
+  assert.match(
+    build,
+    /^    runs-on: ubuntu-latest\n    timeout-minutes: \d+$/m,
+    "a hung build must fail instead of holding the required check open",
+  );
+  assert.match(
+    build,
+    /Install Chromium\n        timeout-minutes: \d+\n        run: npx playwright install chromium/,
+    "the browser download must be bounded",
+  );
   assert.match(build, /run: npm audit --audit-level=moderate/);
   assert.match(build, /run: npm test/);
   assert.match(build, /VITE_POSTHOG_KEY: \$\{\{ vars\.POSTHOG_PROJECT_KEY \}\}/);
