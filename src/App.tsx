@@ -33,12 +33,21 @@ const stages = [
 const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
 const stageTotal = String(STAGE_COUNT).padStart(2, "0");
 const WORD_GLIDE_DISTANCE_EM = 0.29557;
+const WORD_GLIDE_BEZIER = [1 / 3, 4 / 15, 2 / 3, 11 / 15] as const;
 const ACTIVE_STAGE_SCALE = 1.015;
 const DESKTOP_WORD_TRAVEL = {
   x: -WORD_GLIDE_DISTANCE_EM,
   y: -WORD_GLIDE_DISTANCE_EM * 29 / 30,
 };
 const MOBILE_WORD_TRAVEL = { x: 0, y: WORD_GLIDE_DISTANCE_EM };
+
+function easeWordGlide(progress: number) {
+  const [, y1, , y2] = WORD_GLIDE_BEZIER;
+  const inverse = 1 - progress;
+  return 3 * inverse * inverse * progress * y1
+    + 3 * inverse * progress * progress * y2
+    + progress * progress * progress;
+}
 
 function toStageStackStyle(index: number) {
   return {
@@ -362,11 +371,12 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
       wordRefs.current.forEach((word, index) => {
         if (!word) return;
         const stageProgress = toStageProgress(progress, index);
-        const remaining = reducedMotion.matches ? 0 : 1 - stageProgress;
+        const easedStageProgress = easeWordGlide(stageProgress);
+        const remaining = reducedMotion.matches ? 0 : 1 - easedStageProgress;
         word.style.transform = `translate3d(${(travel.x * remaining).toFixed(5)}em, ${(travel.y * remaining).toFixed(5)}em, 0)`;
         word.style.opacity = reducedMotion.matches
           ? "1"
-          : (0.78 + stageProgress * 0.22).toFixed(4);
+          : (0.78 + easedStageProgress * 0.22).toFixed(4);
       });
     };
 

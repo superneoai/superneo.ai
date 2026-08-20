@@ -89,6 +89,22 @@ function distanceBetween(left, right) {
   return Math.hypot(right.x - left.x, right.y - left.y);
 }
 
+async function sampleBoundaryVelocity(page, boundary, radius = 8) {
+  const positions = [];
+  for (let scroll = boundary - radius; scroll <= boundary + radius; scroll += 1) {
+    positions.push(await sampleActiveWordPosition(
+      page,
+      scroll,
+      scroll < boundary ? 1 : 2,
+    ));
+  }
+  return positions.slice(1).map((position, index) => ({
+    from: positions[index].scroll,
+    to: position.scroll,
+    delta: distanceBetween(positions[index], position),
+  }));
+}
+
 test("the active stage word travels continuously with scroll distance", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
@@ -142,6 +158,23 @@ test("the active stage word travels continuously with scroll distance", { timeou
       `stage handoff moved ${handoffDelta}px while an adjacent scroll step moved ${adjacentStep}px`,
     );
 
+    const velocityProfile = await sampleBoundaryVelocity(page, boundary);
+    const seamVelocity = velocityProfile.find(({ from, to }) => (
+      from === boundary - 1 && to === boundary
+    ))?.delta ?? Number.NaN;
+    const adjacentVelocity = velocityProfile.filter(({ from, to }) => (
+      (from >= boundary - 4 && to < boundary)
+      || (from >= boundary && to <= boundary + 3)
+    ));
+    const meanAdjacentVelocity = adjacentVelocity.reduce(
+      (total, { delta }) => total + delta,
+      0,
+    ) / adjacentVelocity.length;
+    assert.ok(
+      Math.abs(seamVelocity - meanAdjacentVelocity) <= meanAdjacentVelocity * 0.12,
+      `stage seam velocity ${seamVelocity}px diverged from adjacent velocity ${meanAdjacentVelocity}px`,
+    );
+
     const heldBefore = await sampleStageWord(page, 0.55);
     await sleep(700);
     const heldAfter = await page.evaluate(() => {
@@ -161,6 +194,11 @@ test("the active stage word travels continuously with scroll distance", { timeou
       afterStep,
       adjacentStep,
       handoffDelta,
+    })}\n`);
+    process.stdout.write(`stage seam velocity ${JSON.stringify({
+      meanAdjacentVelocity,
+      seamVelocity,
+      profile: velocityProfile,
     })}\n`);
   } finally {
     await context.close();
