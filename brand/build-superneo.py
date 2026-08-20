@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
@@ -16,6 +17,12 @@ MASTER = BRAND / "superneo-rectangle.svg"
 COVER = BRAND / "superneo-x-cover.svg"
 TRACKING = -0.075
 INK_HEIGHT = 260
+GAP_RATIO = 0.1192
+FRAME_X = 160
+FRAME_HEIGHT = 600
+NEO_WIDTH = 750
+COVER_WIDTH = 1500
+COVER_HEIGHT = 500
 
 
 def run(*args):
@@ -47,18 +54,31 @@ with TemporaryDirectory() as directory:
     tracking = TRACKING * font["head"].unitsPerEm
     positions = []
     paths = []
+    bounds = []
     x = 0
     for index, item in enumerate(shaped):
-        positions.append(x + item["dx"])
+        position = x + item["dx"]
+        positions.append(position)
         glyph_name = font.getGlyphName(item["g"])
         pen = SVGPathPen(glyph_set)
         glyph_set[glyph_name].draw(pen)
         paths.append(compact(pen.getCommands()))
+        bounds_pen = BoundsPen(glyph_set)
+        glyph_set[glyph_name].draw(bounds_pen)
+        bounds.append((bounds_pen.bounds[0] + position, bounds_pen.bounds[2] + position))
         x += item["ax"]
         if index < len(shaped) - 1:
             x += tracking
     scale = INK_HEIGHT / 742
     baseline = 726 * scale
+    ink_left = min(bound[0] for bound in bounds) * scale
+    ink_right = max(bound[1] for bound in bounds) * scale
+    gap = INK_HEIGHT * GAP_RATIO
+    neo_translate = ink_right + gap
+    side_margin = FRAME_X + ink_left
+    master_width = FRAME_X + neo_translate + NEO_WIDTH + side_margin
+    cover_height = master_width * COVER_HEIGHT / COVER_WIDTH
+    cover_y = (FRAME_HEIGHT - cover_height) / 2
     path_lines = "\n".join(
         f'      <path d="{path}" transform="translate({position:g})"/>'
         for position, path in zip(positions, paths)
@@ -77,10 +97,22 @@ with TemporaryDirectory() as directory:
     master, replacements = pattern.subn(outlined, master, count=1)
     if replacements != 1:
         raise RuntimeError("SUPER artwork was not found")
+    master = re.sub(
+        r'width="[^"]+" height="600" viewBox="0 0 [^"]+"',
+        f'width="{master_width:.12f}" height="600" viewBox="0 0 {master_width:.12f} 600"',
+        master,
+        count=1,
+    )
+    master = re.sub(
+        r'<g transform="translate\([^)]* 0\)"><use href="#neo"',
+        f'<g transform="translate({neo_translate:.12f} 0)"><use href="#neo"',
+        master,
+        count=1,
+    )
     MASTER.write_text(master)
     cover = master.replace(
-        'width="2200" height="600" viewBox="0 0 2200 600"',
-        'width="1500" height="500" viewBox="0 -66.666666666667 2200 733.333333333333"',
+        f'width="{master_width:.12f}" height="600" viewBox="0 0 {master_width:.12f} 600"',
+        f'width="1500" height="500" viewBox="0 {cover_y:.12f} {master_width:.12f} {cover_height:.12f}"',
         1,
     ).replace(
         "SUPERNEO horizontal rectangular logo",
@@ -89,7 +121,10 @@ with TemporaryDirectory() as directory:
     )
     COVER.write_text(cover)
     shutil.copyfile(LICENSE, BRAND / "GEIST-LICENSE.txt")
-    exports = [(MASTER, "superneo-rectangle", 2200, 600), (COVER, "superneo-x-cover", 1500, 500)]
+    exports = [
+        (MASTER, "superneo-rectangle", round(master_width), FRAME_HEIGHT),
+        (COVER, "superneo-x-cover", COVER_WIDTH, COVER_HEIGHT),
+    ]
     for source, name, width, height in exports:
         png = BRAND / f"{name}.png"
         black = Path(directory) / f"{name}-black.png"
