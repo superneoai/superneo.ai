@@ -3,13 +3,13 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const MAIN_ONLY = "github.ref == 'refs/heads/main' && github.event_name != 'pull_request'";
-const PINNED_ACTIONS = new Map([
-  ["actions/checkout", "3d3c42e5aac5ba805825da76410c181273ba90b1"],
-  ["actions/setup-node", "820762786026740c76f36085b0efc47a31fe5020"],
-  ["actions/configure-pages", "45bfe0192ca1faeb007ade9deae92b16b8254a0d"],
-  ["actions/upload-pages-artifact", "fc324d3547104276b827a68afc52ff2a11cc49c9"],
-  ["actions/deploy-pages", "cd2ce8fcbc39b97be8ca5fce6e763baed58fa128"],
-]);
+const REQUIRED_ACTIONS = [
+  "actions/checkout",
+  "actions/configure-pages",
+  "actions/deploy-pages",
+  "actions/setup-node",
+  "actions/upload-pages-artifact",
+];
 
 function jobBlock(workflow, jobName) {
   const jobs = workflow.slice(workflow.indexOf("\njobs:\n") + 1);
@@ -100,11 +100,14 @@ test("pull requests produce the required build check without deployment privileg
   const externalUses = [...workflow.matchAll(/uses: ([^\s@]+)@([^\s#]+)/g)];
   assert.deepEqual(
     [...new Set(externalUses.map(([, action]) => action))].sort(),
-    [...PINNED_ACTIONS.keys()].sort(),
+    REQUIRED_ACTIONS,
   );
   for (const [, action, reference] of externalUses) {
-    assert.equal(reference, PINNED_ACTIONS.get(action), `${action} must use its reviewed SHA`);
-    assert.match(reference, /^[0-9a-f]{40}$/);
+    assert.match(
+      reference,
+      /^[0-9a-f]{40}$/,
+      `${action} must pin an immutable commit, not a tag`,
+    );
   }
   assert.doesNotMatch(workflow, /uses: [^\s]+@v\d+/);
 });

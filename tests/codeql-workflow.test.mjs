@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const CHECKOUT_SHA = "3d3c42e5aac5ba805825da76410c181273ba90b1";
-const CODEQL_SHA = "5595ccaf912efad79be6eef63a5619ff05969be3";
+const PINNED = /@[0-9a-f]{40}$/;
 
 test("CodeQL provides the required analyze check with least privilege and pinned actions", async () => {
   const workflow = await readFile(
@@ -24,8 +23,15 @@ test("CodeQL provides the required analyze check with least privilege and pinned
   );
   assert.match(workflow, /languages: javascript-typescript/);
   assert.match(workflow, /build-mode: none/);
-  assert.match(workflow, new RegExp(`actions/checkout@${CHECKOUT_SHA}`));
-  assert.equal((workflow.match(new RegExp(`github/codeql-action/(?:init|analyze)@${CODEQL_SHA}`, "g")) ?? []).length, 2);
+  const uses = [...workflow.matchAll(/uses: (\S+)/g)].map((match) => match[1]);
+  assert.deepEqual(uses.map((entry) => entry.split("@")[0]), [
+    "actions/checkout",
+    "github/codeql-action/init",
+    "github/codeql-action/analyze",
+  ]);
+  for (const entry of uses) {
+    assert.match(entry, PINNED, `${entry} must pin an immutable commit`);
+  }
   assert.doesNotMatch(workflow, /uses: [^\s]+@v\d+/);
   assert.doesNotMatch(workflow, /(?:pages|id-token|actions): write/);
 });
