@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+
+async function filesContaining(directory, text) {
+  const matches = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const url = new URL(entry.name + (entry.isDirectory() ? "/" : ""), directory);
+    if (entry.isDirectory()) {
+      matches.push(...await filesContaining(url, text));
+    } else if ((await readFile(url)).includes(text)) {
+      matches.push(url.pathname);
+    }
+  }
+  return matches;
+}
 
 test("builds a complete GitHub Pages artifact", async () => {
   const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
@@ -38,6 +51,14 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.doesNotMatch(`${html}\n${app}`, /undisclosed|not public/i);
   assert.match(app, /<span className="footer-brand">SUPERNEO™<\/span>/);
   assert.doesNotMatch(app, /© 2026 ACTUAL LTD\./);
+  assert.deepEqual(
+    await filesContaining(new URL("../src/", import.meta.url), "YOU FOUND IT"),
+    [],
+  );
+  assert.deepEqual(
+    await filesContaining(new URL("../dist/", import.meta.url), "YOU FOUND IT"),
+    [],
+  );
   assert.match(app, /Possibility, compressed\./);
   assert.match(app, /New structure appears\./);
   assert.match(app, /The structure remains open\./);
