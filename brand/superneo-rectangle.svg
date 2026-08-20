@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="600" viewBox="0 0 2200 600">
+  <title>SUPERNEO horizontal rectangular logo</title>
+  <defs>
+    <filter id="glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="16"/></filter>
+    <g id="neo" fill="#BAF628">
+      <path d="M0 260V0H230V260H178V52H52V260Z"/>
+      <g transform="translate(260)"><rect width="230" height="52"/><rect y="104" width="230" height="52"/><rect y="208" width="230" height="52"/></g>
+      <path fill-rule="evenodd" d="M520 0H750V260H520ZM572 52V208H698V52Z"/>
+    </g>
+  </defs>
+  <g transform="translate(160 170)">
+    <text x="0" y="255.6" fill="#E8E5DC" font-family="Arial, Helvetica, sans-serif" font-size="351" font-weight="500" letter-spacing="-26.325">SUPER</text>
+    <g transform="translate(1130 0)"><use href="#neo" opacity=".35" filter="url(#glow)"/><use href="#neo"/></g>
+  </g>
+</svg>

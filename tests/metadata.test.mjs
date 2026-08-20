@@ -25,7 +25,8 @@ test("metadata connects search, social, structured data, and mobile identity", a
   assert.match(html, new RegExp(`name="twitter:image:alt" content="${socialAlt.replaceAll(".", "\\.")}"`));
   assert.match(html, /rel="alternate" hreflang="x-default"/);
   assert.match(html, /<noscript>[\s\S]*?<h1>SUPERNEO<\/h1>[\s\S]*?href="\.\/privacy\/"[\s\S]*?href="\.\/legal\/"/);
-  assert.doesNotMatch(html, /rel="(?:shortcut )?icon"|apple-touch-icon|site\.webmanifest/i);
+  assert.match(html, /rel="icon"[^>]*type="image\/svg\+xml"/i);
+  assert.match(html, /rel="apple-touch-icon"/i);
   assert.equal(website.name, "SUPERNEO");
   assert.equal(website.alternateName, "superneo.ai");
   assert.deepEqual(website.publisher, { "@id": "https://superneo.ai/#organization" });

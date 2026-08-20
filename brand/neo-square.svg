@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>NEO square logo</title>
+  <defs>
+    <filter id="glow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="18"/></filter>
+    <g id="neo" fill="#BAF628">
+      <path d="M0 260V0H230V260H178V52H52V260Z"/>
+      <g transform="translate(260)"><rect width="230" height="52"/><rect y="104" width="230" height="52"/><rect y="208" width="230" height="52"/></g>
+      <path fill-rule="evenodd" d="M520 0H750V260H520ZM572 52V208H698V52Z"/>
+    </g>
+  </defs>
+  <g transform="translate(107 372) scale(1.08)"><use href="#neo" opacity=".35" filter="url(#glow)"/><use href="#neo"/></g>
+</svg>

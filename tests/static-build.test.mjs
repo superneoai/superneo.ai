@@ -68,7 +68,7 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.match(app, /renderStageMeter/);
   assert.doesNotMatch(app, /stageFillOrders/);
   assert.match(html, /https:\/\/superneo\.ai\/og\.png/);
-  assert.doesNotMatch(html, /rel="(?:shortcut )?icon"|apple-touch-icon|site\.webmanifest/i);
+  assert.match(html, /rel="manifest" href="\.\/site\.webmanifest"/i);
   assert.match(html, /src="\.\/assets\//);
   assert.doesNotMatch(`${html}\n${app}`, /quietly|becoming|unannounced/i);
   assert.match(morph, /CatmullRomCurve3/);

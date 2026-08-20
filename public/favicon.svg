@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>SUPERNEO E square logo</title>
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="25"/>
+    </filter>
+    <!-- Exact 230 × 260 master scaled uniformly by 2.55769230769. -->
+    <g id="e" fill="#BAF628" data-master-width="230" data-master-height="260" data-uniform-scale="2.55769230769">
+      <rect x="217.865384615" y="180" width="588.269230769" height="133"/>
+      <rect x="217.865384615" y="446" width="588.269230769" height="133"/>
+      <rect x="217.865384615" y="712" width="588.269230769" height="133"/>
+    </g>
+  </defs>
+  <use href="#e" opacity=".35" filter="url(#glow)"/>
+  <use href="#e"/>
+</svg>
