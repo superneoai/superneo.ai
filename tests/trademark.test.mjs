@@ -2,6 +2,68 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+function cssBlockBody(source, openingBrace) {
+  let depth = 1;
+  let quote = null;
+  let escaped = false;
+
+  for (let index = openingBrace + 1; index < source.length; index += 1) {
+    const character = source[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) quote = null;
+      continue;
+    }
+    if (character === "\"" || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "{") depth += 1;
+    if (character === "}") depth -= 1;
+    if (depth === 0) return source.slice(openingBrace + 1, index);
+  }
+
+  return null;
+}
+
+function cssRuleBody(source, selector) {
+  let cursor = 0;
+  while (cursor < source.length) {
+    const openingBrace = source.indexOf("{", cursor);
+    if (openingBrace === -1) return null;
+    const ruleSelectors = source.slice(cursor, openingBrace)
+      .split(",")
+      .map((candidate) => candidate.trim());
+    const body = cssBlockBody(source, openingBrace);
+    if (body === null) return null;
+    if (ruleSelectors.includes(selector)) return body;
+    cursor = openingBrace + body.length + 2;
+  }
+  return null;
+}
+
+function assertReducedMotionDisablesFooterBrand(styles) {
+  const mediaPrelude = "@media (prefers-reduced-motion: reduce)";
+  const mediaStart = styles.indexOf(mediaPrelude);
+  assert.notEqual(mediaStart, -1, "expected the reduced-motion media query");
+  const mediaOpeningBrace = styles.indexOf("{", mediaStart + mediaPrelude.length);
+  const mediaBody = cssBlockBody(styles, mediaOpeningBrace);
+  assert.ok(mediaBody, "expected a complete reduced-motion media block");
+  const footerBrandRule = cssRuleBody(
+    mediaBody,
+    '.experience[data-scene-ready="true"] > .site-footer .footer-brand',
+  );
+  assert.ok(footerBrandRule, "expected the footer brand selector inside reduced motion");
+  assert.match(footerBrandRule, /(?:^|;)\s*animation\s*:\s*none\s*;/);
+}
+
 test("the canonical brand uses the intended trademark treatments", async () => {
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
@@ -41,7 +103,16 @@ test("the canonical brand uses the intended trademark treatments", async () => {
   assert.doesNotMatch(footerBrandRule, /(?:^|\s)(?:width|overflow):/);
   assert.match(styles, /footer-brand-reveal 470ms steps\(9, end\) 420ms backwards/);
   assert.match(styles, /@keyframes footer-brand-reveal\s*{[\s\S]*?clip-path:\s*inset\(0 100% 0 0\)[\s\S]*?clip-path:\s*inset\(0\)/);
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)\s*{[\s\S]*?\.site-footer \.footer-brand,(?:\s*[^{}]+,)*\s*[^{}]+{[^}]*animation:\s*none;?[^}]*}/);
+  assertReducedMotionDisablesFooterBrand(styles);
+  const declarationMovedOutsideRule = styles.replace(
+    "    animation: none;\n  }\n\n  .stage-panel,",
+    "  }\n\n  .footer-brand {\n    animation: none;\n  }\n\n  .stage-panel,",
+  );
+  assert.notEqual(declarationMovedOutsideRule, styles, "negative control must alter the CSS");
+  assert.throws(
+    () => assertReducedMotionDisablesFooterBrand(declarationMovedOutsideRule),
+    /animation/,
+  );
   for (const page of [privacy, legal]) {
     assert.match(page, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
     assert.equal((page.match(/™/g) ?? []).length, 1);
