@@ -33,11 +33,16 @@ const stages = [
 const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
 const stageTotal = String(STAGE_COUNT).padStart(2, "0");
 const WORD_GLIDE_DISTANCE_EM = 0.29557;
+const DESKTOP_WORD_GLIDE_DISTANCE_EM = 0.275;
 const WORD_GLIDE_BEZIER = [1 / 3, 4 / 15, 2 / 3, 11 / 15] as const;
 const ACTIVE_STAGE_SCALE = 1.015;
 const DESKTOP_WORD_TRAVEL = {
-  x: -WORD_GLIDE_DISTANCE_EM,
-  y: -WORD_GLIDE_DISTANCE_EM * 29 / 30,
+  x: -DESKTOP_WORD_GLIDE_DISTANCE_EM,
+  y: -DESKTOP_WORD_GLIDE_DISTANCE_EM * 29 / 30,
+};
+const DESKTOP_WORD_RUNWAY_INSET = {
+  x: (WORD_GLIDE_DISTANCE_EM + DESKTOP_WORD_TRAVEL.x) * 2 * ACTIVE_STAGE_SCALE,
+  y: (WORD_GLIDE_DISTANCE_EM * 29 / 30 + DESKTOP_WORD_TRAVEL.y) * 2 * ACTIVE_STAGE_SCALE,
 };
 const MOBILE_WORD_TRAVEL = { x: 0, y: WORD_GLIDE_DISTANCE_EM };
 
@@ -52,8 +57,8 @@ function easeWordGlide(progress: number) {
 function toStageStackStyle(index: number) {
   return {
     "--active-stage-scale": ACTIVE_STAGE_SCALE,
-    "--desktop-stack-x": `${(-DESKTOP_WORD_TRAVEL.x * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
-    "--desktop-stack-y": `${(-DESKTOP_WORD_TRAVEL.y * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
+    "--desktop-stack-x": `${(DESKTOP_WORD_RUNWAY_INSET.x - DESKTOP_WORD_TRAVEL.x * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
+    "--desktop-stack-y": `${(DESKTOP_WORD_RUNWAY_INSET.y - DESKTOP_WORD_TRAVEL.y * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
     "--mobile-stack-x": "0em",
     "--mobile-stack-y": `${(-MOBILE_WORD_TRAVEL.y * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
   } as CSSProperties;

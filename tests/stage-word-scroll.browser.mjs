@@ -105,7 +105,130 @@ async function sampleBoundaryVelocity(page, boundary, radius = 8) {
   }));
 }
 
-test("the active stage word travels continuously with scroll distance", { timeout: 90_000 }, async () => {
+async function sampleContainment(page, progress) {
+  await page.evaluate((nextProgress) => {
+    const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    window.scrollTo(0, range * nextProgress);
+  }, progress);
+  await page.evaluate(() => new Promise((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolveFrame));
+  }));
+  return page.evaluate((sampleProgress) => {
+    const word = document.querySelector('h2[data-state="active"] .stage-word');
+    const panel = document.querySelector(".stage-panel");
+    const header = document.querySelector(".site-header");
+    const footer = document.querySelector(".site-footer");
+    if (!(word instanceof HTMLElement)) throw new Error("active stage word is missing");
+    if (!(panel instanceof HTMLElement)) throw new Error("stage panel is missing");
+    if (!(header instanceof HTMLElement)) throw new Error("site header is missing");
+    if (!(footer instanceof HTMLElement)) throw new Error("site footer is missing");
+    const toRect = (element) => {
+      const bounds = element.getBoundingClientRect();
+      return {
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        left: bounds.left,
+      };
+    };
+    const overlaps = (left, right) => (
+      left.left < right.right
+      && left.right > right.left
+      && left.top < right.bottom
+      && left.bottom > right.top
+    );
+    const wordRect = toRect(word);
+    const panelRect = toRect(panel);
+    const clippingAncestors = [];
+    for (let ancestor = word.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const style = getComputedStyle(ancestor);
+      const clipsX = style.overflowX !== "visible";
+      const clipsY = style.overflowY !== "visible";
+      if (!clipsX && !clipsY) continue;
+      const bounds = toRect(ancestor);
+      clippingAncestors.push({
+        className: ancestor.className,
+        clipsX,
+        clipsY,
+        left: wordRect.left - bounds.left,
+        top: wordRect.top - bounds.top,
+        right: bounds.right - wordRect.right,
+        bottom: bounds.bottom - wordRect.bottom,
+      });
+    }
+    const layoutBox = (element) => ({
+      left: element.offsetLeft,
+      top: element.offsetTop,
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+    });
+    return {
+      progress: sampleProgress,
+      stage: Number(word.closest("h2")?.dataset.order),
+      margins: {
+        left: wordRect.left - panelRect.left,
+        top: wordRect.top - panelRect.top,
+        right: panelRect.right - wordRect.right,
+        bottom: panelRect.bottom - wordRect.bottom,
+      },
+      overlapsHeader: overlaps(wordRect, toRect(header)),
+      overlapsFooter: overlaps(wordRect, toRect(footer)),
+      clippingAncestors,
+      layout: {
+        panel: {
+          left: panelRect.left,
+          top: panelRect.top,
+          width: panelRect.right - panelRect.left,
+          height: panelRect.bottom - panelRect.top,
+        },
+        words: Array.from(document.querySelectorAll(".stage-word"), layoutBox),
+      },
+    };
+  }, progress);
+}
+
+async function measureContainment(page, viewport) {
+  await page.setViewportSize(viewport);
+  await page.waitForTimeout(450);
+  await page.evaluate(() => new Promise((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolveFrame));
+  }));
+  const samples = [];
+  for (let step = 0; step <= 12; step += 1) {
+    samples.push(await sampleContainment(page, step / 12));
+  }
+  const initialLayout = samples[0].layout;
+  for (const sample of samples) {
+    for (const [edge, margin] of Object.entries(sample.margins)) {
+      assert.ok(
+        margin >= -0.1,
+        `${viewport.width}px word escaped the panel ${edge} edge by ${-margin}px at ${sample.progress}`,
+      );
+    }
+    assert.equal(sample.overlapsHeader, false, `${viewport.width}px word overlapped the header`);
+    assert.equal(sample.overlapsFooter, false, `${viewport.width}px word overlapped the footer`);
+    for (const ancestor of sample.clippingAncestors) {
+      if (ancestor.clipsX) {
+        assert.ok(ancestor.left >= -0.1 && ancestor.right >= -0.1,
+          `${viewport.width}px word escaped a horizontal clipping ancestor`);
+      }
+      if (ancestor.clipsY) {
+        assert.ok(ancestor.top >= -0.1 && ancestor.bottom >= -0.1,
+          `${viewport.width}px word escaped a vertical clipping ancestor`);
+      }
+    }
+    assert.deepEqual(sample.layout, initialLayout, `${viewport.width}px layout changed while scrolling`);
+  }
+  return {
+    width: viewport.width,
+    minLeft: Math.min(...samples.map(({ margins }) => margins.left)),
+    minTop: Math.min(...samples.map(({ margins }) => margins.top)),
+    minRight: Math.min(...samples.map(({ margins }) => margins.right)),
+    minBottom: Math.min(...samples.map(({ margins }) => margins.bottom)),
+  };
+}
+
+test("the active stage word travels continuously with scroll distance", { timeout: 180_000 }, async () => {
   const server = await startServer();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
@@ -186,6 +309,45 @@ test("the active stage word travels continuously with scroll distance", { timeou
     assert.ok(Math.abs(heldAfter.x - heldBefore.x) < 0.01);
     assert.ok(Math.abs(heldAfter.y - heldBefore.y) < 0.01);
 
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await sampleContainment(page, 0);
+    const clsSupported = await page.evaluate(() => (
+      PerformanceObserver.supportedEntryTypes.includes("layout-shift")
+    ));
+    await page.evaluate(() => {
+      window.__stageWordCls = 0;
+      window.__stageWordClsObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (!entry.hadRecentInput) window.__stageWordCls += entry.value;
+        }
+      });
+      window.__stageWordClsObserver.observe({ type: "layout-shift" });
+    });
+    for (let step = 1; step <= 24; step += 1) {
+      await sampleContainment(page, step / 24);
+    }
+    const cumulativeLayoutShift = await page.evaluate(() => {
+      window.__stageWordClsObserver.disconnect();
+      return window.__stageWordCls;
+    });
+    assert.equal(clsSupported, true, "Chromium does not expose layout-shift entries");
+    assert.ok(
+      cumulativeLayoutShift <= 0.001,
+      `full stage scroll produced ${cumulativeLayoutShift} cumulative layout shift`,
+    );
+
+    const containment = [];
+    for (const viewport of [
+      { width: 1280, height: 720 },
+      { width: 1013, height: 720 },
+      { width: 820, height: 720 },
+      { width: 720, height: 844 },
+      { width: 480, height: 844 },
+      { width: 390, height: 844 },
+    ]) {
+      containment.push(await measureContainment(page, viewport));
+    }
+
     process.stdout.write(`stage word samples ${JSON.stringify(samples)}\n`);
     process.stdout.write(`stage handoff samples ${JSON.stringify({
       beforeStep,
@@ -200,6 +362,8 @@ test("the active stage word travels continuously with scroll distance", { timeou
       seamVelocity,
       profile: velocityProfile,
     })}\n`);
+    process.stdout.write(`stage containment ${JSON.stringify(containment)}\n`);
+    process.stdout.write(`stage cumulative layout shift ${cumulativeLayoutShift}\n`);
   } finally {
     await context.close();
     await browser.close();

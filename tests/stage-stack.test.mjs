@@ -41,8 +41,8 @@ test("stage words cascade continuously from top-left to bottom-right", async () 
 
   assert.match(app, /data-order=\{index\}/);
   assert.match(app, /style=\{toStageStackStyle\(index\)\}/);
-  assert.match(app, /"--desktop-stack-x": `\$\{\(-DESKTOP_WORD_TRAVEL\.x \* ACTIVE_STAGE_SCALE \* index\)/);
-  assert.match(app, /"--desktop-stack-y": `\$\{\(-DESKTOP_WORD_TRAVEL\.y \* ACTIVE_STAGE_SCALE \* index\)/);
+  assert.match(app, /"--desktop-stack-x": `\$\{\(DESKTOP_WORD_RUNWAY_INSET\.x - DESKTOP_WORD_TRAVEL\.x \* ACTIVE_STAGE_SCALE \* index\)/);
+  assert.match(app, /"--desktop-stack-y": `\$\{\(DESKTOP_WORD_RUNWAY_INSET\.y - DESKTOP_WORD_TRAVEL\.y \* ACTIVE_STAGE_SCALE \* index\)/);
   assert.match(app, /"--mobile-stack-y": `\$\{\(-MOBILE_WORD_TRAVEL\.y \* ACTIVE_STAGE_SCALE \* index\)/);
   assert.match(ruleBody(styles, ".stage-stack h2"), /top:\s*0/);
   assert.match(ruleBody(styles, ".stage-stack h2"), /--stack-x:\s*var\(--desktop-stack-x\)/);

@@ -18,6 +18,7 @@ test("mobile stage motion opposes the finger direction", async () => {
   assert.match(field, /self\.direction \* scrollEnergy \* 0\.16/);
   assert.match(field, /objectGroup\.position\.y = scrollLift/);
   assert.match(app, /const WORD_GLIDE_DISTANCE_EM = 0\.29557/);
+  assert.match(app, /const DESKTOP_WORD_GLIDE_DISTANCE_EM = 0\.275/);
   assert.match(app, /const WORD_GLIDE_BEZIER = \[1 \/ 3, 4 \/ 15, 2 \/ 3, 11 \/ 15\] as const/);
   assert.match(app, /const MOBILE_WORD_TRAVEL = \{ x: 0, y: WORD_GLIDE_DISTANCE_EM \}/);
   assert.match(app, /const easedStageProgress = easeWordGlide\(stageProgress\)/);

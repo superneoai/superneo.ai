@@ -767,10 +767,11 @@ a {
 
 .stage-panel {
   position: fixed;
-  right: clamp(1.25rem, 2.3vw, 2.25rem);
+  right: 0;
   bottom: clamp(6.4rem, 11vh, 9rem);
-  left: clamp(1.25rem, 2.3vw, 2.25rem);
+  left: 0;
   z-index: 2;
+  padding: 1.5rem clamp(1.25rem, 2.3vw, 2.25rem) 0;
   pointer-events: none;
 }
 
@@ -1708,7 +1709,11 @@ a {
   }
 
   .stage-panel {
+    right: 0;
     bottom: max(10.25rem, calc(env(safe-area-inset-bottom, 0px) + 9.8rem));
+    left: 0;
+    padding-right: max(1.15rem, calc(env(safe-area-inset-right, 0px) + 0.75rem));
+    padding-left: max(1.15rem, calc(env(safe-area-inset-left, 0px) + 0.75rem));
   }
 
   .stage-stack {
@@ -1913,7 +1918,11 @@ a {
   }
 
   .stage-panel {
+    right: 0;
     bottom: max(10.1rem, calc(env(safe-area-inset-bottom, 0px) + 9.65rem));
+    left: 0;
+    padding-right: max(0.88rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
+    padding-left: max(0.88rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
   }
 
   .stage-stack {
