@@ -60,6 +60,21 @@ test("the scene still reaches its ready state when motion is reduced", async () 
           "true",
           `the scene left reducedMotion=${reducedMotion} unready`,
         );
+        await page.evaluate(() => {
+          const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+          window.scrollTo(0, range * 0.5);
+        });
+        await page.waitForFunction(
+          () => document.querySelector('h2[data-order="1"]')?.getAttribute("data-state") === "active",
+        );
+        const wordOffset = await page.evaluate(() => {
+          const word = document.querySelector('h2[data-order="1"] .stage-word');
+          if (!(word instanceof HTMLElement)) throw new Error("active stage word is missing");
+          const matrix = new DOMMatrixReadOnly(getComputedStyle(word).transform);
+          return { x: matrix.m41, y: matrix.m42 };
+        });
+        assert.ok(Math.abs(wordOffset.x) < 0.1);
+        assert.ok(Math.abs(wordOffset.y) < 0.1);
         await context.close();
       }
     }

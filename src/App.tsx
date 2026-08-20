@@ -32,6 +32,8 @@ const stages = [
 
 const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
 const stageTotal = String(STAGE_COUNT).padStart(2, "0");
+const DESKTOP_WORD_TRAVEL = { x: -0.045, y: -0.04 };
+const MOBILE_WORD_TRAVEL = { x: 0, y: 0.15 };
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
@@ -320,8 +322,47 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
   const indexRef = useRef<HTMLParagraphElement>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
   const headingRefs = useRef<Array<HTMLHeadingElement | null>>([]);
+  const wordRefs = useRef<Array<HTMLSpanElement | null>>([]);
 
   useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const compactLayout = window.matchMedia("(max-width: 720px)");
+    let scrollFrame = 0;
+    let scrollRange = 1;
+
+    const updateScrollRange = () => {
+      scrollRange = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1,
+      );
+    };
+
+    const syncWordTravel = () => {
+      scrollFrame = 0;
+      const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
+      const travel = compactLayout.matches
+        ? MOBILE_WORD_TRAVEL
+        : DESKTOP_WORD_TRAVEL;
+      wordRefs.current.forEach((word, index) => {
+        if (!word) return;
+        const stageProgress = toStageProgress(progress, index);
+        const remaining = reducedMotion.matches ? 0 : 1 - stageProgress;
+        word.style.transform = `translate3d(${(travel.x * remaining).toFixed(5)}em, ${(travel.y * remaining).toFixed(5)}em, 0)`;
+        word.style.opacity = reducedMotion.matches
+          ? "1"
+          : (0.78 + stageProgress * 0.22).toFixed(4);
+      });
+    };
+
+    const queueWordTravel = () => {
+      if (!scrollFrame) scrollFrame = window.requestAnimationFrame(syncWordTravel);
+    };
+
+    const refreshWordTravel = () => {
+      updateScrollRange();
+      queueWordTravel();
+    };
+
     const syncStage = (event: Event) => {
       const { stage, previous } = (event as CustomEvent<StageChangeDetail>).detail;
       const direction = stage > previous ? "forward" : "backward";
@@ -379,9 +420,20 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
         }
       }).catch(() => undefined);
     }
+    updateScrollRange();
+    syncWordTravel();
+    window.addEventListener("scroll", queueWordTravel, { passive: true });
+    window.addEventListener("resize", refreshWordTravel, { passive: true });
+    reducedMotion.addEventListener("change", queueWordTravel);
+    compactLayout.addEventListener("change", queueWordTravel);
     window.addEventListener(STAGE_CHANGE_EVENT, syncStage);
     return () => {
       disposed = true;
+      window.cancelAnimationFrame(scrollFrame);
+      window.removeEventListener("scroll", queueWordTravel);
+      window.removeEventListener("resize", refreshWordTravel);
+      reducedMotion.removeEventListener("change", queueWordTravel);
+      compactLayout.removeEventListener("change", queueWordTravel);
       window.removeEventListener(STAGE_CHANGE_EVENT, syncStage);
     };
   }, []);
@@ -409,7 +461,11 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             <span className="stage-trail stage-trail--far" aria-hidden="true">
               <StageWord title={item.title} forcedNeoState={forcedNeoState} />
             </span>
-            <span className="stage-word" aria-hidden="true">
+            <span
+              className="stage-word"
+              ref={(element) => { wordRefs.current[index] = element; }}
+              aria-hidden="true"
+            >
               <StageWord
                 title={item.title}
                 forcedNeoState={forcedNeoState}

@@ -1,0 +1,119 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { resolve } from "node:path";
+import test from "node:test";
+import { chromium } from "playwright";
+
+const ROOT = resolve(import.meta.dirname, "..");
+const PORT = 4194;
+const BASE_URL = `http://127.0.0.1:${PORT}`;
+const sleep = (duration) => new Promise((resolveSleep) => setTimeout(resolveSleep, duration));
+
+async function startServer() {
+  const child = spawn(
+    resolve(ROOT, "node_modules/.bin/vite"),
+    ["--host", "127.0.0.1", "--port", String(PORT), "--strictPort"],
+    { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk; });
+  child.stderr.on("data", (chunk) => { output += chunk; });
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 12_000) {
+    if (child.exitCode !== null) throw new Error(`Vite stopped early:\n${output}`);
+    try {
+      if ((await fetch(BASE_URL)).ok) return child;
+    } catch {}
+    await sleep(100);
+  }
+  child.kill("SIGTERM");
+  throw new Error(`Vite failed to start:\n${output}`);
+}
+
+async function stopServer(server) {
+  if (server.exitCode !== null) return;
+  const exited = new Promise((resolveExit) => server.once("exit", resolveExit));
+  server.kill("SIGTERM");
+  await Promise.race([exited, sleep(2_000)]);
+}
+
+async function sampleStageWord(page, fraction) {
+  await page.evaluate((stageFraction) => {
+    const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    window.scrollTo(0, range * (2 + stageFraction) / 3);
+  }, fraction);
+  await page.waitForFunction(
+    () => document.querySelector('h2[data-order="2"]')?.getAttribute("data-state") === "active",
+  );
+  await page.evaluate(() => new Promise((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolveFrame));
+  }));
+  return page.evaluate(() => {
+    const word = document.querySelector('h2[data-order="2"] .stage-word');
+    assertWord(word);
+    const style = getComputedStyle(word);
+    const matrix = new DOMMatrixReadOnly(style.transform);
+    const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    return {
+      scroll: window.scrollY,
+      progress: window.scrollY / range,
+      x: matrix.m41,
+      y: matrix.m42,
+      opacity: Number(style.opacity),
+    };
+
+    function assertWord(element) {
+      if (!(element instanceof HTMLElement)) throw new Error("final stage word is missing");
+    }
+  });
+}
+
+test("the active stage word travels continuously with scroll distance", { timeout: 90_000 }, async () => {
+  const server = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  const page = await context.newPage();
+
+  try {
+    await page.goto(`${BASE_URL}/?neoState=full`, { waitUntil: "load" });
+    await page.locator(".signal-canvas").waitFor({ state: "attached" });
+    await page.evaluate(() => document.fonts.ready);
+    const fractions = [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 1];
+    const samples = [];
+    for (const fraction of fractions) samples.push(await sampleStageWord(page, fraction));
+
+    assert.ok(Math.hypot(samples[0].x, samples[0].y) > 2);
+    for (let index = 1; index < samples.length; index += 1) {
+      const previous = samples[index - 1];
+      const current = samples[index];
+      assert.ok(current.x >= previous.x - 0.02, `x reversed at sample ${index}`);
+      assert.ok(current.y >= previous.y - 0.02, `y reversed at sample ${index}`);
+      assert.ok(
+        Math.hypot(current.x, current.y) <= Math.hypot(previous.x, previous.y) + 0.02,
+        `distance reversed at sample ${index}`,
+      );
+      assert.ok(current.opacity >= previous.opacity - 0.001, `opacity reversed at sample ${index}`);
+    }
+
+    const landing = samples.at(-1);
+    assert.ok(Math.abs(landing.x) < 0.1, `final x offset is ${landing.x}px`);
+    assert.ok(Math.abs(landing.y) < 0.1, `final y offset is ${landing.y}px`);
+
+    const heldBefore = await sampleStageWord(page, 0.55);
+    await sleep(700);
+    const heldAfter = await page.evaluate(() => {
+      const word = document.querySelector('h2[data-order="2"] .stage-word');
+      if (!(word instanceof HTMLElement)) throw new Error("final stage word is missing");
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(word).transform);
+      return { x: matrix.m41, y: matrix.m42 };
+    });
+    assert.ok(Math.abs(heldAfter.x - heldBefore.x) < 0.01);
+    assert.ok(Math.abs(heldAfter.y - heldBefore.y) < 0.01);
+
+    process.stdout.write(`stage word samples ${JSON.stringify(samples)}\n`);
+  } finally {
+    await context.close();
+    await browser.close();
+    await stopServer(server);
+  }
+});

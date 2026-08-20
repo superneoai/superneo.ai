@@ -70,17 +70,22 @@ test("stage headings leave a visible compositor-only text trail", async () => {
   assert.match(app, /className="stage-outline"/);
   assert.match(styles, /@keyframes stage-trail-near/);
   assert.match(styles, /@keyframes stage-trail-far/);
-  assert.match(styles, /@keyframes stage-word-settle/);
+  assert.doesNotMatch(styles, /@keyframes stage-word-settle/);
   assert.match(trailRules, /animation:/);
   assert.doesNotMatch(trailRules, /filter|text-shadow|transition/);
   assert.match(echoLayer, /z-index:\s*0/);
   assert.doesNotMatch(styles, /\.stage-stack h2::(?:before|after)\s*\{[^}]*clip-path/s);
-  assert.match(wordRule, /animation:\s*stage-word-settle/);
-  assert.doesNotMatch(wordRule, /filter|text-shadow|transition/);
+  assert.match(app, /const stageProgress = toStageProgress\(progress, index\)/);
+  assert.match(app, /word\.style\.transform = `translate3d/);
+  assert.match(app, /word\.style\.opacity = reducedMotion\.matches/);
+  assert.match(wordRule, /will-change:\s*opacity, transform/);
+  assert.doesNotMatch(wordRule, /animation|filter|text-shadow|transition/);
   assert.doesNotMatch(ruleBody(styles, ".stage-line"), /animation/);
+  const reducedMotion = styles.slice(styles.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(reducedMotion, /\.stage-trail,[\s\S]*\.stage-word,[\s\S]*animation:\s*none/);
   assert.match(
-    styles.slice(styles.indexOf("@media (prefers-reduced-motion: reduce)")),
-    /\.stage-trail,[\s\S]*\.stage-word,[\s\S]*animation:\s*none/,
+    reducedMotion,
+    /\.stage-stack \.stage-word\s*\{[^}]*opacity:\s*1 !important;[^}]*transform:\s*translate3d\(0, 0, 0\) !important/s,
   );
 });
 

@@ -784,8 +784,6 @@ a {
   --trail-near-y: -0.14em;
   --trail-far-x: -0.31em;
   --trail-far-y: -0.27em;
-  --word-settle-x: -0.045em;
-  --word-settle-y: -0.04em;
   position: relative;
   width: 100%;
   height: clamp(7rem, 20vw, 20rem);
@@ -797,8 +795,6 @@ a {
   --trail-near-y: 0.14em;
   --trail-far-x: 0.31em;
   --trail-far-y: 0.27em;
-  --word-settle-x: 0.045em;
-  --word-settle-y: 0.04em;
 }
 
 .stage-stack h2 {
@@ -865,7 +861,6 @@ a {
 }
 
 .stage-stack h2[data-state="active"] .stage-word {
-  animation: stage-word-settle 360ms cubic-bezier(0.16, 0.84, 0.24, 1) both;
   will-change: opacity, transform;
 }
 
@@ -1390,18 +1385,6 @@ a {
   }
 }
 
-@keyframes stage-word-settle {
-  from {
-    opacity: 0.78;
-    transform: translate3d(var(--word-settle-x), var(--word-settle-y), 0);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
 @keyframes stage-exit-up {
   from {
     opacity: 0.9;
@@ -1751,8 +1734,6 @@ a {
     --trail-near-y: 0.2em;
     --trail-far-x: 0em;
     --trail-far-y: 0.38em;
-    --word-settle-x: 0em;
-    --word-settle-y: 0.15em;
   }
 
   .stage-stack[data-direction="backward"] {
@@ -1760,8 +1741,6 @@ a {
     --trail-near-y: -0.2em;
     --trail-far-x: 0em;
     --trail-far-y: -0.38em;
-    --word-settle-x: 0em;
-    --word-settle-y: -0.15em;
   }
 
   .stage-stack h2[data-exiting] .stage-outline {
@@ -2160,6 +2139,11 @@ a {
   .bit-loader i,
   .soundtrack-bars i {
     animation: none;
+  }
+
+  .stage-stack .stage-word {
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
   }
 
   .stage-stack[data-sign-ready="true"] .neo-sign--full {
