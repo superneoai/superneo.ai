@@ -38,8 +38,6 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # The runner image already provides the shared libraries Chromium needs, so
-      # this skips apt and only downloads the browser Playwright launches in tests.
       - name: Install Chromium
         timeout-minutes: 10
         run: npx playwright install chromium
@@ -60,9 +58,6 @@ jobs:
         with:
           path: ./dist
 
-  # The scene baseline was recorded on macOS, and CoreText lays the wordmark out a
-  # few pixels differently from FreeType, so this runs on the platform it targets.
-  # Standard runners are free for public repositories.
   visual:
     permissions:
       contents: read
@@ -85,9 +80,6 @@ jobs:
         timeout-minutes: 10
         run: npx playwright install chromium
 
-      # Performance figures describe the recording machine's display, and the glow
-      # wave is sampled on a timer, so the runner checks the deterministic parts:
-      # layout, the NEO mask, boot frames, fault handling and reduced motion.
       - name: Verify the scene
         run: npm run test:visual -- --browsers=chromium --skip-performance --skip-pulse
 

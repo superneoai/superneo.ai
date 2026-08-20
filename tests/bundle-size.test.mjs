@@ -3,14 +3,11 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import test from "node:test";
 
-// Raw bytes track parse and compile cost; gzip tracks what the visitor downloads.
 const CHUNK_BUDGETS = new Map([
   ["three", { raw: 600_000, gzip: 155_000 }],
   ["gsap", { raw: 150_000, gzip: 55_000 }],
   ["LatentField", { raw: 100_000, gzip: 30_000 }],
 ]);
-// The scene loads every one of its chunks at once, so the split must not let the
-// payload grow behind smaller per-chunk numbers.
 const SCENE_PAYLOAD_BUDGET = { raw: 750_000, gzip: 200_000 };
 const ENTRY_BUDGET = { raw: 300_000, gzip: 100_000 };
 const ORDINARY_CHUNK_BUDGET = { raw: 500_000, gzip: 160_000 };

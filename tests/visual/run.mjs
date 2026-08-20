@@ -21,12 +21,7 @@ const cli = new Map(
   }),
 );
 const recordingBaseline = cli.has("record-baseline");
-// Performance numbers describe the recording machine's display, so a run on any
-// other hardware compares against figures it cannot reproduce.
 const skipPerformance = cli.has("skip-performance");
-// The glow wave is sampled on a timer, so a slower machine catches it at a
-// different point in its travel. Pinning that needs a QA hook in the scene
-// itself; until then these metrics are only meaningful where they were recorded.
 const skipPulse = cli.has("skip-pulse");
 const requestedBrowsers = String(
   cli.get("browsers") || process.env.SUPERNEO_VISUAL_BROWSERS || ALL_BROWSERS.join(","),
@@ -158,9 +153,6 @@ function posterMetrics(buffer) {
   };
 }
 
-// The boot poster is a deliberately dim, low-contrast artwork: measured means sit
-// near 6-9 with deviations near 5-8, so assert that character rather than a
-// contrast figure the poster has never produced.
 function assertBootFrame(metrics, label) {
   assert.ok(metrics.mean > 2, `${label} frame is empty/black: ${JSON.stringify(metrics)}`);
   assert.ok(metrics.mean < 32, `${label} frame is not dimmed: ${JSON.stringify(metrics)}`);
@@ -343,14 +335,10 @@ async function waitForScene(session, ready = true) {
       ? readyCondition
       : "return document.querySelector('.experience')?.dataset.sceneReady === 'false';",
     ready ? "the completed WebGL reveal" : "the poster fallback",
-    // Compiling shaders and reaching the first valid frame exceeds the default
-    // wait on a busy machine, which is what made this suite flaky.
     60_000,
   );
 }
 
-// The final-stage wordmark slides into place, so measuring before it lands
-// reports a position that depends on how fast the machine is.
 async function waitForWordmarkSettle(session) {
   await waitFor(
     session,

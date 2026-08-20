@@ -98,8 +98,6 @@ test("pull requests produce the required build check without deployment privileg
   assert.match(deploy, /needs: \[build, visual, security\]/);
 
   const externalUses = [...workflow.matchAll(/uses: ([^\s@]+)@([^\s#]+)/g)];
-  // Actions repeat across jobs, so require every reviewed action to appear and
-  // every appearance to carry its reviewed SHA.
   assert.deepEqual(
     [...new Set(externalUses.map(([, action]) => action))].sort(),
     [...PINNED_ACTIONS.keys()].sort(),
