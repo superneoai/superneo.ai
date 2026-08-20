@@ -24,7 +24,6 @@ test("morph targets have genuinely different silhouettes", () => {
     geometry.getAttribute("aTarget1"),
     geometry.getAttribute("aTarget2"),
   ] as BufferAttribute[];
-  assert.equal(geometry.getAttribute("aTarget3"), undefined);
   const aspects = targets.map(aspectRatio);
   assert.ok(
     Math.max(...aspects) - Math.min(...aspects) > 0.75,

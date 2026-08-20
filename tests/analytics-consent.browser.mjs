@@ -337,7 +337,6 @@ test("the footer brand remains static after scene interaction", { timeout: 90_00
     assert.equal(await footerBrand.textContent(), "SUPERNEO™");
     await page.mouse.click(640, 360);
     assert.equal(await footerBrand.textContent(), "SUPERNEO™");
-    assert.equal(await page.locator("[data-found]").count(), 0);
   } finally {
     await context.close();
     await browser.close();

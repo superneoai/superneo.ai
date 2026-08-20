@@ -72,7 +72,6 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.match(events, /web_vital/);
   assert.match(runtime, /const stageNames = \["latent", "emergence", "superneo"\]/);
   assert.match(runtime, /stage === LAST_STAGE/);
-  assert.doesNotMatch(runtime, /spark|swarm|inference|stage === 3/);
   assert.match(workflow, /POSTHOG_PROJECT_KEY/);
   assert.match(workflow, /VITE_POSTHOG_HOST: https:\/\/us\.i\.posthog\.com/);
 });

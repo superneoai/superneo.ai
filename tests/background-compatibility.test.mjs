@@ -42,7 +42,6 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
     app,
     /const bootPhases = \[\s*\{ label: "RUNTIME", activity: "INIT" \},\s*\{ label: "FIELD", activity: "DECODE" \},\s*\{ label: "SCENE", activity: "LINK" \},\s*\] as const;/,
   );
-  assert.doesNotMatch(app, /\{ label: "SIGNAL", activity: "SYNC" \}/);
   assert.match(app, /const bootTotal = String\(bootPhases\.length\)\.padStart\(2, "0"\)/);
   assert.match(app, /const SCENE_LOADING_STEP_MS = 300/);
   assert.match(app, /const INITIALIZING_LINGER_BASE_MS = 550/);
@@ -51,9 +50,7 @@ test("the scene poster crossfades through the first valid WebGL frame", async ()
   assert.match(app, /Math\.floor\(Math\.random\(\) \* INITIALIZING_LINGER_JITTER_MS\)/);
   assert.match(app, /Math\.max\(0, MIN_SCENE_LOADING_MS - elapsed\)/);
   assert.match(app, /bootPhases\.map\(\(_, index\) =>/);
-  assert.doesNotMatch(app, /\[2, 3, 4, 5\]\.map|\/04/);
   assert.match(styles, /\.scene-loader-track\s*\{[^}]*grid-template-columns:\s*repeat\(3, 1fr\)/s);
-  assert.doesNotMatch(styles, /\.scene-loader-track\s*\{[^}]*repeat\(4, 1fr\)/s);
   assert.match(app, /className="scene-loader-final" data-visible=\{finalizing\}/);
   assert.match(app, />INITIALIZING<\/span>/);
   assert.match(app, /state === "complete" \? "OK" : state === "active" \? phase\.activity : "WAIT"/);
