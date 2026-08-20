@@ -12,8 +12,8 @@ test("the live site ships a globally opt-in consent surface", async () => {
   assert.match(app, /consent\.status === "pending" \|\| analyticsConsentPreviewMode/);
   assert.match(app, /setConsentPreviewDismissed\(true\)/);
   assert.match(app, /<a[\s\S]*?href="\.\/privacy\/"[\s\S]*?>\s*PRIVACY\s*<\/a>/);
-  assert.match(app, /<nav className="footer-privacy" aria-label="Site information">[\s\S]*?href="\.\/privacy\/"[\s\S]*?href="\.\/legal\/">LEGAL<\/a>[\s\S]*?<\/nav>/);
-  assert.match(app, /<footer className="site-footer">[\s\S]*?<nav className="contact-links" aria-label="Contact">[\s\S]*?x\.com\/superneoai[\s\S]*?mailto:hello@superneo\.ai[\s\S]*?<\/footer>/);
+  assert.match(app, /<nav className="footer-privacy" aria-label="Site information">[\s\S]*?href="\.\/privacy\/"[\s\S]*?dispatchOutboundClick\("privacy"\)[\s\S]*?href="\.\/legal\/"[\s\S]*?dispatchOutboundClick\("legal"\)[\s\S]*?LEGAL[\s\S]*?<\/nav>/);
+  assert.match(app, /<footer className="site-footer">[\s\S]*?<nav className="contact-links" aria-label="Contact">[\s\S]*?x\.com\/superneoai[\s\S]*?dispatchOutboundClick\("x"\)[\s\S]*?mailto:hello@superneo\.ai[\s\S]*?dispatchOutboundClick\("email"\)[\s\S]*?<\/footer>/);
   assert.match(consent, /mode: "opt-in"/);
   assert.match(consent, /autoShow: false/);
   assert.match(consent, /CONSENT_COOKIE_NAME = "sn_consent"/);
@@ -64,6 +64,10 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.match(client, /POSTHOG_STORAGE/);
   assert.match(config, /https:\/\/us\.i\.posthog\.com/);
   assert.match(events, /APPROVED_ANALYTICS_EVENTS/);
+  assert.match(events, /OUTBOUND_DESTINATION_CATEGORIES = \[[\s\S]*?"email",[\s\S]*?"legal",[\s\S]*?"privacy",[\s\S]*?"x",[\s\S]*?\] as const/);
+  assert.match(events, /sanitizeAnalyticsEventDetail/);
+  assert.match(events, /return \{ name: detail\.name, properties \}/);
+  assert.doesNotMatch(events, /resolvedUrl|resolved_url|queryString|query_string/);
   assert.match(events, /stage_completed/);
   assert.match(events, /web_vital/);
   assert.match(runtime, /const stageNames = \["latent", "emergence", "superneo"\]/);

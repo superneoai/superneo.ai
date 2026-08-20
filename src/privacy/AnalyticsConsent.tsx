@@ -1,3 +1,4 @@
+import { dispatchOutboundClick } from "../analytics/events";
 import {
   useCallback,
   useEffect,
@@ -247,7 +248,9 @@ export function PrivacyPreferences({
       </div>
 
       <footer>
-        <a href="./privacy/">FULL PRIVACY NOTICE ↗</a>
+        <a href="./privacy/" onClick={() => dispatchOutboundClick("privacy")}>
+          FULL PRIVACY NOTICE ↗
+        </a>
         <button type="button" disabled={saving} onClick={() => { void save(); }}>
           SAVE PREFERENCES
         </button>

@@ -11,6 +11,7 @@ import {
 } from "./client";
 import {
   ANALYTICS_EVENT,
+  sanitizeAnalyticsEventDetail,
   type AnalyticsEventDetail,
 } from "./events";
 import {
@@ -115,8 +116,11 @@ export function AnalyticsRuntime({ consentStatus, sceneReady }: AnalyticsRuntime
     };
 
     const captureDispatchedEvent = (event: Event) => {
-      const { name, properties } = (event as CustomEvent<AnalyticsEventDetail>).detail;
-      captureAnalyticsEvent(name, properties);
+      const detail = sanitizeAnalyticsEventDetail(
+        (event as CustomEvent<AnalyticsEventDetail>).detail,
+      );
+      if (!detail) return;
+      captureAnalyticsEvent(detail.name, detail.properties);
     };
 
     window.addEventListener(STAGE_CHANGE_EVENT, captureStage);

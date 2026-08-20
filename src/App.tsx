@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { AnalyticsRuntime } from "./analytics/AnalyticsRuntime";
-import { dispatchAnalyticsEvent } from "./analytics/events";
+import { dispatchOutboundClick } from "./analytics/events";
 import { analyticsConsentPreviewMode } from "./analytics/runtimeConfig";
 import {
   ConsentDock,
@@ -643,13 +643,20 @@ export function App() {
                   || event.altKey
                 ) return;
                 event.preventDefault();
+                dispatchOutboundClick("privacy");
                 setPrivacyOpen(true);
               }}
             >
               PRIVACY
             </a>
           )}
-          <a className="contact-link" href="./legal/">LEGAL</a>
+          <a
+            className="contact-link"
+            href="./legal/"
+            onClick={() => dispatchOutboundClick("legal")}
+          >
+            LEGAL
+          </a>
         </nav>
 
         <nav className="contact-links" aria-label="Contact">
@@ -659,7 +666,7 @@ export function App() {
             target="_blank"
             rel="noreferrer"
             aria-label="SUPERNEO on X"
-            onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "x" })}
+            onClick={() => dispatchOutboundClick("x")}
           >
             <span className="x-mark" aria-hidden="true">𝕏</span>
             <span>@superneoai</span>
@@ -667,7 +674,7 @@ export function App() {
           <a
             className="contact-link"
             href="mailto:hello@superneo.ai"
-            onClick={() => dispatchAnalyticsEvent("outbound_clicked", { destination: "email" })}
+            onClick={() => dispatchOutboundClick("email")}
           >
             hello@superneo.ai
           </a>

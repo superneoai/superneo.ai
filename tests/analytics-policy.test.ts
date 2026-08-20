@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  OUTBOUND_DESTINATION_CATEGORIES,
+  outboundAnalyticsProperties,
+  sanitizeAnalyticsEventDetail,
+} from "../src/analytics/events.ts";
+import {
   analyticsContext,
   deviceClass,
   isAnalyticsRuntimeAllowed,
@@ -51,6 +56,27 @@ test("analytics runs only with a token on the live host or an explicit dev QA ro
     qaRequested: true,
     projectKey: "phc_test",
   }), false);
+});
+
+test("outbound destination categories are bounded and URL-free", () => {
+  assert.deepEqual(OUTBOUND_DESTINATION_CATEGORIES, ["email", "legal", "privacy", "x"]);
+  assert.deepEqual(outboundAnalyticsProperties("x"), { destination: "x" });
+  assert.equal(outboundAnalyticsProperties("https://x.com/superneoai?private=yes"), undefined);
+  assert.deepEqual(sanitizeAnalyticsEventDetail({
+    name: "outbound_clicked",
+    properties: {
+      destination: "privacy",
+      url: "https://superneo.ai/privacy/?private=yes",
+      query: "private=yes",
+    },
+  }), {
+    name: "outbound_clicked",
+    properties: { destination: "privacy" },
+  });
+  assert.equal(sanitizeAnalyticsEventDetail({
+    name: "outbound_clicked",
+    properties: { destination: "https://example.com/private?secret=yes" },
+  }), undefined);
 });
 
 test("analytics properties are coarse and bounded", () => {
