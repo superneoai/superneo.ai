@@ -4,6 +4,10 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { gunzipSync } from "node:zlib";
 import { chromium } from "playwright";
+import {
+  monitorSceneFailures,
+  waitForSceneOrVerifiedFallback,
+} from "./browser-scene.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PORT = 4192;
@@ -25,6 +29,56 @@ function decodePostHogPayload(request) {
   } catch {
     return JSON.parse(body.toString("utf8"));
   }
+}
+
+async function installFooterAnimationProbe(page) {
+  await page.addInitScript(() => {
+    window.__footerBrandAnimations = [];
+    for (const type of ["animationstart", "animationend", "animationcancel"]) {
+      document.addEventListener(type, (event) => {
+        if (event.animationName !== "footer-brand-reveal") return;
+        window.__footerBrandAnimations.push(type);
+      });
+    }
+  });
+}
+
+async function footerBrandPresentation(page) {
+  return page.locator(".footer-brand").evaluate((brand) => {
+    const text = brand.firstChild;
+    if (!(text instanceof Text) || !text.data.endsWith("™")) {
+      throw new Error("footer trademark glyph is missing");
+    }
+    const glyph = document.createRange();
+    glyph.setStart(text, text.length - 1);
+    glyph.setEnd(text, text.length);
+    const brandBounds = brand.getBoundingClientRect();
+    const glyphBounds = glyph.getBoundingClientRect();
+    const style = getComputedStyle(brand);
+    return {
+      animationName: style.animationName,
+      brandBounds: {
+        bottom: brandBounds.bottom,
+        left: brandBounds.left,
+        right: brandBounds.right,
+        top: brandBounds.top,
+      },
+      clipPath: style.clipPath,
+      events: window.__footerBrandAnimations,
+      glyphBounds: {
+        bottom: glyphBounds.bottom,
+        left: glyphBounds.left,
+        right: glyphBounds.right,
+        top: glyphBounds.top,
+      },
+      glyphHeight: glyphBounds.height,
+      glyphWidth: glyphBounds.width,
+      glyphFullyInside: glyphBounds.left >= brandBounds.left - 0.5
+        && glyphBounds.right <= brandBounds.right + 0.5,
+      text: brand.textContent,
+      visibility: style.visibility,
+    };
+  });
 }
 
 async function startServer() {
@@ -316,30 +370,68 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   }
 });
 
-test("the footer brand remains static after scene interaction", { timeout: 90_000 }, async () => {
+test("the footer brand reveals once, preserves its glyph, and honors reduced motion", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const browser = await launchConsentBrowser();
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    userAgent: TEST_USER_AGENT,
-  });
-  const page = await context.newPage();
 
   try {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      userAgent: TEST_USER_AGENT,
+    });
+    const page = await context.newPage();
+    const failures = monitorSceneFailures(page);
+    await installFooterAnimationProbe(page);
     await page.goto(`${BASE_URL}/?consentPreview=0&neoState=full`, {
       waitUntil: "domcontentloaded",
     });
-    await page.locator(".signal-stage canvas").waitFor({ state: "visible", timeout: 30_000 });
-    await page.waitForFunction(() => (
-      document.querySelector(".experience")?.getAttribute("data-scene-ready") === "true"
-    ), undefined, { timeout: 30_000 });
-    const footerBrand = page.locator(".footer-brand");
-    assert.equal(await footerBrand.textContent(), "SUPERNEO™");
+    await waitForSceneOrVerifiedFallback(page, failures);
+    await page.waitForFunction(() => window.__footerBrandAnimations.includes("animationend"));
+    const revealed = await footerBrandPresentation(page);
+    assert.deepEqual(revealed.events, ["animationstart", "animationend"]);
+    assert.equal(revealed.text, "SUPERNEO™");
+    assert.equal(revealed.visibility, "visible");
+    assert.match(revealed.clipPath, /^inset\(0(?:px)?\)$/);
+    assert.ok(revealed.glyphWidth > 0 && revealed.glyphHeight > 0);
+    assert.equal(
+      revealed.glyphFullyInside,
+      true,
+      `the trademark glyph must not be clipped on the reveal axis: ${JSON.stringify({
+        brand: revealed.brandBounds,
+        glyph: revealed.glyphBounds,
+      })}`,
+    );
     await page.mouse.click(640, 360);
-    assert.equal(await footerBrand.textContent(), "SUPERNEO™");
+    await sleep(700);
+    assert.deepEqual((await footerBrandPresentation(page)).events, revealed.events);
     assert.equal(await page.locator("[data-found]").count(), 0);
-  } finally {
     await context.close();
+
+    const reducedContext = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      userAgent: TEST_USER_AGENT,
+      reducedMotion: "reduce",
+    });
+    const reducedPage = await reducedContext.newPage();
+    const reducedFailures = monitorSceneFailures(reducedPage);
+    await installFooterAnimationProbe(reducedPage);
+    await reducedPage.goto(`${BASE_URL}/?consentPreview=0&neoState=full`, {
+      waitUntil: "domcontentloaded",
+    });
+    await waitForSceneOrVerifiedFallback(reducedPage, reducedFailures);
+    await sleep(700);
+    const reduced = await footerBrandPresentation(reducedPage);
+    assert.equal(reduced.animationName, "none");
+    assert.deepEqual(reduced.events, []);
+    assert.equal(reduced.text, "SUPERNEO™");
+    assert.match(reduced.clipPath, /^inset\(0(?:px)?\)$/);
+    assert.equal(
+      reduced.glyphFullyInside,
+      true,
+      "reduced motion must show the full trademark glyph on the reveal axis",
+    );
+    await reducedContext.close();
+  } finally {
     await browser.close();
     await stopServer(server);
   }

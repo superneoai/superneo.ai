@@ -3,6 +3,10 @@ import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import test from "node:test";
 import { chromium } from "playwright";
+import {
+  monitorSceneFailures,
+  waitForSceneOrVerifiedFallback,
+} from "./browser-scene.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PORT = 4194;
@@ -233,14 +237,17 @@ test("the active stage word travels continuously with scroll distance", { timeou
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await context.newPage();
+  const failures = monitorSceneFailures(page);
 
   try {
     await page.goto(`${BASE_URL}/?neoState=full`, { waitUntil: "load" });
-    await page.locator(".signal-canvas").waitFor({ state: "attached" });
-    await page.waitForFunction(
-      () => document.querySelector(".experience")?.getAttribute("data-scene-ready") === "true",
-    );
-    await sleep(1_100);
+    await waitForSceneOrVerifiedFallback(page, failures);
+    await page.evaluate(() => new Promise((resolveFrame) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolveFrame));
+    }));
+    await page.locator(".stage-panel").evaluate((panel) => (
+      Promise.all(panel.getAnimations().map((animation) => animation.finished))
+    ));
     await page.evaluate(() => document.fonts.ready);
     const fractions = [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 1];
     const samples = [];
