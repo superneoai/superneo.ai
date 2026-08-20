@@ -1031,7 +1031,11 @@ a {
 }
 
 .footer-brand {
+  display: inline-block;
+  width: 10ch;
+  overflow: hidden;
   white-space: nowrap;
+  clip-path: inset(0);
 }
 
 .contact-link {
@@ -1176,6 +1180,10 @@ a {
   animation: overlay-status-in 480ms cubic-bezier(0.16, 1, 0.3, 1) 420ms backwards;
 }
 
+.experience[data-scene-ready="true"] > .site-footer .footer-brand {
+  animation: footer-brand-reveal 470ms steps(9, end) 420ms backwards;
+}
+
 .experience[data-scene-ready="true"] > .site-footer .footer-privacy {
   animation: overlay-privacy-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 480ms backwards;
 }
@@ -1284,6 +1292,16 @@ a {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes footer-brand-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
   }
 }
 
@@ -2114,6 +2132,7 @@ a {
   .experience[data-scene-ready="true"] > .site-header .header-instruments,
   .experience[data-scene-ready="true"] > .making-line,
   .experience[data-scene-ready="true"] > .site-footer .status-line,
+  .experience[data-scene-ready="true"] > .site-footer .footer-brand,
   .experience[data-scene-ready="true"] > .site-footer .footer-privacy,
   .experience[data-scene-ready="true"] > .site-footer .contact-links,
   .experience[data-scene-ready="true"] > .scroll-rail,

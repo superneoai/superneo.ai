@@ -34,6 +34,10 @@ test("the canonical brand uses the intended trademark treatments", async () => {
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*color:\s*var\(--bone\)/s);
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*font-size:\s*0\.18em/s);
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*var\(--bone\) 28%/s);
+  assert.match(styles, /\.footer-brand\s*{[^}]*width:\s*10ch[^}]*clip-path:\s*inset\(0\)/s);
+  assert.match(styles, /footer-brand-reveal 470ms steps\(9, end\) 420ms backwards/);
+  assert.match(styles, /@keyframes footer-brand-reveal\s*{[\s\S]*?clip-path:\s*inset\(0 100% 0 0\)[\s\S]*?clip-path:\s*inset\(0\)/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.site-footer \.footer-brand,[\s\S]*?animation:\s*none/);
   for (const page of [privacy, legal]) {
     assert.match(page, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
     assert.equal((page.match(/™/g) ?? []).length, 1);
