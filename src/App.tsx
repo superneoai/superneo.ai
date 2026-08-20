@@ -72,8 +72,6 @@ const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).hr
 const SCENE_LOADING_STEP_MS = 300;
 const INITIALIZING_LINGER_BASE_MS = 550;
 const INITIALIZING_LINGER_JITTER_MS = 350;
-const DISCOVERY_REWARD_MS = 4_000;
-const FOOTER_NOTICE = "SUPERNEO™ © 2026 ACTUAL LTD.";
 const bootPhases = [
   { label: "RUNTIME", activity: "INIT" },
   { label: "FIELD", activity: "DECODE" },
@@ -518,8 +516,7 @@ export function App() {
   const sceneQa = import.meta.env.DEV
     ? parseSceneQa(window.location.search)
     : null;
-  const [discovered, setDiscovered] = useState(false);
-  const [discoveryRewardVisible, setDiscoveryRewardVisible] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [loadStep, setLoadStep] = useState(1);
   const [consentFallbackReady, setConsentFallbackReady] = useState(false);
@@ -534,17 +531,8 @@ export function App() {
   }, [chooseAnalytics]);
   const loadingStartedAtRef = useRef(performance.now());
   const sceneReadyTimerRef = useRef<number | null>(null);
-  const discoveryRewardTimerRef = useRef<number | null>(null);
-  const handleDiscover = useCallback(() => {
-    setDiscovered(true);
-    setDiscoveryRewardVisible(true);
-    if (discoveryRewardTimerRef.current !== null) {
-      window.clearTimeout(discoveryRewardTimerRef.current);
-    }
-    discoveryRewardTimerRef.current = window.setTimeout(() => {
-      setDiscoveryRewardVisible(false);
-      discoveryRewardTimerRef.current = null;
-    }, DISCOVERY_REWARD_MS);
+  const handleInteraction = useCallback(() => {
+    setHasInteracted(true);
   }, []);
   const handleSceneStateChange = useCallback((ready: boolean) => {
     if (sceneReadyTimerRef.current !== null) {
@@ -580,9 +568,6 @@ export function App() {
       if (sceneReadyTimerRef.current !== null) {
         window.clearTimeout(sceneReadyTimerRef.current);
       }
-      if (discoveryRewardTimerRef.current !== null) {
-        window.clearTimeout(discoveryRewardTimerRef.current);
-      }
     };
   }, []);
 
@@ -609,7 +594,7 @@ export function App() {
       <ScenePoster loadStep={loadStep} />
       <Suspense fallback={null}>
         <LatentField
-          onDiscover={handleDiscover}
+          onInteract={handleInteraction}
           onSceneStateChange={handleSceneStateChange}
           qa={sceneQa}
         />
@@ -631,28 +616,15 @@ export function App() {
         <span className="scroll-rail-fill" />
       </div>
 
-      <div className="scroll-cue" data-hidden={discovered} aria-hidden="true">
+      <div className="scroll-cue" data-hidden={hasInteracted} aria-hidden="true">
         <span>SCROLL</span>
         <i />
       </div>
 
       <footer className="site-footer">
-        <p className="status-line" aria-live="polite">
+        <p className="status-line">
           <span className="status-dot" aria-hidden="true" />
-          <span className="discovery-copy" data-found={discoveryRewardVisible}>
-            <span
-              className="discovery-message discovery-message--notice"
-              aria-hidden={discoveryRewardVisible}
-            >
-              {FOOTER_NOTICE}
-            </span>
-            <span
-              className="discovery-message discovery-message--reward"
-              aria-hidden={!discoveryRewardVisible}
-            >
-              YOU FOUND IT.
-            </span>
-          </span>
+          <span className="footer-brand">SUPERNEO™</span>
         </p>
 
         <nav className="footer-privacy" aria-label="Site information">

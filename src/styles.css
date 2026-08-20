@@ -1030,32 +1030,8 @@ a {
   animation: status-pulse 3.8s steps(2, end) infinite;
 }
 
-.discovery-copy {
-  display: inline-grid;
-  width: 32ch;
-  overflow: hidden;
+.footer-brand {
   white-space: nowrap;
-  transition: color 280ms linear;
-}
-
-.discovery-message {
-  grid-area: 1 / 1;
-  opacity: 0;
-  transition: opacity 140ms linear;
-  will-change: opacity;
-}
-
-.discovery-message--notice,
-.discovery-copy[data-found="true"] .discovery-message--reward {
-  opacity: 1;
-}
-
-.discovery-copy[data-found="true"] {
-  color: var(--bone);
-}
-
-.discovery-copy[data-found="true"] .discovery-message--notice {
-  opacity: 0;
 }
 
 .contact-link {
@@ -2172,8 +2148,6 @@ a {
   }
 
   .contact-link::after,
-  .discovery-copy,
-  .discovery-message,
   .scroll-cue {
     transition: none;
   }

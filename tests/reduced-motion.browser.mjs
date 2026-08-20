@@ -60,25 +60,6 @@ test("the scene still reaches its ready state when motion is reduced", async () 
           "true",
           `the scene left reducedMotion=${reducedMotion} unready`,
         );
-        await page.mouse.click(viewport.width / 2, viewport.height / 2);
-        await page.waitForFunction(() => (
-          document.querySelector(".discovery-copy")?.getAttribute("data-found") === "true"
-        ));
-        const discoveryState = await page.evaluate(() => {
-          const copy = document.querySelector(".discovery-copy");
-          const reward = document.querySelector(".discovery-message--reward");
-          if (!(copy instanceof HTMLElement) || !(reward instanceof HTMLElement)) return null;
-          return {
-            copyTransition: getComputedStyle(copy).transitionDuration,
-            rewardTransition: getComputedStyle(reward).transitionDuration,
-            rewardHidden: reward.getAttribute("aria-hidden"),
-          };
-        });
-        assert.deepEqual(discoveryState, {
-          copyTransition: "0s",
-          rewardTransition: "0s",
-          rewardHidden: "false",
-        });
         await page.evaluate(() => {
           const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
           window.scrollTo(0, range * 0.5);

@@ -21,8 +21,8 @@ test("the canonical brand uses the intended trademark treatments", async () => {
   assert.match(app, /aria-label="superneo\.ai">superneo\.ai<\/h1>/);
   assert.equal((app.match(/™/g) ?? []).length, 2);
   assert.equal((html.match(/™/g) ?? []).length, 0);
-  assert.match(app, /SUPERNEO™ © 2026 ACTUAL LTD\./);
-  assert.doesNotMatch(app, /SUPERNEO<sup[^>]*>™<\/sup> © 2026 ACTUAL LTD\./);
+  assert.match(app, /<span className="footer-brand">SUPERNEO™<\/span>/);
+  assert.doesNotMatch(app, /© 2026 ACTUAL LTD\./);
   assert.doesNotMatch(app, /brand-tm brand-tm--domain/);
   assert.match(app, /brand-tm brand-tm--stage/);
   assert.match(app, /showTrademark/);

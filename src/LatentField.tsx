@@ -32,7 +32,7 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 type LatentFieldProps = {
-  onDiscover: () => void;
+  onInteract: () => void;
   onSceneStateChange: (ready: boolean) => void;
   qa?: SceneQaConfig | null;
 };
@@ -40,7 +40,7 @@ type LatentFieldProps = {
 const MAX_ACTIVE_SIGNALS = 5;
 const SIGNAL_LIFETIME = 1.7;
 const SCENE_REVEAL_DURATION = 1_200;
-export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldProps) {
+export function LatentField({ onInteract, onSceneStateChange, qa }: LatentFieldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -368,7 +368,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     let previousTelemetry = 0;
     let motionAccumulator = 0;
     let currentStage = 0;
-    let discovered = false;
+    let hasInteracted = false;
     let resizeTimer: number | null = null;
     let pointerMoveFrame: number | null = null;
     let pendingPointerX = 0;
@@ -379,10 +379,10 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
     const frameProbe = createFrameProbe();
     const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
 
-    const discover = () => {
-      if (discovered) return;
-      discovered = true;
-      onDiscover();
+    const markInteraction = () => {
+      if (hasInteracted) return;
+      hasInteracted = true;
+      onInteract();
     };
 
     const resize = () => {
@@ -509,7 +509,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       targetPointerStrength = 1;
       targetPointerMotion = Math.max(targetPointerMotion, speed);
       needsRender = true;
-      discover();
+      markInteraction();
     };
 
     const setPointer = (event: PointerEvent) => {
@@ -591,7 +591,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           targetScrollLift = coarsePointer.matches && !motionIsReduced()
             ? self.direction * scrollEnergy * 0.16
             : 0;
-          if (self.progress > 0.006) discover();
+          if (self.progress > 0.006) markInteraction();
         },
       },
     });
@@ -808,7 +808,7 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [onDiscover, onSceneStateChange]);
+  }, [onInteract, onSceneStateChange]);
 
   return <div ref={hostRef} className="signal-stage" aria-hidden="true" />;
 }
