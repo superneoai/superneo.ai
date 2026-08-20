@@ -410,15 +410,15 @@ async function measureGeometry(session) {
 
 function assertDesktopGeometry(geometry) {
   const core = {
-    x: geometry.neo.x + geometry.neo.width * 214 / 1000,
-    y: geometry.neo.y + geometry.neo.height * 204 / 640,
-    width: geometry.neo.width * 572 / 1000,
-    height: geometry.neo.height * 233 / 640,
+    x: geometry.neo.x + geometry.neo.width * 182 / 1000,
+    y: geometry.neo.y + geometry.neo.height * 208 / 640,
+    width: geometry.neo.width * 643 / 1000,
+    height: geometry.neo.height * 222 / 640,
   };
   assert.ok(Math.abs(core.x - 532) <= 2, `NEO core x is ${core.x}`);
   assert.ok(Math.abs(core.y - 430) <= 2, `NEO core y is ${core.y}`);
-  assert.ok(Math.abs(core.width - 256) / 256 <= 0.01, `NEO core width is ${core.width}`);
-  assert.ok(Math.abs(core.height - 104) / 104 <= 0.01, `NEO core height is ${core.height}`);
+  assert.ok(Math.abs(core.width - 287) / 287 <= 0.01, `NEO core width is ${core.width}`);
+  assert.ok(Math.abs(core.height - 99) / 99 <= 0.01, `NEO core height is ${core.height}`);
   return core;
 }
 

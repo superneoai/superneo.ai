@@ -184,7 +184,7 @@ a {
 
 .scene-loader-track {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.16rem;
   width: 100%;
 }
@@ -611,7 +611,7 @@ a {
   grid-template-columns: 1fr;
   align-items: center;
   gap: 0.45rem;
-  width: min(26rem, 52vw);
+  width: clamp(11rem, calc(50vw - 9.75rem), 26rem);
   padding: 0;
   color: color-mix(in oklch, var(--bone) 46%, transparent);
   background: transparent;
@@ -954,9 +954,9 @@ a {
 .stage-stack .neo-accent {
   position: relative;
   display: inline-block;
-  width: 1.872em;
+  width: 2.069em;
   height: 0.84em;
-  flex: 0 0 1.872em;
+  flex: 0 0 2.069em;
   align-self: baseline;
   margin-left: 0;
   color: var(--signal);

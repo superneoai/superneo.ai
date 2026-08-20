@@ -158,7 +158,7 @@ test("all engines use the same predecoded NEO halo", async () => {
   assert.match(signRule, /width:\s*3\.216em/);
   assert.match(signRule, /transform:\s*translate\(-50%,\s*-50%\)/);
   assert.match(readySourceRule, /visibility:\s*hidden/);
-  assert.match(ruleBody(styles, ".stage-stack .neo-accent"), /width:\s*1\.872em/);
+  assert.match(ruleBody(styles, ".stage-stack .neo-accent"), /width:\s*2\.069em/);
   assert.doesNotMatch(styles, /@supports \(-moz-appearance:\s*none\)/);
   assert.doesNotMatch(
     neoRenderer,
