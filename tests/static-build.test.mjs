@@ -36,10 +36,12 @@ test("builds a complete GitHub Pages artifact", async () => {
   assert.doesNotMatch(html, /PRIVATE AI RESEARCH/i);
   assert.doesNotMatch(app, /PRIVATE AI RESEARCH/i);
   assert.doesNotMatch(`${html}\n${app}`, /undisclosed|not public/i);
-  assert.match(
-    app,
-    /<span className="discovery-copy" data-found=\{discovered\}>\s*\{discovered \? "YOU FOUND IT\." : "SUPERNEO™ © 2026 ACTUAL LTD\."\}\s*<\/span>/,
-  );
+  assert.match(app, /const DISCOVERY_REWARD_MS = 4_000;/);
+  assert.match(app, /const FOOTER_NOTICE = "SUPERNEO™ © 2026 ACTUAL LTD\.";/);
+  assert.match(app, /className="discovery-copy" data-found=\{discoveryRewardVisible\}/);
+  assert.match(app, /className="discovery-message discovery-message--notice"/);
+  assert.match(app, /className="discovery-message discovery-message--reward"/);
+  assert.match(app, /YOU FOUND IT\./);
   assert.match(app, /Possibility, compressed\./);
   assert.match(app, /New structure appears\./);
   assert.match(app, /The structure remains open\./);

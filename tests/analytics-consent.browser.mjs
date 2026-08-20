@@ -316,6 +316,55 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
   }
 });
 
+test("the discovery reward returns to the persistent footer notice", { timeout: 90_000 }, async () => {
+  const server = await startServer();
+  const browser = await launchConsentBrowser();
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 },
+    userAgent: TEST_USER_AGENT,
+  });
+  const page = await context.newPage();
+  const activeFooterCopy = () => page.locator(".discovery-copy").evaluate((copy) => {
+    const activeMessage = copy.querySelector('[aria-hidden="false"]');
+    return (activeMessage ?? copy).textContent?.trim();
+  });
+
+  try {
+    await page.goto(`${BASE_URL}/?consentPreview=0&neoState=full`, {
+      waitUntil: "domcontentloaded",
+    });
+    await page.locator(".signal-stage canvas").waitFor({ state: "visible", timeout: 30_000 });
+    await page.waitForFunction(() => (
+      document.querySelector(".experience")?.getAttribute("data-scene-ready") === "true"
+    ), undefined, { timeout: 30_000 });
+    await sleep(1_000);
+    const restingBox = await page.locator(".discovery-copy").boundingBox();
+    assert.equal(await activeFooterCopy(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    assert.equal(await page.locator(".discovery-copy").getAttribute("data-found"), "false");
+
+    await page.mouse.click(640, 360);
+    await page.waitForFunction(() => (
+      document.querySelector(".discovery-copy")?.getAttribute("data-found") === "true"
+    ));
+    assert.equal(await activeFooterCopy(), "YOU FOUND IT.");
+    assert.deepEqual(await page.locator(".discovery-copy").boundingBox(), restingBox);
+
+    await page.waitForFunction(() => (
+      document.querySelector(".discovery-copy")?.getAttribute("data-found") === "false"
+    ), undefined, { timeout: 6_000 });
+    assert.equal(await activeFooterCopy(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    assert.deepEqual(await page.locator(".discovery-copy").boundingBox(), restingBox);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    assert.equal(await activeFooterCopy(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    assert.equal(await page.locator(".discovery-copy").getAttribute("data-found"), "false");
+  } finally {
+    await context.close();
+    await browser.close();
+    await stopServer(server);
+  }
+});
+
 test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, async () => {
   const server = await startServer();
   const browser = await launchConsentBrowser();
@@ -339,7 +388,9 @@ test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, asyn
     });
     await sleep(3_200);
     const discoveryCopy = page.locator(".discovery-copy");
-    assert.equal(await discoveryCopy.textContent(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    const notice = discoveryCopy.locator(".discovery-message--notice");
+    assert.equal(await notice.textContent(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    assert.equal(await notice.getAttribute("aria-hidden"), "false");
     assert.equal(await discoveryCopy.getAttribute("data-found"), "false");
     const dock = page.locator(".analytics-consent-dock");
     assert.equal(await dock.isVisible(), true,
