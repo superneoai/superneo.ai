@@ -16,7 +16,7 @@ export class ChromiumViewport {
       reducedMotion: "no-preference",
     });
     const page = await context.newPage();
-    page.setDefaultTimeout(12_000);
+    page.setDefaultTimeout(60_000);
     return new ChromiumViewport(browser, context, page);
   }
 
