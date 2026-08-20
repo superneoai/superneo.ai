@@ -608,7 +608,7 @@ export function App() {
         <p className="status-line" aria-live="polite">
           <span className="status-dot" aria-hidden="true" />
           <span className="discovery-copy" data-found={discovered}>
-            {discovered ? "YOU FOUND IT." : "█"}
+            {discovered ? "YOU FOUND IT." : "SUPERNEO™ © 2026 ACTUAL LTD."}
           </span>
         </p>
 

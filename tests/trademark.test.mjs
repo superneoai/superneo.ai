@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("the canonical brand uses one intentional trademark treatment", async () => {
+test("the canonical brand uses the intended trademark treatments", async () => {
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const privacy = await readFile(
@@ -19,6 +19,10 @@ test("the canonical brand uses one intentional trademark treatment", async () =>
   );
 
   assert.match(app, /aria-label="superneo\.ai">superneo\.ai<\/h1>/);
+  assert.equal((app.match(/™/g) ?? []).length, 2);
+  assert.equal((html.match(/™/g) ?? []).length, 0);
+  assert.match(app, /SUPERNEO™ © 2026 ACTUAL LTD\./);
+  assert.doesNotMatch(app, /SUPERNEO<sup[^>]*>™<\/sup> © 2026 ACTUAL LTD\./);
   assert.doesNotMatch(app, /brand-tm brand-tm--domain/);
   assert.match(app, /brand-tm brand-tm--stage/);
   assert.match(app, /showTrademark/);

@@ -187,7 +187,12 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
       const contactItems = Array.from(document.querySelectorAll(".contact-links .contact-link"))
         .map((element) => {
           const rect = element.getBoundingClientRect();
-          return { top: rect.top, bottom: rect.bottom };
+          return {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+          };
         });
       const siteItems = Array.from(document.querySelectorAll(".footer-privacy .contact-link"))
         .map((element) => {
@@ -231,29 +236,44 @@ test("consent blocks, permits, and withdraws PostHog without affecting the exper
       ) < 1,
       "site-information links remain centered in the footer",
     );
-    assert.equal(mobileFooter.contactDirection, "row", "mobile contact links stay on one line");
+    assert.equal(mobileFooter.contactDirection, "column", "narrow contact links use both footer rows");
     assert.ok(
-      mobileFooter.contactItems.every(({ top }) => Math.abs(top - mobileFooter.contactItems[0].top) < 1),
-      "mobile contact links share one baseline",
+      mobileFooter.contactItems.every(({ bottom, left, right, top }) => (
+        Math.round(right - left) >= 44 && Math.round(bottom - top) >= 44
+      )),
+      "mobile contact links retain 44 by 44px touch targets",
     );
     assert.ok(
-      Math.abs(mobileFooter.contacts.right - mobileFooter.footer.right) < 1,
-      "mobile contact stays flush right",
+      mobileFooter.contactItems.every(({ right }) => Math.abs(right - mobileFooter.footer.right) < 1),
+      "mobile contact links stay flush right",
     );
     assert.ok(
-      Math.abs(mobileFooter.contacts.bottom - mobileFooter.footer.bottom) < 1,
-      "mobile contact occupies the bottom row",
+      Math.abs(mobileFooter.contactItems[0].top - mobileFooter.footer.top) < 1
+      && Math.abs(mobileFooter.contactItems.at(-1).bottom - mobileFooter.footer.bottom) < 1,
+      "mobile contact links occupy both footer rows",
+    );
+    assert.ok(
+      mobileFooter.contactItems[0].bottom <= mobileFooter.contactItems[1].top + 1,
+      "mobile contact targets do not overlap",
     );
     assert.ok(
       Math.abs(
         (mobileFooter.status.top + mobileFooter.status.bottom) / 2
-        - (mobileFooter.contacts.top + mobileFooter.contacts.bottom) / 2
+        - (mobileFooter.contactItems[1].top + mobileFooter.contactItems[1].bottom) / 2
       ) < 1,
-      "mobile status shares the contact baseline",
+      "mobile status shares the lower contact baseline",
     );
     assert.ok(
-      mobileFooter.privacy.bottom <= mobileFooter.contacts.top + 1,
-      "mobile privacy sits above the contact row",
+      mobileFooter.privacy.right <= mobileFooter.contactItems[0].left + 1,
+      "mobile site-information and contact links do not overlap",
+    );
+    assert.ok(
+      mobileFooter.status.right <= mobileFooter.contactItems[1].left + 1,
+      "mobile status and contact links do not overlap",
+    );
+    assert.ok(
+      mobileFooter.privacy.bottom <= mobileFooter.status.top + 1,
+      "mobile privacy sits above the status row",
     );
     const privacyButton = page.locator(".privacy-link");
     await privacyButton.click();
@@ -318,6 +338,9 @@ test("Global Privacy Control is an automatic decline", { timeout: 90_000 }, asyn
       waitUntil: "domcontentloaded",
     });
     await sleep(3_200);
+    const discoveryCopy = page.locator(".discovery-copy");
+    assert.equal(await discoveryCopy.textContent(), "SUPERNEO™ © 2026 ACTUAL LTD.");
+    assert.equal(await discoveryCopy.getAttribute("data-found"), "false");
     const dock = page.locator(".analytics-consent-dock");
     assert.equal(await dock.isVisible(), true,
       "the development-only QA preview should remain visible under GPC");

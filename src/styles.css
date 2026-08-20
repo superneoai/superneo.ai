@@ -1031,18 +1031,15 @@ a {
 
 .discovery-copy {
   display: inline-block;
-  width: 14ch;
+  width: 32ch;
   overflow: hidden;
   white-space: nowrap;
-  clip-path: inset(0 calc(100% - 1ch) 0 0);
-  transition:
-    clip-path 680ms steps(13, end),
-    color 280ms linear;
+  clip-path: inset(0);
+  transition: color 280ms linear;
 }
 
 .discovery-copy[data-found="true"] {
   color: var(--bone);
-  clip-path: inset(0);
 }
 
 .contact-link {
@@ -1939,6 +1936,14 @@ a {
 
   .status-line {
     width: auto;
+  }
+
+  .contact-links {
+    grid-row: 1 / -1;
+    align-items: flex-end;
+    align-self: stretch;
+    flex-direction: column;
+    gap: 0;
   }
 }
 
