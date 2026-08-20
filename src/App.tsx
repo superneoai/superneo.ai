@@ -40,17 +40,17 @@ const mobileArtworkUrl = new URL("latent-field-mobile.jpg", document.baseURI).hr
 const SCENE_LOADING_STEP_MS = 300;
 const INITIALIZING_LINGER_BASE_MS = 550;
 const INITIALIZING_LINGER_JITTER_MS = 350;
-const MIN_SCENE_LOADING_MS = (
-  SCENE_LOADING_STEP_MS * 4
-  + INITIALIZING_LINGER_BASE_MS
-  + Math.floor(Math.random() * INITIALIZING_LINGER_JITTER_MS)
-);
 const bootPhases = [
   { label: "RUNTIME", activity: "INIT" },
   { label: "FIELD", activity: "DECODE" },
-  { label: "SIGNAL", activity: "SYNC" },
   { label: "SCENE", activity: "LINK" },
 ] as const;
+const bootTotal = String(bootPhases.length).padStart(2, "0");
+const MIN_SCENE_LOADING_MS = (
+  SCENE_LOADING_STEP_MS * bootPhases.length
+  + INITIALIZING_LINGER_BASE_MS
+  + Math.floor(Math.random() * INITIALIZING_LINGER_JITTER_MS)
+);
 
 function ScenePoster({ loadStep }: { loadStep: number }) {
   const finalizing = loadStep > bootPhases.length;
@@ -68,7 +68,7 @@ function ScenePoster({ loadStep }: { loadStep: number }) {
       <div className="scene-loader">
         <span className="scene-loader-label">
           <span>SYSTEM BOOT</span>
-          <output>{String(Math.min(loadStep, bootPhases.length)).padStart(2, "0")}/04</output>
+          <output>{String(Math.min(loadStep, bootPhases.length)).padStart(2, "0")}/{bootTotal}</output>
         </span>
         <span className="scene-loader-log">
           {bootPhases.map((phase, index) => {
@@ -465,10 +465,13 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const stepTimers = [2, 3, 4, 5].map((step) => window.setTimeout(
-      () => setLoadStep(step),
-      SCENE_LOADING_STEP_MS * (step - 1),
-    ));
+    const stepTimers = bootPhases.map((_, index) => {
+      const step = index + 2;
+      return window.setTimeout(
+        () => setLoadStep(step),
+        SCENE_LOADING_STEP_MS * (step - 1),
+      );
+    });
 
     return () => {
       stepTimers.forEach(window.clearTimeout);
