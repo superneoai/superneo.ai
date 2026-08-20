@@ -798,8 +798,8 @@ a {
 }
 
 .stage-stack h2 {
-  --stack-x: 0em;
-  --stack-y: 0em;
+  --stack-x: var(--desktop-stack-x);
+  --stack-y: var(--desktop-stack-y);
   position: absolute;
   top: 0;
   left: 0;
@@ -868,7 +868,7 @@ a {
   z-index: 5;
   color: var(--bone);
   opacity: 1;
-  transform: translate(var(--stack-x), var(--stack-y)) scale(1.015);
+  transform: translate(var(--stack-x), var(--stack-y)) scale(var(--active-stage-scale));
 }
 
 .stage-stack h2[data-state="complete"] {
@@ -912,21 +912,6 @@ a {
 .stage-stack h2[data-depth="3"] {
   z-index: 1;
   opacity: 0;
-}
-
-.stage-stack h2[data-order="0"] {
-  --stack-x: 0em;
-  --stack-y: 0em;
-}
-
-.stage-stack h2[data-order="1"] {
-  --stack-x: 0.3em;
-  --stack-y: 0.29em;
-}
-
-.stage-stack h2[data-order="2"] {
-  --stack-x: 0.6em;
-  --stack-y: 0.58em;
 }
 
 .superneo-word {
@@ -1759,6 +1744,8 @@ a {
   }
 
   .stage-stack h2 {
+    --stack-x: var(--mobile-stack-x);
+    --stack-y: var(--mobile-stack-y);
     max-width: calc(100vw - 2.7rem);
     font-size: clamp(2.65rem, 12.8vw, 5rem);
     line-height: 0.86;

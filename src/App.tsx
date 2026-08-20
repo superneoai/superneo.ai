@@ -32,12 +32,24 @@ const stages = [
 
 const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
 const stageTotal = String(STAGE_COUNT).padStart(2, "0");
-const WORD_GLIDE_DISTANCE_EM = 0.16;
+const WORD_GLIDE_DISTANCE_EM = 0.29557;
+const ACTIVE_STAGE_SCALE = 1.015;
 const DESKTOP_WORD_TRAVEL = {
   x: -WORD_GLIDE_DISTANCE_EM,
-  y: -WORD_GLIDE_DISTANCE_EM * 8 / 9,
+  y: -WORD_GLIDE_DISTANCE_EM * 29 / 30,
 };
 const MOBILE_WORD_TRAVEL = { x: 0, y: WORD_GLIDE_DISTANCE_EM };
+
+function toStageStackStyle(index: number) {
+  return {
+    "--active-stage-scale": ACTIVE_STAGE_SCALE,
+    "--desktop-stack-x": `${(-DESKTOP_WORD_TRAVEL.x * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
+    "--desktop-stack-y": `${(-DESKTOP_WORD_TRAVEL.y * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
+    "--mobile-stack-x": "0em",
+    "--mobile-stack-y": `${(-MOBILE_WORD_TRAVEL.y * ACTIVE_STAGE_SCALE * index).toFixed(5)}em`,
+  } as CSSProperties;
+}
+
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
@@ -453,6 +465,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
             data-state={index === 0 ? "active" : "pending"}
             data-depth={index}
             data-order={index}
+            style={toStageStackStyle(index)}
             aria-label={item.title}
             aria-current={index === 0 ? "step" : undefined}
           >

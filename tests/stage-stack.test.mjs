@@ -35,16 +35,18 @@ test("pending stage words do not consume compositor layers", async () => {
   assert.doesNotMatch(pending, /display:\s*none|visibility:\s*hidden/);
 });
 
-test("stage words cascade from top-left to bottom-right", async () => {
+test("stage words cascade continuously from top-left to bottom-right", async () => {
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
 
   assert.match(app, /data-order=\{index\}/);
+  assert.match(app, /style=\{toStageStackStyle\(index\)\}/);
+  assert.match(app, /"--desktop-stack-x": `\$\{\(-DESKTOP_WORD_TRAVEL\.x \* ACTIVE_STAGE_SCALE \* index\)/);
+  assert.match(app, /"--desktop-stack-y": `\$\{\(-DESKTOP_WORD_TRAVEL\.y \* ACTIVE_STAGE_SCALE \* index\)/);
+  assert.match(app, /"--mobile-stack-y": `\$\{\(-MOBILE_WORD_TRAVEL\.y \* ACTIVE_STAGE_SCALE \* index\)/);
   assert.match(ruleBody(styles, ".stage-stack h2"), /top:\s*0/);
-  assert.match(ruleBody(styles, '.stage-stack h2[data-order="0"]'), /--stack-x:\s*0em/);
-  assert.match(ruleBody(styles, '.stage-stack h2[data-order="1"]'), /--stack-x:\s*0\.3em/);
-  assert.match(ruleBody(styles, '.stage-stack h2[data-order="2"]'), /--stack-y:\s*0\.58em/);
-  assert.equal(ruleBody(styles, '.stage-stack h2[data-order="3"]'), "");
+  assert.match(ruleBody(styles, ".stage-stack h2"), /--stack-x:\s*var\(--desktop-stack-x\)/);
+  assert.doesNotMatch(styles, /h2\[data-order=/);
 });
 
 test("stage headings leave a visible compositor-only text trail", async () => {
