@@ -32,6 +32,9 @@ test("mobile sound uses device volume and unlocks from the tap", async () => {
   assert.match(stageSignal, /STAGE_CHANGE_EVENT = "superneo:stage-change"/);
   assert.match(stageSignal, /dispatchStageChange\(stage: number, previous: number\)/);
   assert.match(engine, /latencyHint: options\.compact \? "balanced" : "interactive"/);
+  assert.match(engine, /Math\.min\(LAST_STAGE, Math\.max\(0, stage\)\)/);
+  assert.match(engine, /const cutoff = \[620, 920, 2100\]\[this\.stage\]/);
+  assert.doesNotMatch(engine, /\[620, 920, 1380, 2100\]/);
   assert.match(engine, /options\.compact \? null : this\.createImpulseResponse/);
 });
 
@@ -51,8 +54,8 @@ test("stage changes cross the soundtrack boundary as typed events", async () => 
       }, { once: true });
     });
 
-    dispatchStageChange(3, 2);
-    assert.deepEqual(await received, { stage: 3, previous: 2 });
+    dispatchStageChange(2, 1);
+    assert.deepEqual(await received, { stage: 2, previous: 1 });
   } finally {
     if (previousWindow === undefined) delete globalThis.window;
     else globalThis.window = previousWindow;

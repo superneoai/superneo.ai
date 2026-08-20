@@ -45,6 +45,10 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   const client = await readFile(new URL("../src/analytics/client.ts", import.meta.url), "utf8");
   const config = await readFile(new URL("../src/analytics/runtimeConfig.ts", import.meta.url), "utf8");
   const events = await readFile(new URL("../src/analytics/events.ts", import.meta.url), "utf8");
+  const runtime = await readFile(
+    new URL("../src/analytics/AnalyticsRuntime.tsx", import.meta.url),
+    "utf8",
+  );
   const workflow = await readFile(new URL("../.github/workflows/deploy-pages.yml", import.meta.url), "utf8");
 
   assert.match(client, /import\("posthog-js"\)/);
@@ -62,6 +66,9 @@ test("PostHog is lazy, allowlisted, minimized, and US-only", async () => {
   assert.match(events, /APPROVED_ANALYTICS_EVENTS/);
   assert.match(events, /stage_completed/);
   assert.match(events, /web_vital/);
+  assert.match(runtime, /const stageNames = \["latent", "emergence", "superneo"\]/);
+  assert.match(runtime, /stage === LAST_STAGE/);
+  assert.doesNotMatch(runtime, /spark|swarm|inference|stage === 3/);
   assert.match(workflow, /POSTHOG_PROJECT_KEY/);
   assert.match(workflow, /VITE_POSTHOG_HOST: https:\/\/us\.i\.posthog\.com/);
 });

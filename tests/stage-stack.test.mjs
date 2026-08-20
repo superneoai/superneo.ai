@@ -13,11 +13,12 @@ function ruleBody(styles, selector) {
 test("completed stage words remain clean outline layers", async () => {
   const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
 
-  for (const depth of [-1, -2, -3]) {
+  for (const depth of [-1, -2]) {
     const previousLayer = ruleBody(styles, `.stage-stack h2[data-depth="${depth}"]`);
     assert.match(previousLayer, /-webkit-text-stroke/);
     assert.doesNotMatch(previousLayer, /clip-path|opacity:\s*0\s*;/);
   }
+  assert.equal(ruleBody(styles, '.stage-stack h2[data-depth="-3"]'), "");
 });
 
 test("pending stage words do not consume compositor layers", async () => {
@@ -43,7 +44,7 @@ test("stage words cascade from top-left to bottom-right", async () => {
   assert.match(ruleBody(styles, '.stage-stack h2[data-order="0"]'), /--stack-x:\s*0em/);
   assert.match(ruleBody(styles, '.stage-stack h2[data-order="1"]'), /--stack-x:\s*0\.3em/);
   assert.match(ruleBody(styles, '.stage-stack h2[data-order="2"]'), /--stack-y:\s*0\.58em/);
-  assert.match(ruleBody(styles, '.stage-stack h2[data-order="3"]'), /--stack-y:\s*0\.87em/);
+  assert.equal(ruleBody(styles, '.stage-stack h2[data-order="3"]'), "");
 });
 
 test("stage headings leave a visible compositor-only text trail", async () => {

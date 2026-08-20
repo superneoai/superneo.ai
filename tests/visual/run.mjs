@@ -415,8 +415,8 @@ function assertDesktopGeometry(geometry) {
     width: geometry.neo.width * 572 / 1000,
     height: geometry.neo.height * 233 / 640,
   };
-  assert.ok(Math.abs(core.x - 573) <= 2, `NEO core x is ${core.x}`);
-  assert.ok(Math.abs(core.y - 467) <= 2, `NEO core y is ${core.y}`);
+  assert.ok(Math.abs(core.x - 532) <= 2, `NEO core x is ${core.x}`);
+  assert.ok(Math.abs(core.y - 430) <= 2, `NEO core y is ${core.y}`);
   assert.ok(Math.abs(core.width - 256) / 256 <= 0.01, `NEO core width is ${core.width}`);
   assert.ok(Math.abs(core.height - 104) / 104 <= 0.01, `NEO core height is ${core.height}`);
   return core;
@@ -567,7 +567,7 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
   await waitForRoot(session);
   await waitForScene(session);
   const stableHeights = [];
-  const stageProgress = [0.02, 0.27, 0.52, 0.78];
+  const stageProgress = [0.02, 0.35, 0.68];
   for (let stage = 0; stage < stageProgress.length; stage += 1) {
     await setScroll(session, stageProgress[stage]);
     const checkpoint = await assertCheckpoint(session, stage);
@@ -580,7 +580,7 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
     [viewport.height],
     "browser chrome changed the fixed scene height while scrolling",
   );
-  for (const [index, transition] of [0.245, 0.495, 0.745].entries()) {
+  for (const [index, transition] of [0.328, 0.662].entries()) {
     await setScroll(session, transition);
     await capture(session, directory, `transition-${index + 1}`);
     result.captures.push(`transition-${index + 1}`);

@@ -888,12 +888,6 @@ a {
   opacity: 0;
 }
 
-.stage-stack h2[data-depth="-3"] {
-  z-index: 1;
-  opacity: 0.3;
-  -webkit-text-stroke: 0.009em color-mix(in oklch, var(--bone) 56%, transparent);
-}
-
 .stage-stack h2[data-depth="-2"] {
   z-index: 2;
   opacity: 0.35;
@@ -938,11 +932,6 @@ a {
 .stage-stack h2[data-order="2"] {
   --stack-x: 0.6em;
   --stack-y: 0.58em;
-}
-
-.stage-stack h2[data-order="3"] {
-  --stack-x: 0.9em;
-  --stack-y: 0.87em;
 }
 
 .superneo-word {

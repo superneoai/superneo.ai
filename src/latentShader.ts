@@ -1,7 +1,6 @@
 const morphVertexChunk = /* glsl */ `
   attribute vec3 aTarget1;
   attribute vec3 aTarget2;
-  attribute vec3 aTarget3;
   attribute float aSeed;
   attribute float aAlong;
   attribute float aStrand;
@@ -27,25 +26,20 @@ const morphVertexChunk = /* glsl */ `
       sin(uTime * 0.16) * 0.042 +
       sin(uTime * 0.061 + 1.7) * 0.016;
     float basePhase = uStagePhase;
-    // Let the shells separate while travelling, then converge on every named
-    // stage so a previous silhouette never trails the next label.
     float transitionWave = sin(basePhase * 3.14159265);
     float transitionEnvelope = transitionWave * transitionWave;
     float phase = clamp(
       basePhase + (uMorphBias + ambientMorph) * 4.0 * transitionEnvelope,
       0.0,
-      3.0
+      2.0
     );
     vec3 current;
     if (phase < 1.0) {
       float blend = smoothstep(0.0, 1.0, phase);
       current = mix(position, aTarget1, blend);
-    } else if (phase < 2.0) {
+    } else {
       float blend = smoothstep(0.0, 1.0, phase - 1.0);
       current = mix(aTarget1, aTarget2, blend);
-    } else {
-      float blend = smoothstep(0.0, 1.0, phase - 2.0);
-      current = mix(aTarget2, aTarget3, blend);
     }
     return current;
   }
@@ -151,28 +145,19 @@ const morphVertexChunk = /* glsl */ `
 
     float semanticPhase = uStagePhase;
     float latentMotion = stageInfluence(semanticPhase, 0.0);
-    float inferenceMotion = stageInfluence(semanticPhase, 1.0);
-    float emergenceMotion = stageInfluence(semanticPhase, 2.0);
-    float openMotion = stageInfluence(semanticPhase, 3.0);
+    float emergenceMotion = stageInfluence(semanticPhase, 1.0);
+    float openMotion = stageInfluence(semanticPhase, 2.0);
 
-    // LATENT: contained pressure, breathing toward and away from the core.
     float latentBreath = sin(uTime * 0.58 + aAlong * 2.4 + aStrand) *
       (0.012 + aSeed * 0.006);
     current.xy *= 1.0 + latentMotion * latentBreath;
     current.z += latentMotion * cos(uTime * 0.41 + aAlong * 5.0) * 0.009;
 
-    // INFERENCE: a directional signal travels along the routed form.
-    float routeWave = sin(aAlong * 22.0 - uTime * 1.45 + aStrand * 2.2);
-    current.x += inferenceMotion * routeWave * 0.008;
-    current.z += inferenceMotion * routeWave * 0.024 * uDisplacementScale;
-
-    // EMERGENCE: pulses split from the center and lift through the branches.
     float branchDirection = sin(aStrand * 6.28318);
     float growthWave = sin(uTime * 0.82 - aAlong * 10.0 + aStrand * 4.0);
     current.x += emergenceMotion * branchDirection * growthWave * 0.014;
     current.y += emergenceMotion * growthWave * (0.009 + aAlong * 0.009);
 
-    // OPEN: layers counter-move without closing into a fixed silhouette.
     float openAngle = openMotion * (
       sin(uTime * 0.24 + aSeed * 2.0) +
       cos(uTime * 0.13 + aStrand * 4.0)
@@ -393,19 +378,14 @@ export const surfaceFragmentShader = /* glsl */ `
     float latentEffect = stageInfluence(semanticPhase, 0.0) *
       (1.0 - smoothstep(0.16, 0.72, length(vObjectPosition.xy))) *
       (0.45 + sin(uTime * 0.58 + vSeed * 3.0) * 0.2);
-    float routeEffect = stageInfluence(semanticPhase, 1.0) * pow(
-      0.5 + sin(vAlong * 20.0 - uTime * 1.7) * 0.5,
-      9.0
-    );
-    float emergenceEffect = stageInfluence(semanticPhase, 2.0) * pow(
+    float emergenceEffect = stageInfluence(semanticPhase, 1.0) * pow(
       0.5 + sin(vAlong * 12.0 - uTime * 0.92 + vStrand * 4.0) * 0.5,
       7.0
     );
-    float openEffect = stageInfluence(semanticPhase, 3.0) * rim *
+    float openEffect = stageInfluence(semanticPhase, 2.0) * rim *
       (0.58 + sin(uTime * 0.34 + vStrand * 6.28318) * 0.24);
     float semanticSignal = clamp(
-      latentEffect * 0.2 + routeEffect * 0.62 +
-      emergenceEffect * 0.56 + openEffect * 0.58,
+      latentEffect * 0.2 + emergenceEffect * 0.56 + openEffect * 0.58,
       0.0,
       1.0
     );
@@ -490,10 +470,6 @@ export const particleFragmentShader = /* glsl */ `
       dotMask(p + vec2(0.0, 0.17), 0.075)
     );
     float latentGlyph = mix(dotMask(p, 0.105), dotPair, step(0.58, vSeed));
-    float inferenceGlyph = max(
-      lineMask(abs(p.y - (0.22 - p.x)), 0.045),
-      lineMask(abs(p.y + (0.22 - p.x)), 0.045)
-    ) * step(-0.24, p.x) * step(p.x, 0.28);
     float stem = lineMask(abs(p.x), 0.042) * step(-0.31, p.y) * step(p.y, 0.08);
     float branches = max(
       lineMask(abs(p.y - p.x - 0.04), 0.045),
@@ -503,15 +479,14 @@ export const particleFragmentShader = /* glsl */ `
     float openGlyph = 1.0 - smoothstep(0.038, 0.068, abs(length(p) - 0.23));
     float mask = mix(
       latentGlyph,
-      inferenceGlyph,
+      emergenceGlyph,
       smoothstep(0.32, 0.68, glyphPhase)
     );
     mask = mix(
       mask,
-      emergenceGlyph,
+      openGlyph,
       smoothstep(1.32, 1.68, glyphPhase)
     );
-    mask = mix(mask, openGlyph, smoothstep(2.32, 2.68, glyphPhase));
 
     if (mask < 0.02) discard;
     vec3 bone = vec3(0.91, 0.898, 0.863);
@@ -672,16 +647,13 @@ export const backgroundFragmentShader = /* glsl */ `
       sin(artworkUv.y * 8.0 + uTime * 0.19),
       cos(artworkUv.x * 7.0 - uTime * 0.16)
     ) * (0.0011 + ambientBreath * 0.0012);
-    float latentState = 1.0 - smoothstep(0.08, 0.31, uScroll);
-    float inferenceState = smoothstep(0.08, 0.31, uScroll) *
-      (1.0 - smoothstep(0.38, 0.58, uScroll));
-    float emergenceState = smoothstep(0.4, 0.63, uScroll) *
-      (1.0 - smoothstep(0.7, 0.9, uScroll));
-    float openState = smoothstep(0.72, 0.96, uScroll);
+    float latentState = 1.0 - smoothstep(0.12, 0.35, uScroll);
+    float emergenceState = smoothstep(0.2, 0.38, uScroll) *
+      (1.0 - smoothstep(0.62, 0.78, uScroll));
+    float openState = smoothstep(0.62, 0.82, uScroll);
     vec2 warpedUv = artworkUv;
     warpedUv = (warpedUv - 0.5) *
       (1.0 + latentState * 0.03 - openState * 0.035) + 0.5;
-    warpedUv.x += inferenceState * sin(artworkUv.y * 18.0) * 0.006;
     warpedUv.x += emergenceState * sign(pixelUv.x - 0.5) *
       smoothstep(0.08, 0.48, abs(pixelUv.y - 0.5)) * 0.008;
     warpedUv.x += foldA * (0.0015 + uVelocity * 0.008);

@@ -1,3 +1,4 @@
+import { LAST_STAGE } from "./morphTimeline.ts";
 import type { TipArrival } from "./tipSignal";
 
 const BPM = 72;
@@ -191,8 +192,8 @@ export class SuperneoSoundtrack {
   }
 
   setStage(stage: number) {
-    this.stage = Math.min(3, Math.max(0, stage));
-    const cutoff = [620, 920, 1380, 2100][this.stage];
+    this.stage = Math.min(LAST_STAGE, Math.max(0, stage));
+    const cutoff = [620, 920, 2100][this.stage];
     this.toneFilter.frequency.setTargetAtTime(cutoff, this.context.currentTime, 0.5);
     this.reverbGain.gain.setTargetAtTime(0.17 + this.stage * 0.025, this.context.currentTime, 0.5);
   }

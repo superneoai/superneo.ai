@@ -16,7 +16,7 @@ import {
   useAnalyticsConsent,
 } from "./privacy/AnalyticsConsent";
 import { SoundtrackController } from "./Soundtrack";
-import { toStageProgress } from "./morphTimeline";
+import { STAGE_COUNT, toStageProgress } from "./morphTimeline";
 import { parseSceneQa, type NeoQaState } from "./sceneQa";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "./stageSignal";
 
@@ -26,12 +26,12 @@ const LatentField = lazy(() =>
 
 const stages = [
   { title: "LATENT", line: "Possibility, compressed." },
-  { title: "INFERENCE", line: "Signals converge on a path." },
-  { title: "EMERGENCE", line: "New structure appears between them." },
+  { title: "EMERGENCE", line: "New structure appears." },
   { title: "SUPERNEO", line: "The structure remains open." },
 ];
 
-const progressStages = ["01 LATENT", "02 INFER", "03 EMERGE", "04 NEO"];
+const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
+const stageTotal = String(STAGE_COUNT).padStart(2, "0");
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
@@ -328,7 +328,9 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
       if (stackRef.current) {
         stackRef.current.dataset.direction = stage > previous ? "forward" : "backward";
       }
-      if (indexRef.current) indexRef.current.textContent = `0${stage + 1} / 04`;
+      if (indexRef.current) {
+        indexRef.current.textContent = `${String(stage + 1).padStart(2, "0")} / ${stageTotal}`;
+      }
       if (lineRef.current) lineRef.current.textContent = stages[stage].line;
 
       headingRefs.current.forEach((heading, index) => {
@@ -386,7 +388,7 @@ function StagePanel({ forcedNeoState }: { forcedNeoState: NeoQaState | null }) {
 
   return (
     <section className="stage-panel" aria-live="polite">
-      <p className="stage-index" ref={indexRef}>01 / 04</p>
+      <p className="stage-index" ref={indexRef}>01 / {stageTotal}</p>
       <div className="stage-stack" data-direction="forward" ref={stackRef}>
         {stages.map((item, index) => (
           <h2

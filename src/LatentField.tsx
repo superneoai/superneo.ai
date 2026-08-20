@@ -463,12 +463,11 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
       const base = geometry.getAttribute("position") as THREE.BufferAttribute;
       const target1 = geometry.getAttribute("aTarget1") as THREE.BufferAttribute;
       const target2 = geometry.getAttribute("aTarget2") as THREE.BufferAttribute;
-      const target3 = geometry.getAttribute("aTarget3") as THREE.BufferAttribute;
       const along = geometry.getAttribute("aAlong") as THREE.BufferAttribute;
       const phase = stagePhaseUniform.value;
-      const from = phase < 1 ? base : phase < 2 ? target1 : target2;
-      const to = phase < 1 ? target1 : phase < 2 ? target2 : target3;
-      const localPhase = phase < 1 ? phase : phase < 2 ? phase - 1 : phase - 2;
+      const from = phase < 1 ? base : target1;
+      const to = phase < 1 ? target1 : target2;
+      const localPhase = phase < 1 ? phase : phase - 1;
       const blend = localPhase * localPhase * (3 - 2 * localPhase);
       let nearestDistance = Number.POSITIVE_INFINITY;
       let nearestAlong = 0.5;
@@ -651,20 +650,17 @@ export function LatentField({ onDiscover, onSceneStateChange, qa }: LatentFieldP
           return 1 - smoothDistance;
         };
         const latentWeight = weight(0);
-        const inferenceWeight = weight(1);
-        const emergenceWeight = weight(2);
-        const openWeight = weight(3);
+        const emergenceWeight = weight(1);
+        const openWeight = weight(2);
         const ambientTurn = time * 0.045;
         objectGroup.rotation.x =
           Math.sin(time * 0.1) * 0.045 +
           latentWeight * Math.sin(time * 0.17) * 0.012 +
-          inferenceWeight * Math.sin(time * 0.24) * 0.025 +
           emergenceWeight * Math.sin(time * 0.31) * 0.062 +
           openWeight * Math.sin(time * 0.16) * 0.038;
         objectGroup.rotation.y =
           ambientTurn +
           latentWeight * Math.sin(time * 0.14) * 0.016 +
-          inferenceWeight * Math.sin(time * 0.38) * 0.078 +
           emergenceWeight * Math.cos(time * 0.22) * 0.036 +
           openWeight * (
             Math.sin(time * 0.2) * 0.09 + Math.sin(time * 0.071) * 0.035

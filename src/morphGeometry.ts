@@ -11,7 +11,6 @@ function samplePath(
   state: number,
   u: number,
   strand: number,
-  nCurve: THREE.CatmullRomCurve3,
   target: THREE.Vector3,
 ) {
   const centered = u - 0.5;
@@ -26,13 +25,6 @@ function samplePath(
     );
   }
   if (state === 1) {
-    nCurve.getPointAt(u, target);
-    const convergence = Math.pow(Math.abs(centered) * 2, 1.45);
-    target.y += strandOffset * convergence * 0.24;
-    target.z += strandOffset * convergence * 0.13;
-    return target;
-  }
-  if (state === 2) {
     const split = THREE.MathUtils.smoothstep(u, 0.34, 0.9);
     const branchCurl = Math.sin((u - 0.32) * Math.PI * 1.4 + strandOffset * 0.82);
     return target.set(
@@ -41,7 +33,6 @@ function samplePath(
       strandOffset * split * 0.21 + Math.sin(u * Math.PI * 3 + strandOffset) * 0.12,
     );
   }
-
   const arc = centered * Math.PI * 1.34;
   const radialLayer = 1 + strandOffset * 0.17;
   return target.set(
@@ -61,29 +52,13 @@ export function createMorphGeometry(compact: boolean) {
     new Float32Array(count * 3),
     new Float32Array(count * 3),
     new Float32Array(count * 3),
-    new Float32Array(count * 3),
   ];
   const seeds = new Float32Array(count);
   const along = new Float32Array(count);
   const strandIds = new Float32Array(count);
   const indices: number[] = [];
-  const nCurve = new THREE.CatmullRomCurve3(
-    [
-      new THREE.Vector3(-0.98, -0.52, 0.04),
-      new THREE.Vector3(-0.72, -0.29, -0.12),
-      new THREE.Vector3(-0.24, -0.08, 0.08),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0.24, 0.06, -0.08),
-      new THREE.Vector3(0.72, 0.27, 0.12),
-      new THREE.Vector3(0.98, 0.52, -0.04),
-    ],
-    false,
-    "centripetal",
-    0.42,
-  );
   const stateSettings = [
     { braid: 0.1, width: 0.12, twists: 3.1, fold: 0.055 },
-    { braid: 0.16, width: 0.14, twists: 2.2, fold: 0.075 },
     { braid: 0.12, width: 0.155, twists: 1.65, fold: 0.1 },
     { braid: 0.055, width: 0.18, twists: 0.8, fold: 0.065 },
   ];
@@ -113,9 +88,9 @@ export function createMorphGeometry(compact: boolean) {
         strandIds[index] = strand / Math.max(strandCount - 1, 1);
 
         stateSettings.forEach((settings, state) => {
-          samplePath(state, u, strand, nCurve, point);
-          samplePath(state, Math.max(0, u - 0.002), strand, nCurve, previous);
-          samplePath(state, Math.min(1, u + 0.002), strand, nCurve, next);
+          samplePath(state, u, strand, point);
+          samplePath(state, Math.max(0, u - 0.002), strand, previous);
+          samplePath(state, Math.min(1, u + 0.002), strand, next);
           tangent.copy(next).sub(previous).normalize();
           side.set(-tangent.y, tangent.x, 0).normalize();
           if (side.lengthSq() < 0.001) side.set(1, 0, 0);
@@ -125,9 +100,10 @@ export function createMorphGeometry(compact: boolean) {
           const twistCos = Math.cos(twist);
           const twistSin = Math.sin(twist);
           let braidProfile = 0.68 + Math.sin(Math.PI * u) * 0.32;
-          if (state === 1) braidProfile = 0.14 + Math.abs(u - 0.5) * 1.72;
-          if (state === 2) braidProfile = 0.14 + THREE.MathUtils.smoothstep(u, 0.28, 0.84) * 0.86;
-          if (state === 3) braidProfile = 0.42;
+          if (state === 1) {
+            braidProfile = 0.14 + THREE.MathUtils.smoothstep(u, 0.28, 0.84) * 0.86;
+          }
+          if (state === 2) braidProfile = 0.42;
           const braidRadius = settings.braid * braidProfile;
           result
             .copy(point)
@@ -165,7 +141,6 @@ export function createMorphGeometry(compact: boolean) {
   geometry.setAttribute("position", new THREE.BufferAttribute(positions[0], 3));
   geometry.setAttribute("aTarget1", new THREE.BufferAttribute(positions[1], 3));
   geometry.setAttribute("aTarget2", new THREE.BufferAttribute(positions[2], 3));
-  geometry.setAttribute("aTarget3", new THREE.BufferAttribute(positions[3], 3));
   geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
   geometry.setAttribute("aAlong", new THREE.BufferAttribute(along, 1));
   geometry.setAttribute("aStrand", new THREE.BufferAttribute(strandIds, 1));

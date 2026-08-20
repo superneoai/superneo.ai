@@ -23,17 +23,16 @@ test("morph targets have genuinely different silhouettes", () => {
     geometry.getAttribute("position"),
     geometry.getAttribute("aTarget1"),
     geometry.getAttribute("aTarget2"),
-    geometry.getAttribute("aTarget3"),
   ] as BufferAttribute[];
+  assert.equal(geometry.getAttribute("aTarget3"), undefined);
   const aspects = targets.map(aspectRatio);
   assert.ok(
     Math.max(...aspects) - Math.min(...aspects) > 0.75,
     `expected major silhouette change; aspect ratios were ${aspects.map((value) => value.toFixed(2)).join(", ")}`,
   );
-  assert.ok(aspects[0] < 1.1, `latent state should remain compressed; got ${aspects[0].toFixed(2)}`);
-  assert.ok(aspects[1] > 1.15, `inference should form a directional route; got ${aspects[1].toFixed(2)}`);
-  assert.ok(aspects[2] < 1, `emergence should branch vertically; got ${aspects[2].toFixed(2)}`);
-  assert.ok(aspects[3] > 1.65, `open state should expand horizontally; got ${aspects[3].toFixed(2)}`);
+  assert.ok(aspects[0] < 1.1, `LATENT should remain compressed; got ${aspects[0].toFixed(2)}`);
+  assert.ok(aspects[1] < 1, `EMERGENCE should branch vertically; got ${aspects[1].toFixed(2)}`);
+  assert.ok(aspects[2] > 1.65, `SUPERNEO should expand horizontally; got ${aspects[2].toFixed(2)}`);
   geometry.dispose();
 });
 

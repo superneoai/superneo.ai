@@ -1,6 +1,6 @@
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
-export const STAGE_COUNT = 4;
+export const STAGE_COUNT = 3;
 export const LAST_STAGE = STAGE_COUNT - 1;
 
 export function toMorphPhase(progress: number) {

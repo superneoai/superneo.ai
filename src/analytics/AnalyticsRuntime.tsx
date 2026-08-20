@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { LAST_STAGE } from "../morphTimeline";
 import { STAGE_CHANGE_EVENT, type StageChangeDetail } from "../stageSignal";
 import { TIP_SIGNAL_EVENT } from "../tipSignal";
 import type { ConsentStatus } from "../privacy/consent";
@@ -18,7 +19,7 @@ import {
   safeReferrerHost,
 } from "./policy";
 
-const stageNames = ["latent", "inference", "emergence", "superneo"];
+const stageNames = ["latent", "emergence", "superneo"];
 
 function pageProperties() {
   const query = new URLSearchParams(window.location.search);
@@ -99,7 +100,7 @@ export function AnalyticsRuntime({ consentStatus, sceneReady }: AnalyticsRuntime
           stage_index: previous + 1,
         });
       }
-      if (stage === 3 && !experienceCapturedRef.current) {
+      if (stage === LAST_STAGE && !experienceCapturedRef.current) {
         experienceCapturedRef.current = true;
         captureAnalyticsEvent("experience_completed", { final_stage: "superneo" });
       }
