@@ -73,9 +73,10 @@ test("the production artifact contains the privacy notice without embedding a to
   assert.doesNotMatch(html, /phc_[a-zA-Z0-9]+/);
   assert.match(privacy, /Analytics on superneo\.ai are optional/);
   assert.match(privacy, /ACTUAL LTD\. operates superneo\.ai, the website of/);
-  assert.match(privacy, /controller that determines why and how/);
+  assert.match(privacy, /ACTUAL LTD\. is the\s+controller/);
+  assert.match(privacy, /decides why and how it processes/);
   assert.match(privacy, /PostHog Cloud US/);
-  assert.match(privacy, /no more\s+than 12 months/i);
+  assert.match(privacy, /maximum of 12 months/i);
   assert.match(privacy, /Global Privacy Control/);
   assert.match(privacy, /EFFECTIVE 2026-08-19 \/\/ CONSENT REVISION 02/);
   assert.doesNotMatch(privacy, /SUPERNEO does not|analytics for SUPERNEO/);

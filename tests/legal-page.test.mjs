@@ -25,10 +25,10 @@ test("the legal page identifies the operator and ownership without overclaiming"
 
   assert.equal(normalizeText(elementContents(legal, "h1")[0]), "Legal");
   assert.ok(paragraphs.includes("SYSTEM // LEGAL"));
-  assert.ok(paragraphs.includes("Operator. superneo.ai is operated by ACTUAL LTD."));
+  assert.ok(paragraphs.includes("Operator. ACTUAL LTD. operates superneo.ai."));
   assert.ok(paragraphs.includes(
-    "Brand. SUPERNEO ™ is a trademark of ACTUAL LTD., used here as an unregistered mark. " +
-    "NEO is a product name of ACTUAL LTD. No registration is claimed.",
+    "Brand. SUPERNEO ™ is a trademark of ACTUAL LTD. This site uses it as an unregistered mark. " +
+    "NEO is a product name of ACTUAL LTD. ACTUAL LTD. claims no registration.",
   ));
   assert.ok(paragraphs.includes(
     "Copyright. © 2026 ACTUAL LTD. Site content, design, and the SUPERNEO wordmark treatment " +
