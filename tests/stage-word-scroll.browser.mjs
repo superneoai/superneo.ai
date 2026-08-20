@@ -82,7 +82,7 @@ test("the active stage word travels continuously with scroll distance", { timeou
     const samples = [];
     for (const fraction of fractions) samples.push(await sampleStageWord(page, fraction));
 
-    assert.ok(Math.hypot(samples[0].x, samples[0].y) > 2);
+    assert.ok(Math.hypot(samples[0].x, samples[0].y) > 20);
     for (let index = 1; index < samples.length; index += 1) {
       const previous = samples[index - 1];
       const current = samples[index];

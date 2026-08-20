@@ -17,7 +17,8 @@ test("mobile stage motion opposes the finger direction", async () => {
   assert.doesNotMatch(app, /setExitStage/);
   assert.match(field, /self\.direction \* scrollEnergy \* 0\.16/);
   assert.match(field, /objectGroup\.position\.y = scrollLift/);
-  assert.match(app, /const MOBILE_WORD_TRAVEL = \{ x: 0, y: 0\.15 \}/);
+  assert.match(app, /const WORD_GLIDE_DISTANCE_EM = 0\.16/);
+  assert.match(app, /const MOBILE_WORD_TRAVEL = \{ x: 0, y: WORD_GLIDE_DISTANCE_EM \}/);
   assert.match(app, /const remaining = reducedMotion\.matches \? 0 : 1 - stageProgress/);
   assert.match(app, /travel\.y \* remaining/);
   assert.match(styles, /@keyframes stage-exit-up[\s\S]*?translate3d\(0, -0\.24em, 0\)/);

@@ -32,8 +32,12 @@ const stages = [
 
 const progressStages = ["01 LATENT", "02 EMERGE", "03 NEO"];
 const stageTotal = String(STAGE_COUNT).padStart(2, "0");
-const DESKTOP_WORD_TRAVEL = { x: -0.045, y: -0.04 };
-const MOBILE_WORD_TRAVEL = { x: 0, y: 0.15 };
+const WORD_GLIDE_DISTANCE_EM = 0.16;
+const DESKTOP_WORD_TRAVEL = {
+  x: -WORD_GLIDE_DISTANCE_EM,
+  y: -WORD_GLIDE_DISTANCE_EM * 8 / 9,
+};
+const MOBILE_WORD_TRAVEL = { x: 0, y: WORD_GLIDE_DISTANCE_EM };
 const neoSignFullUrl = new URL("neo-sign-full.png", document.baseURI).href;
 const neoSignMediumUrl = new URL("neo-sign-medium.png", document.baseURI).href;
 const neoSignFaultLowUrl = new URL("neo-sign-fault-low.png", document.baseURI).href;
