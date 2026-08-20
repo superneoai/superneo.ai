@@ -24,8 +24,12 @@ test("the canonical brand uses one intentional trademark treatment", async () =>
   assert.match(app, /showTrademark/);
   assert.match(app, /<StageWord[\s\S]*showTrademark[\s\S]*\/>/);
   assert.match(app, /aria-label=\{item\.title\}/);
-  assert.match(styles, /\.superneo-word\s*{[^}]*padding-right:\s*0\.25em/s);
+  assert.match(styles, /\.superneo-word\s*{[^}]*padding-right:\s*0\.32em/s);
   assert.match(styles, /\.brand-tm--stage\s*{[^}]*position:\s*absolute/s);
+  assert.match(styles, /\.brand-tm--stage\s*{[^}]*top:\s*0/s);
+  assert.match(styles, /\.brand-tm--stage\s*{[^}]*color:\s*var\(--bone\)/s);
+  assert.match(styles, /\.brand-tm--stage\s*{[^}]*font-size:\s*0\.18em/s);
+  assert.match(styles, /\.brand-tm--stage\s*{[^}]*var\(--bone\) 28%/s);
   for (const page of [privacy, legal]) {
     assert.match(page, /SUPERNEO<sup aria-hidden="true">™<\/sup>/);
     assert.equal((page.match(/™/g) ?? []).length, 1);
