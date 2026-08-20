@@ -1032,8 +1032,6 @@ a {
 
 .footer-brand {
   display: inline-block;
-  width: 10ch;
-  overflow: hidden;
   white-space: nowrap;
   clip-path: inset(0);
 }
