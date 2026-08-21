@@ -41,7 +41,7 @@ test("the scene still reaches its ready state when motion is reduced", async () 
       for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 }]) {
         const context = await browser.newContext({ viewport, reducedMotion });
         const page = await context.newPage();
-        await page.goto(`${BASE_URL}/?neoState=full`, { waitUntil: "load" });
+        await page.goto(`${BASE_URL}/?neoState=full&sceneProgress=1`, { waitUntil: "load" });
         await page.waitForFunction(
           () => document.querySelector(".experience")?.dataset.sceneReady === "true",
           null,
@@ -59,6 +59,31 @@ test("the scene still reaches its ready state when motion is reduced", async () 
           sceneReady,
           "true",
           `the scene left reducedMotion=${reducedMotion} unready`,
+        );
+        const idleSnapshot = await page.evaluate(() => JSON.parse(
+          document.querySelector(".signal-stage")?.dataset.qaSceneProgress ?? "null",
+        ));
+        assert.equal(idleSnapshot.signalPhase, "idle");
+        await page.evaluate(() => {
+          window.dispatchEvent(new CustomEvent("superneo:qa-scene-progress", {
+            detail: { signalPhase: "arrival" },
+          }));
+        });
+        await page.waitForFunction(
+          (revision) => {
+            const value = document.querySelector(".signal-stage")?.dataset.qaSceneProgress;
+            if (!value) return false;
+            const snapshot = JSON.parse(value);
+            return snapshot.signalPhase === "arrival" && snapshot.revision > revision;
+          },
+          idleSnapshot.revision,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.querySelector(".experience")?.dataset.sceneReady,
+          ),
+          "true",
+          "a reduced-motion progress query must not stall scene readiness",
         );
         await page.evaluate(() => {
           const range = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);

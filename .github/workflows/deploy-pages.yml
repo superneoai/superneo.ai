@@ -81,7 +81,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Verify the scene
-        run: npm run test:visual -- --browsers=chromium --skip-performance --skip-pulse
+        run: npm run test:visual -- --browsers=chromium --skip-performance
 
   security:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
