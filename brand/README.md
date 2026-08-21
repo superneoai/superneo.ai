@@ -19,9 +19,9 @@
 
 ## Rebuild
 
-`build-superneo.py` instances `geist-latin-wght-normal.woff2` at weight 500 with fontTools `varLib.instancer`, shapes `SUPER` with HarfBuzz kerning, applies four `-75/1000 em` tracking adjustments, extracts the static glyph paths, positions NEO from the outlined SUPER ink bound and target gap ratio, balances the side margins, and regenerates the vector and raster exports.
+`npm run brand:build` uses `wawoff2` to decode `geist-latin-wght-normal.woff2`, then uses HarfBuzzJS to select the weight 500 instance before shaping or outlining. It shapes `SUPER` with kerning, applies four `-75/1000 em` tracking adjustments, extracts the static glyph paths, positions NEO from the outlined SUPER ink bound and target gap ratio, balances the side margins, and regenerates the vector and raster exports.
 
-The build requires fontTools with WOFF2 support, `hb-shape`, `rsvg-convert`, and `sips`. Install fontTools into a temporary virtual environment rather than adding it to the website runtime dependencies.
+`npm run brand:check` regenerates the vectors in memory and requires them to be byte-identical to the committed SVGs. Raster exports require `rsvg-convert` and `sips`; all JavaScript dependencies are pinned as development dependencies.
 
 ## Licence
 
