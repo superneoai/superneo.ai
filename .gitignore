@@ -9,3 +9,5 @@ dist-preview/
 !.env.example
 tests/fixtures/visual-results.json
 brand/.raster/
+
+docs/
