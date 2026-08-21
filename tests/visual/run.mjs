@@ -23,6 +23,7 @@ const cli = new Map(
 const recordingBaseline = cli.has("record-baseline");
 const skipPerformance = cli.has("skip-performance");
 const skipPulse = cli.has("skip-pulse");
+const pulseNegativeControl = cli.has("pulse-negative-control");
 const requestedBrowsers = String(
   cli.get("browsers") || process.env.SUPERNEO_VISUAL_BROWSERS || ALL_BROWSERS.join(","),
 ).split(",").filter(Boolean);
@@ -197,7 +198,7 @@ function createRouteMask(buffer) {
       }
     }
   }
-  const dilation = Math.max(8, Math.round(png.width * 0.045));
+  const dilation = Math.max(8, Math.round(png.width * 0.047));
   const mask = new Uint8Array(pixels);
   let count = 0;
   for (let index = 0; index < pixels; index += 1) {
@@ -208,14 +209,17 @@ function createRouteMask(buffer) {
   return { width: png.width, height: png.height, mask, count };
 }
 
-function pulseMetrics(idleBuffer, arrivalBuffer, routeMask = null) {
+function pulseMetrics(idleBuffer, pulseBuffer, containmentBuffer, routeMask = null) {
   const idle = readPng(idleBuffer);
-  const arrival = readPng(arrivalBuffer);
-  assert.equal(arrival.width, idle.width);
-  assert.equal(arrival.height, idle.height);
+  const pulse = readPng(pulseBuffer);
+  const containment = readPng(containmentBuffer);
+  assert.equal(pulse.width, idle.width);
+  assert.equal(pulse.height, idle.height);
+  assert.equal(containment.width, idle.width);
+  assert.equal(containment.height, idle.height);
   let outsideGreen = 0;
   let outsideCount = 0;
-  const tipCandidates = [];
+  const pulseCandidates = [];
   for (let y = 0; y < idle.height; y += 1) {
     for (let x = 0; x < idle.width; x += 1) {
       const offset = (y * idle.width + x) * 4;
@@ -223,11 +227,14 @@ function pulseMetrics(idleBuffer, arrivalBuffer, routeMask = null) {
         0,
         idle.data[offset + 1] - Math.max(idle.data[offset], idle.data[offset + 2]),
       );
-      const arrivalGreen = Math.max(
+      const containmentGreen = Math.max(
         0,
-        arrival.data[offset + 1] - Math.max(arrival.data[offset], arrival.data[offset + 2]),
+        containment.data[offset + 1] - Math.max(
+          containment.data[offset],
+          containment.data[offset + 2],
+        ),
       );
-      const greenDelta = Math.max(0, arrivalGreen - idleGreen);
+      const greenDelta = Math.max(0, containmentGreen - idleGreen);
       const nx = (x / idle.width - 0.5) / 0.42;
       const ny = (y / idle.height - 0.47) / 0.38;
       const insideRouteMask = routeMask
@@ -236,16 +243,16 @@ function pulseMetrics(idleBuffer, arrivalBuffer, routeMask = null) {
       if (insideRouteMask) {
         const idleLight = idle.data[offset] * 0.2126 +
           idle.data[offset + 1] * 0.7152 + idle.data[offset + 2] * 0.0722;
-        const arrivalLight = arrival.data[offset] * 0.2126 +
-          arrival.data[offset + 1] * 0.7152 + arrival.data[offset + 2] * 0.0722;
-        tipCandidates.push(Math.max(0, arrivalLight - idleLight));
+        const pulseLight = pulse.data[offset] * 0.2126 +
+          pulse.data[offset + 1] * 0.7152 + pulse.data[offset + 2] * 0.0722;
+        pulseCandidates.push(Math.max(0, pulseLight - idleLight));
       } else {
         outsideGreen += greenDelta;
         outsideCount += 1;
       }
     }
   }
-  tipCandidates.sort((left, right) => left - right);
+  pulseCandidates.sort((left, right) => left - right);
   return {
     outsideGreen: Math.round(
       outsideGreen / Math.max(1, outsideCount) / 255 * 100_000,
@@ -253,7 +260,7 @@ function pulseMetrics(idleBuffer, arrivalBuffer, routeMask = null) {
     routeCoverage: routeMask
       ? rounded(routeMask.count / (routeMask.width * routeMask.height))
       : null,
-    tipPeak: rounded(tipCandidates[Math.floor(tipCandidates.length * 0.999)] || 0),
+    pulsePeak: rounded(pulseCandidates[Math.floor(pulseCandidates.length * 0.999)] || 0),
   };
 }
 
@@ -430,10 +437,45 @@ async function preparePulsePage(session, pageUrl) {
   await session.execute("Math.random = () => 0.5; return true;");
 }
 
+async function setSceneSignalPhase(session, signalPhase) {
+  const expectedProgress = {
+    idle: 1.7,
+    travel: 0.28,
+    arrival: 0.83,
+    fade: 1.42,
+  }[signalPhase];
+  const previousRevision = await session.execute(`
+    const value = document.querySelector('.signal-stage')?.dataset.qaSceneProgress;
+    return value ? JSON.parse(value).revision : -1;
+  `);
+  await session.execute(`
+    window.dispatchEvent(new CustomEvent('superneo:qa-scene-progress', {
+      detail: { signalPhase: arguments[0] },
+    }));
+    return true;
+  `, signalPhase);
+  await waitFor(
+    session,
+    `
+      const value = document.querySelector('.signal-stage')?.dataset.qaSceneProgress;
+      if (!value) return false;
+      const snapshot = JSON.parse(value);
+      return snapshot.signalPhase === '${signalPhase}' &&
+        snapshot.revision > ${previousRevision};
+    `,
+    `rendered ${signalPhase} signal phase`,
+  );
+  const snapshot = await session.execute(`
+    return JSON.parse(document.querySelector('.signal-stage').dataset.qaSceneProgress);
+  `);
+  assert.equal(snapshot.progress, expectedProgress, `${signalPhase} signal progress diverged`);
+  return snapshot;
+}
+
 async function runPulse(session, directory, pageUrl, routeMask = null) {
   await preparePulsePage(session, pageUrl);
   await hideInterface(session);
-  await sleep(180);
+  await setSceneSignalPhase(session, "idle");
   const idle = await capture(session, directory, "pulse-idle");
   await session.execute(`
     const x = innerWidth * 0.5;
@@ -446,13 +488,13 @@ async function runPulse(session, directory, pageUrl, routeMask = null) {
     }));
     return true;
   `);
-  await sleep(140);
-  await capture(session, directory, "pulse-travel");
-  await sleep(760);
+  await setSceneSignalPhase(session, pulseNegativeControl ? "fade" : "travel");
+  const pulse = await capture(session, directory, "pulse-travel");
+  await setSceneSignalPhase(session, "arrival");
   const arrival = await capture(session, directory, "pulse-arrival");
-  await sleep(850);
+  await setSceneSignalPhase(session, "fade");
   await capture(session, directory, "pulse-fade");
-  return pulseMetrics(idle, arrival, routeMask);
+  return pulseMetrics(idle, pulse, arrival, routeMask);
 }
 
 async function runPerformanceSample(session, baseUrl) {
@@ -542,7 +584,7 @@ async function runBaselineCase(session, baseUrl, directory) {
   const pulse = await runPulse(
     session,
     directory,
-    `${baseUrl}/?freezeScene=1`,
+    `${baseUrl}/?freezeScene=1&sceneProgress=1`,
     routeMask,
   );
   const performance = await runPerformance(session, baseUrl);
@@ -605,7 +647,7 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
     result.pulse = await runPulse(
       session,
       directory,
-      stateUrl("neoState=full&freezeScene=1"),
+      stateUrl("neoState=full&freezeScene=1&sceneProgress=1"),
       routeMask,
     );
     assert.ok(
@@ -613,8 +655,8 @@ async function runVisualCase(session, browserName, viewportName, baseUrl, direct
       `pulse green ${result.pulse.outsideGreen} escaped the object/route mask`,
     );
     assert.ok(
-      result.pulse.tipPeak >= baseline.pulse.tipPeak * 0.85,
-      `tip peak ${result.pulse.tipPeak} fell below 85% of ${baseline.pulse.tipPeak}`,
+      result.pulse.pulsePeak >= baseline.pulse.pulsePeak * 0.85,
+      `pulse peak ${result.pulse.pulsePeak} fell below 85% of ${baseline.pulse.pulsePeak}`,
     );
   }
 

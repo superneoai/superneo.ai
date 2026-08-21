@@ -22,6 +22,7 @@ import { toMorphPhase, toStageIndex } from "./morphTimeline";
 import { createRenderProfile } from "./renderProfile";
 import { createFrameProbe } from "./frameProbe";
 import type { SceneQaConfig } from "./sceneQa";
+import { createSceneProgressController } from "./sceneProgress";
 import { dispatchStageChange } from "./stageSignal";
 import {
   createTipArrivals,
@@ -378,6 +379,33 @@ export function LatentField({ onInteract, onSceneStateChange, qa }: LatentFieldP
     let lastPixelRatio = 0;
     const frameProbe = createFrameProbe();
     const scrollRailFill = document.querySelector<HTMLElement>(".scroll-rail-fill");
+    let qaSignalProgress: number | null = null;
+    let sceneProgressController: ReturnType<typeof createSceneProgressController> | null = null;
+    if (import.meta.env.DEV && qa?.sceneProgress) {
+      sceneProgressController = createSceneProgressController({
+        eventTarget: window,
+        host,
+        onProgress: ({ progress, signalPhase }) => {
+          qaSignalProgress = signalPhase === "idle" ? null : progress;
+          const contactStrength = 1;
+          targetPointerStrength = contactStrength;
+          targetPointerMotion = 0;
+          targetPress = 0;
+          targetVelocity = 0;
+          targetScrollLift = 0;
+          pointerWorld.value.copy(targetPointerWorld);
+          pointerDelta.value.set(0, 0, 0);
+          pointerScreen.value.copy(targetPointerScreen);
+          pointerStrength.value = contactStrength;
+          pointerMotion.value = 0;
+          press.value = 0;
+          velocity.value = 0;
+          targetPointerDelta.set(0, 0, 0);
+          scrollLift = 0;
+          needsRender = true;
+        },
+      });
+    }
 
     const markInteraction = () => {
       if (hasInteracted) return;
@@ -630,10 +658,14 @@ export function LatentField({ onInteract, onSceneStateChange, qa }: LatentFieldP
       objectGroup.position.y = scrollLift;
       let signalEnergy = 0;
       for (let signalIndex = 0; signalIndex < MAX_ACTIVE_SIGNALS; signalIndex += 1) {
-        const progress = Math.min(
-          SIGNAL_LIFETIME,
-          signalProgressValues[signalIndex] + delta * SIGNAL_PROGRESS_PER_SECOND,
-        );
+        const progress = import.meta.env.DEV &&
+            qaSignalProgress !== null &&
+            signalProgressValues[signalIndex] < SIGNAL_LIFETIME
+          ? qaSignalProgress
+          : Math.min(
+            SIGNAL_LIFETIME,
+            signalProgressValues[signalIndex] + delta * SIGNAL_PROGRESS_PER_SECOND,
+          );
         signalProgressValues[signalIndex] = progress;
         const travelPhase = Math.min(progress, 1);
         signalEnergy = Math.max(
@@ -697,6 +729,7 @@ export function LatentField({ onInteract, onSceneStateChange, qa }: LatentFieldP
       const renderStarted = performance.now();
       try {
         composer.render(delta);
+        if (import.meta.env.DEV) sceneProgressController?.publish();
         if (!sceneReady && artworkReady && shaderHealthy) {
           const context = renderer.getContext();
           if (!context.isContextLost() && context.getError() === context.NO_ERROR) {
@@ -789,6 +822,7 @@ export function LatentField({ onInteract, onSceneStateChange, qa }: LatentFieldP
       renderer.domElement.removeEventListener("webglcontextrestored", handleContextRestored);
       reducedMotion.removeEventListener("change", handleMotionPreference);
       coarsePointer.removeEventListener("change", scheduleResize);
+      if (import.meta.env.DEV) sceneProgressController?.dispose();
       scrollRailFill?.style.removeProperty("transform");
       renderPass.dispose();
       bloomPass.dispose();

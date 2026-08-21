@@ -6,7 +6,7 @@
         "pulse": {
           "outsideGreen": 0.00487,
           "routeCoverage": 0.595,
-          "tipPeak": 179.948
+          "pulsePeak": 179.948
         },
         "performance": {
           "frames": 432,
@@ -59,7 +59,7 @@
         "pulse": {
           "outsideGreen": 0.00114,
           "routeCoverage": 0.254,
-          "tipPeak": 95.621
+          "pulsePeak": 95.621
         },
         "performance": {
           "frames": 432,
@@ -114,7 +114,7 @@
         "pulse": {
           "outsideGreen": 0.01594,
           "routeCoverage": 0.602,
-          "tipPeak": 189.079
+          "pulsePeak": 189.079
         },
         "performance": {
           "frames": 429,
@@ -167,7 +167,7 @@
         "pulse": {
           "outsideGreen": 0.00115,
           "routeCoverage": 0.259,
-          "tipPeak": 96.05
+          "pulsePeak": 96.05
         },
         "performance": {
           "frames": 432,

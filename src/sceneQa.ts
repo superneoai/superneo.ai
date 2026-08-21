@@ -8,6 +8,7 @@ export type SceneQaConfig = {
   freezeScene: boolean;
   reducedMotion: boolean;
   objectMask: boolean;
+  sceneProgress: boolean;
 };
 
 const NEO_STATES = new Set<NeoQaState>(["full", "medium", "fault-low"]);
@@ -37,5 +38,6 @@ export function parseSceneQa(search: string): SceneQaConfig {
     freezeScene: query.get("freezeScene") === "1",
     reducedMotion: query.get("reducedMotion") === "1",
     objectMask: query.get("objectMask") === "1",
+    sceneProgress: query.get("sceneProgress") === "1",
   };
 }
